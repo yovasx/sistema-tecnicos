@@ -1,0 +1,5 @@
+.env
+backend/build/
+backend/.gradle/
+.idea/
+*.iml

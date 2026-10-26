@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: tecnicos-backend
+
+  datasource:
+    # Valores para correr desde tu PC (apuntan al puerto 5432 que expusimos).
+    # Dentro de Docker se sobrescriben con variables de entorno.
+    url: jdbc:postgresql://localhost:5432/tecnicos_db
+    username: tecnicos_user
+    password: password
+
+  jpa:
+    hibernate:
+      ddl-auto: validate      # Hibernate NUNCA toca el esquema: lo manda Flyway
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
