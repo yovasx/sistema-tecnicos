@@ -206,7 +206,9 @@ Todavía no hay endpoints implementados. Los primeros serán:
 | GET | `/api/auth/me` | pendiente |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
 | GET/PATCH | `/api/admin/usuarios` | pendiente |
-| GET/POST | `/api/admin/tecnicos/pendientes` | pendiente |
+| GET | `/api/admin/tecnicos/pendientes` | pendiente |
+| POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
+| POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
 
 ## Flujo de trabajo con Git
 
