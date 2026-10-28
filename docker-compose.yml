@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgis/postgis:16-3.4      # trae PostGIS (la de alpine no)
+    image: postgis/postgis:16-3.4
     container_name: tecnicos-postgres
     restart: unless-stopped
     environment:
@@ -19,13 +19,7 @@ services:
     networks:
       - tecnicos-net
 
-networks:
-  tecnicos-net:
-
-volumes:
-  postgres_data:
-
-    backend:
+  backend:
     build: ./backend
     container_name: tecnicos-backend
     restart: unless-stopped
@@ -33,7 +27,6 @@ volumes:
       postgres:
         condition: service_healthy
     environment:
-      # Dentro de Docker el host es el nombre del servicio, no localhost
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -41,3 +34,10 @@ volumes:
       - "${BACKEND_PORT}:8080"
     networks:
       - tecnicos-net
+
+networks:
+  tecnicos-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

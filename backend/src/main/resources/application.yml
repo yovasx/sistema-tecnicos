@@ -3,11 +3,10 @@ spring:
     name: tecnicos-backend
 
   datasource:
-    # Valores para correr desde tu PC (apuntan al puerto 5432 que expusimos).
-    # Dentro de Docker se sobrescriben con variables de entorno.
-    url: jdbc:postgresql://localhost:5432/tecnicos_db
-    username: tecnicos_user
-    password: password
+    # Defaults para correr desde tu PC. Docker los sobrescribe con SPRING_DATASOURCE_*.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tecnicos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:tecnicos_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
 
   jpa:
     hibernate:

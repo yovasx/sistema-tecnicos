@@ -3,3 +3,7 @@ backend/build/
 backend/.gradle/
 .idea/
 *.iml
+.claude/
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
