@@ -130,6 +130,49 @@ Editá `mobile/.env.local` según dónde corras la app:
 
 Las variables `EXPO_PUBLIC_*` se inyectan al compilar el bundle: si las cambiás, reiniciá Metro.
 
+### 4. Teléfono físico: red local y firewall
+
+Para que el teléfono llegue al backend, Windows tiene que permitir el tráfico entrante:
+
+```powershell
+# Verificá la IP de tu PC en la red local
+ipconfig | Select-String "IPv4"
+
+# Abrí los puertos (PowerShell como administrador)
+New-NetFirewallRule -DisplayName "Fixly backend 9080" -Direction Inbound -Protocol TCP -LocalPort 9080 -Action Allow
+New-NetFirewallRule -DisplayName "Fixly Expo 9081"    -Direction Inbound -Protocol TCP -LocalPort 9081 -Action Allow
+```
+
+Y probalo desde el teléfono:
+
+```powershell
+Invoke-WebRequest http://<IP-LAN-de-tu-PC>:9080/api/ping
+```
+
+Si responde `"status": "ok"` y `"base": "ok"`, el teléfono ya ve al backend.
+
+### 5. Verificar el arranque limpio
+
+Esto es lo que hay que poder repetir desde cero, sin pasos manuales:
+
+```powershell
+# 1. Recrear la base desde cero (BORRA los datos de desarrollo)
+docker compose down -v
+docker compose up -d postgres
+
+# 2. Arrancar el backend; Flyway aplica V1 y V2 solo
+cd backend
+.\gradlew.bat bootRun
+
+# 3. Healthcheck real
+Invoke-WebRequest http://localhost:8080/api/ping   # 200, "base": "ok"
+
+# 4. Suite completa contra la misma base que usa producción
+.\gradlew.bat test
+```
+
+`docker compose up -d postgres` **solo** levanta la base: sirve para desarrollar con `bootRun` en local. `docker compose up -d --build` levanta base y backend en contenedor.
+
 ## Comandos
 
 ### Backend
@@ -188,6 +231,26 @@ Reglas:
 - Hibernate usa `ddl-auto: validate`: si una entidad no coincide con el SQL, la app no arranca.
 - Para recrear la base de desarrollo: `docker compose down -v` y volver a levantar. Es destructivo.
 
+### Migración V2: seeds de La Paz
+
+`V2__seeds_la_paz.sql` carga datos de desarrollo **idempotentes**: categorías, tarifas, comisión del 15%, usuarios, perfiles de técnico y zonas de cobertura. Cada bloque verifica si los datos ya existen, así que correrla dos veces no duplica nada.
+
+Categorías: **Plomería**, **Electricidad**, **Climatización**.
+Zonas: **Sopocachi**, **Miraflores**, **Calacoto (Zona Sur)**.
+
+Usuarios de prueba (todos con la misma contraseña):
+
+| Rol | Email | Contraseña |
+|---|---|---|
+| Administrador | `admin@fixly.bo` | `Fixly2026!` |
+| Cliente | `maria.quispe@ejemplo.bo` | `Fixly2026!` |
+| Cliente | `jorge.mamani@ejemplo.bo` | `Fixly2026!` |
+| Técnico (Plomería, Electricidad) | `diego.vargas@ejemplo.bo` | `Fixly2026!` |
+| Técnico (Electricidad, Climatización) | `lucia.fernandez@ejemplo.bo` | `Fixly2026!` |
+| Técnico (Climatización, Plomería) | `raul.choque@ejemplo.bo` | `Fixly2026!` |
+
+Los técnicos nacen `aprobado` y `disponible` para que el matching encuentre candidatos desde el primer día. **Nunca sembrar esta migración en producción.**
+
 Verificar el historial:
 
 ```powershell
@@ -197,11 +260,9 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 
 ## API (roadmap)
 
-Todavía no hay endpoints implementados. Los primeros serán:
-
 | Método | Endpoint | Estado |
 |---|---|---|
-| GET | `/api/ping` | pendiente |
+| GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | pendiente |
 | GET | `/api/auth/me` | pendiente |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
@@ -209,6 +270,28 @@ Todavía no hay endpoints implementados. Los primeros serán:
 | GET | `/api/admin/tecnicos/pendientes` | pendiente |
 | POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
 | POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
+
+Hoy el resto de la API devuelve **403**: `SecurityConfig` exige autenticación pero todavía no hay JWT. Eso se cierra con el login.
+
+### Formato de errores
+
+Todos los errores usan la misma forma, en español:
+
+```json
+{ "codigo": "EMAIL_DUPLICADO", "mensaje": "Ya existe un usuario con ese email.", "campos": [] }
+```
+
+`campos` solo se llena en errores de validación: `[{ "campo": "email", "mensaje": "…" }]`.
+
+| HTTP | Cuándo |
+|---|---|
+| 400 | `DATOS_INVALIDOS` — validación de campos |
+| 401 | sin token (cuando exista JWT) |
+| 403 | `PERMISO_INSUFICIENTE` — rol insuficiente o `42501` en la base |
+| 409 | `REGISTRO_DUPLICADO` (SQLSTATE `23505`), `REFERENCIA_INVALIDA` (`23503`) |
+| 422 | `REGLA_NEGOCIO` — `23502`/`23514` o `RAISE` de una función PL/pgSQL |
+| 503 | `BASE_NO_DISPONIBLE` en `/api/ping` |
+| 500 | `ERROR_INTERNO`; jamás se filtra el mensaje crudo de Postgres |
 
 ## Flujo de trabajo con Git
 
@@ -233,13 +316,16 @@ Se usa **GitHub Flow / trunk-based**, sin rama `develop`:
 - [x] Docker Compose con PostGIS
 - [x] Esquema v2 y datos iniciales
 - [x] Env examples y documentación base
-- [ ] Paso 0: `/api/ping`, `SecurityFilterChain`, CORS y errores JSON
+- [x] Paso 0: `/api/ping`, `SecurityFilterChain`, CORS y errores JSON
+- [x] Capa de datos JPA/Hibernate espejo de la v2 (esquemas `identity` y `orders`)
+- [x] Contexto de auditoría por transacción (`app.usuario_id`)
+- [x] Seeds de La Paz (V2) y verificación de arranque limpio
+- [x] Tests de integración contra Postgres real (sin Testcontainers ni H2)
 - [ ] Login con JWT, BCrypt y admin inicial
 - [ ] CRUD de categorías con validaciones
 - [ ] CRUD de usuarios y aprobación de técnicos
 - [ ] Login mobile, almacenamiento de token e interceptor
 - [ ] Pantallas de administración en la app
-- [ ] Tests de integración con Testcontainers
 - [ ] CI (tests backend + typecheck mobile)
 - [ ] Perfil Docker opcional para el build web
 
