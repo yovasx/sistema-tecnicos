@@ -21,6 +21,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	// Spatial: la base usa PostGIS (GEOGRAPHY POINT y POLYGON). Versión alineada a hibernate-core.
+	implementation 'org.hibernate.orm:hibernate-spatial:7.4.5.Final'
+	implementation 'org.locationtech.jts:jts-core'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -37,4 +40,10 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Visibilidad: las APIs deprecadas de Spring/Hibernate se ven como error más
+// tarde que como aviso hoy, así que preferimos saberlo desde el primer compile.
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-Xlint:deprecation'
 }
