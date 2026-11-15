@@ -25,6 +25,8 @@ dependencies {
 	implementation 'org.hibernate.orm:hibernate-spatial:7.4.5.Final'
 	implementation 'org.locationtech.jts:jts-core'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// Resource server JWT: incluye Nimbus para firmar y verificar HS256 sin librerías de terceros.
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.flywaydb:flyway-database-postgresql'

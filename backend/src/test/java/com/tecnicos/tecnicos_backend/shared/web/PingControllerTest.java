@@ -33,10 +33,10 @@ class PingControllerTest {
     }
 
     @Test
-    void el_resto_de_la_api_sigue_cerrado_hasta_que_exista_el_jwt() throws Exception {
-        // Documenta el estado actual: cualquierRequest().authenticated() sin
-        // mecanismo de autenticación devuelve 403. Se cierra en SCRUM-14.
+    void el_resto_de_la_api_exige_un_token_valido() throws Exception {
+        // Sin token, la API responde 401 con el formato de error uniforme.
         mvc.perform(get("/api/ordenes"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
     }
 }

@@ -16,3 +16,11 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+app:
+  jwt:
+    # Base64 de al menos 32 bytes. Vacío en local: se usa el secreto de desarrollo
+    # con un WARN al arrancar. En producción se inyecta JWT_SECRET.
+    secret: ${JWT_SECRET:}
+    issuer: ${JWT_ISSUER:https://api.fixly.bo}
+    ttl-minutes: ${JWT_TTL_MINUTES:30}

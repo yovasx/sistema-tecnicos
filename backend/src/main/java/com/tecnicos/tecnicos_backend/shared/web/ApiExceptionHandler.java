@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -73,6 +74,16 @@ public class ApiExceptionHandler {
                         .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Probá de nuevo."));
             }
         };
+    }
+
+    /**
+     * Ruta inexistente: sin este handler el catch-all de abajo la convertiría en
+     * 500. Un 404 explícito también deja claro que la seguridad sí dejó pasar.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiError> recursoNoEncontrado(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.de("RECURSO_NO_ENCONTRADO", "El recurso solicitado no existe."));
     }
 
     @ExceptionHandler(IllegalStateException.class)
