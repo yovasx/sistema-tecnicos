@@ -72,10 +72,34 @@ public class AuthService {
         }
 
         TokenGenerado token = jwtService.generar(
-                usuario.getId(), usuario.getRol(), usuario.getNombreCompleto(), usuario.getEmail());
+                usuario.getId(), usuario.getRol(), usuario.getTipoCliente(),
+                usuario.getNombreVisible(), usuario.getEmail());
 
-        log.info("Login correcto: usuario {} con rol {}", usuario.getId(), usuario.getRol());
+        log.info("Login correcto: usuario {} con rol {} y perfil {}",
+                usuario.getId(), usuario.getRol(), usuario.getTipoCliente());
         return new LoginResponse(token.token(), token.expiraEn(), UsuarioResumen.de(usuario));
+    }
+
+    /**
+     * Sesión actual, leída de la base.
+     *
+     * <p>El token dice quién es el usuario, pero no si la cuenta sigue vigente:
+     * una cuenta desactivada después de emitir el token debe dejar de entrar.
+     * Por eso {@code /api/auth/me} vuelve a la base en vez de confiar solo en
+     * los claims.</p>
+     */
+    @Transactional(readOnly = true)
+    public UsuarioResumen sesion(Long usuarioId) {
+        Usuario usuario = usuarios.findById(usuarioId)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "NO_AUTENTICADO",
+                        "Necesitás iniciar sesión."));
+
+        if (!usuario.isActivo() || usuario.isEliminado()) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "CUENTA_INACTIVA",
+                    "Tu cuenta está inactiva. Contactá a soporte para reactivarla.");
+        }
+
+        return UsuarioResumen.de(usuario);
     }
 
     private ApiException credencialesInvalidas() {

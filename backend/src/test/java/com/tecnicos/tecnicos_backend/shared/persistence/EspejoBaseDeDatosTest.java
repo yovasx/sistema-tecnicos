@@ -3,6 +3,7 @@ package com.tecnicos.tecnicos_backend.shared.persistence;
 import com.tecnicos.tecnicos_backend.identity.domain.EstadoDisponibilidad;
 import com.tecnicos.tecnicos_backend.identity.domain.EstadoValidacion;
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import com.tecnicos.tecnicos_backend.orders.domain.EstadoOferta;
 import com.tecnicos.tecnicos_backend.orders.domain.EstadoOrden;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,7 @@ class EspejoBaseDeDatosTest {
     void los_enums_java_coinciden_exactamente_con_pg_enum() {
         Map<String, Class<?>> mapeados = new HashMap<>();
         mapeados.put("rol_usuario", RolUsuario.class);
+        mapeados.put("tipo_cliente", TipoCliente.class);
         mapeados.put("estado_validacion", EstadoValidacion.class);
         mapeados.put("estado_disponibilidad", EstadoDisponibilidad.class);
         mapeados.put("estado_orden", EstadoOrden.class);

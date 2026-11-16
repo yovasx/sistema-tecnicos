@@ -101,6 +101,22 @@ class SeguridadJwtTest {
     }
 
     @Test
+    void un_token_con_perfil_desconocido_responde_401_y_no_500() throws Exception {
+        String token = firmar(claimsValidos().claim("tipoCliente", "ong"));
+
+        mvc.perform(get("/api/ordenes").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void un_token_sin_perfil_responde_401() throws Exception {
+        String token = firmar(claimsValidos().claims(claims -> claims.remove("tipoCliente")));
+
+        mvc.perform(get("/api/ordenes").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void un_token_valido_pasa_seguridad_y_llega_al_ruteo() throws Exception {
         String token = firmar(claimsValidos());
 
@@ -133,6 +149,7 @@ class SeguridadJwtTest {
                 .issuedAt(ahora)
                 .expiresAt(ahora.plus(Duration.ofMinutes(5)))
                 .claim("rol", "tecnico")
+                .claim("tipoCliente", "persona")
                 .claim("nombre", "Carlos Mamani")
                 .claim("email", "carlos@fixly.bo");
     }

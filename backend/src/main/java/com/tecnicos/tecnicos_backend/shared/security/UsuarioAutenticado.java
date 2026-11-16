@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import org.springframework.security.core.AuthenticatedPrincipal;
 
 /**
@@ -10,7 +11,8 @@ import org.springframework.security.core.AuthenticatedPrincipal;
  * <p>Implementa {@link AuthenticatedPrincipal} para que el nombre de la
  * autenticación sea el email en lugar del {@code sub} numérico.</p>
  */
-public record UsuarioAutenticado(Long id, RolUsuario rol, String nombre, String email)
+public record UsuarioAutenticado(Long id, RolUsuario rol, TipoCliente tipoCliente,
+                                 String nombre, String email)
         implements AuthenticatedPrincipal {
 
     @Override

@@ -254,8 +254,18 @@ Usuarios de prueba (todos con la misma contraseña):
 | Técnico (Plomería, Electricidad) | `diego.vargas@ejemplo.bo` | `Fixly2026!` |
 | Técnico (Electricidad, Climatización) | `lucia.fernandez@ejemplo.bo` | `Fixly2026!` |
 | Técnico (Climatización, Plomería) | `raul.choque@ejemplo.bo` | `Fixly2026!` |
+| Cliente empresa (Ferretería La Paz S.R.L., NIT `1234567021`) | `contacto@ferreteria-lapaz.bo` | `Fixly2026!` |
 
 Los técnicos nacen `aprobado` y `disponible` para que el matching encuentre candidatos desde el primer día. **Nunca sembrar esta migración en producción.**
+
+### Migración V3: perfil de cliente empresa
+
+`V3__perfil_cliente_empresa.sql` agrega `identity.tipo_cliente` (`persona` | `empresa`) y las columnas `razon_social` y `nit`.
+
+- El **rol sigue siendo `cliente`**: las reglas de autorización y las funciones de la base no cambian. El perfil solo define qué casos de uso ve la app.
+- Solo un `cliente` puede ser `empresa`; técnicos y administradores son siempre `persona`.
+- Una empresa exige razón social y NIT (`CHECK`), y el NIT es único entre cuentas activas.
+- Hoy una empresa es **una sola cuenta**. Varios usuarios por empresa (tablas `empresas` + `empresa_miembros`) queda para un sprint posterior.
 
 Verificar el historial:
 
@@ -270,7 +280,7 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 |---|---|---|
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
-| GET | `/api/auth/me` | ✅ implementado; devuelve el usuario del token |
+| GET | `/api/auth/me` | ✅ implementado; perfil fresco desde la base (incluye `tipoCliente`, `razonSocial`, `nit`) |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
 | GET/PATCH | `/api/admin/usuarios` | pendiente |
 | GET | `/api/admin/tecnicos/pendientes` | pendiente |

@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +22,7 @@ class ConversorJwtTest {
                 .header("alg", "HS256")
                 .subject("7")
                 .claim("rol", "tecnico")
+                .claim("tipoCliente", "persona")
                 .claim("nombre", "Carlos Mamani")
                 .claim("email", "carlos@fixly.bo")
                 .build();
@@ -34,6 +36,7 @@ class ConversorJwtTest {
         UsuarioAutenticado usuario = (UsuarioAutenticado) autenticacion.getPrincipal();
         assertThat(usuario.id()).isEqualTo(7L);
         assertThat(usuario.rol()).isEqualTo(RolUsuario.tecnico);
+        assertThat(usuario.tipoCliente()).isEqualTo(TipoCliente.persona);
         assertThat(usuario.nombre()).isEqualTo("Carlos Mamani");
         assertThat(usuario.email()).isEqualTo("carlos@fixly.bo");
         assertThat(autenticacion.getName()).isEqualTo("carlos@fixly.bo");
@@ -50,6 +53,7 @@ class ConversorJwtTest {
                 .header("alg", "HS256")
                 .subject("1")
                 .claim("rol", rol)
+                .claim("tipoCliente", "persona")
                 .claim("nombre", "Nombre Apellido")
                 .claim("email", "usuario@fixly.bo")
                 .build();

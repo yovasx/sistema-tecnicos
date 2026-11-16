@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -127,6 +128,7 @@ public class JwtConfig {
     private boolean tieneClaimsValidos(Jwt jwt) {
         return esIdValido(jwt.getSubject())
                 && esRolValido(jwt.getClaimAsString("rol"))
+                && esTipoClienteValido(jwt.getClaimAsString("tipoCliente"))
                 && esTextoValido(jwt.getClaimAsString("nombre"))
                 && esTextoValido(jwt.getClaimAsString("email"));
     }
@@ -148,6 +150,18 @@ public class JwtConfig {
         }
         for (RolUsuario valor : RolUsuario.values()) {
             if (valor.name().equals(rol)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean esTipoClienteValido(String tipoCliente) {
+        if (!esTextoValido(tipoCliente)) {
+            return false;
+        }
+        for (TipoCliente valor : TipoCliente.values()) {
+            if (valor.name().equals(tipoCliente)) {
                 return true;
             }
         }

@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -32,12 +33,13 @@ class JwtServiceTest {
     @Test
     void el_token_lleva_los_claims_que_necesita_la_app() {
         TokenGenerado generado = servicio.generar(
-                7L, RolUsuario.tecnico, "Carlos Mamani", "carlos@fixly.bo");
+                7L, RolUsuario.tecnico, TipoCliente.persona, "Carlos Mamani", "carlos@fixly.bo");
 
         Jwt jwt = decodificador.decode(generado.token());
 
         assertThat(jwt.getSubject()).isEqualTo("7");
         assertThat(jwt.getClaimAsString("rol")).isEqualTo("tecnico");
+        assertThat(jwt.getClaimAsString("tipoCliente")).isEqualTo("persona");
         assertThat(jwt.getClaimAsString("nombre")).isEqualTo("Carlos Mamani");
         assertThat(jwt.getClaimAsString("email")).isEqualTo("carlos@fixly.bo");
         assertThat(jwt.getIssuer().toString()).isEqualTo("https://api.fixly.bo");
@@ -49,7 +51,7 @@ class JwtServiceTest {
         Instant antes = Instant.now();
 
         TokenGenerado generado = servicio.generar(
-                7L, RolUsuario.cliente, "Ana Quispe", "ana@fixly.bo");
+                7L, RolUsuario.cliente, TipoCliente.persona, "Ana Quispe", "ana@fixly.bo");
 
         assertThat(generado.expiraEn())
                 .isAfter(antes.plus(Duration.ofMinutes(29)))
@@ -61,9 +63,21 @@ class JwtServiceTest {
     @Test
     void el_rol_se_guarda_en_minusculas_igual_que_en_postgres() {
         TokenGenerado generado = servicio.generar(
-                1L, RolUsuario.administrador, "Admin Fixly", "admin@fixly.bo");
+                1L, RolUsuario.administrador, TipoCliente.persona, "Admin Fixly", "admin@fixly.bo");
 
         assertThat(decodificador.decode(generado.token()).getClaimAsString("rol"))
                 .isEqualTo("administrador");
+    }
+
+    @Test
+    void el_perfil_de_empresa_viaja_en_el_token_y_el_rol_sigue_siendo_cliente() {
+        TokenGenerado generado = servicio.generar(
+                9L, RolUsuario.cliente, TipoCliente.empresa,
+                "Ferretería La Paz S.R.L.", "contacto@ferreteria-lapaz.bo");
+
+        Jwt jwt = decodificador.decode(generado.token());
+
+        assertThat(jwt.getClaimAsString("rol")).isEqualTo("cliente");
+        assertThat(jwt.getClaimAsString("tipoCliente")).isEqualTo("empresa");
     }
 }

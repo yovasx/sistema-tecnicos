@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import com.tecnicos.tecnicos_backend.shared.persistence.AuditoriaContexto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -87,7 +88,8 @@ class FiltroAuditoriaTest {
 
     private void autenticar(Long usuarioId) {
         UsuarioAutenticado usuario = new UsuarioAutenticado(
-                usuarioId, RolUsuario.tecnico, "Carlos Mamani", "carlos@fixly.bo");
+                usuarioId, RolUsuario.tecnico, TipoCliente.persona,
+                "Carlos Mamani", "carlos@fixly.bo");
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(
                 jwt(), usuario, List.of(new SimpleGrantedAuthority("ROLE_TECNICO"))));
     }
@@ -97,6 +99,7 @@ class FiltroAuditoriaTest {
                 .header("alg", "HS256")
                 .subject("7")
                 .claim("rol", "tecnico")
+                .claim("tipoCliente", "persona")
                 .claim("nombre", "Carlos Mamani")
                 .claim("email", "carlos@fixly.bo")
                 .build();

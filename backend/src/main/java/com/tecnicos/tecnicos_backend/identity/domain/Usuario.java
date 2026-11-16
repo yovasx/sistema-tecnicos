@@ -47,6 +47,17 @@ public class Usuario {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "tipo_cliente", nullable = false)
+    private TipoCliente tipoCliente = TipoCliente.persona;
+
+    @Column(name = "razon_social", length = 150)
+    private String razonSocial;
+
+    @Column(name = "nit", length = 20)
+    private String nit;
+
     @Column(name = "foto_perfil_url")
     private String fotoPerfilUrl;
 
@@ -86,6 +97,29 @@ public class Usuario {
         return passwordHash;
     }
 
+    public TipoCliente getTipoCliente() {
+        return tipoCliente;
+    }
+
+    public String getRazonSocial() {
+        return razonSocial;
+    }
+
+    public String getNit() {
+        return nit;
+    }
+
+    /**
+     * Nombre que se muestra en la app: la razón social si es empresa, el nombre
+     * de la persona si no. La sesión y la UI usan esto en vez de concatenar.
+     */
+    public String getNombreVisible() {
+        if (tipoCliente == TipoCliente.empresa && razonSocial != null && !razonSocial.isBlank()) {
+            return razonSocial;
+        }
+        return getNombreCompleto();
+    }
+
     public boolean isActivo() {
         return activo;
     }
@@ -120,6 +154,18 @@ public class Usuario {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public void setTipoCliente(TipoCliente tipoCliente) {
+        this.tipoCliente = tipoCliente;
+    }
+
+    public void setRazonSocial(String razonSocial) {
+        this.razonSocial = razonSocial;
+    }
+
+    public void setNit(String nit) {
+        this.nit = nit;
     }
 
     public void setActivo(boolean activo) {

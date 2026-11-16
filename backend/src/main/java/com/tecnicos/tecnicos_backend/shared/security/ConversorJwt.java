@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.shared.security;
 
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
+import com.tecnicos.tecnicos_backend.identity.domain.TipoCliente;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,9 +26,11 @@ public class ConversorJwt implements Converter<Jwt, AbstractAuthenticationToken>
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         RolUsuario rol = RolUsuario.valueOf(jwt.getClaimAsString("rol"));
+        TipoCliente tipoCliente = TipoCliente.valueOf(jwt.getClaimAsString("tipoCliente"));
         UsuarioAutenticado usuario = new UsuarioAutenticado(
                 Long.valueOf(jwt.getSubject()),
                 rol,
+                tipoCliente,
                 jwt.getClaimAsString("nombre"),
                 jwt.getClaimAsString("email"));
 

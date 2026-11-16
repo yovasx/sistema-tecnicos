@@ -65,6 +65,11 @@ class AuthControllerTest {
         assertThat(JsonPath.read(cuerpo, "$.usuario.email").toString()).isEqualTo(EMAIL_TECNICO);
         assertThat(JsonPath.read(cuerpo, "$.usuario.nombre").toString()).isEqualTo("Diego Vargas");
         assertThat(JsonPath.read(cuerpo, "$.usuario.rol").toString()).isEqualTo("tecnico");
+        assertThat(JsonPath.read(cuerpo, "$.usuario.tipoCliente").toString()).isEqualTo("persona");
+        Object razonSocial = JsonPath.read(cuerpo, "$.usuario.razonSocial");
+        Object nit = JsonPath.read(cuerpo, "$.usuario.nit");
+        assertThat(razonSocial).isNull();
+        assertThat(nit).isNull();
         Object expiraEn = JsonPath.read(cuerpo, "$.expiraEn");
         assertThat(expiraEn).isNotNull();
         assertThat(JsonPath.read(cuerpo, "$.token").toString()).isNotBlank();
@@ -81,7 +86,28 @@ class AuthControllerTest {
         assertThat(jwt.getSubject()).isEqualTo(String.valueOf(id));
         assertThat(jwt.getClaimAsString("email")).isEqualTo(EMAIL_TECNICO);
         assertThat(jwt.getClaimAsString("rol")).isEqualTo("tecnico");
+        assertThat(jwt.getClaimAsString("tipoCliente")).isEqualTo("persona");
         assertThat(jwt.getClaimAsString("nombre")).isEqualTo("Diego Vargas");
+    }
+
+    @Test
+    void una_empresa_cliente_entra_con_rol_cliente_y_su_perfil_de_empresa() throws Exception {
+        MvcResult resultado = login("contacto@ferreteria-lapaz.bo", CLAVE);
+
+        assertThat(resultado.getResponse().getStatus()).isEqualTo(200);
+        String cuerpo = cuerpo(resultado);
+
+        assertThat(JsonPath.read(cuerpo, "$.usuario.rol").toString()).isEqualTo("cliente");
+        assertThat(JsonPath.read(cuerpo, "$.usuario.tipoCliente").toString()).isEqualTo("empresa");
+        assertThat(JsonPath.read(cuerpo, "$.usuario.nombre").toString())
+                .isEqualTo("Ferretería La Paz S.R.L.");
+        assertThat(JsonPath.read(cuerpo, "$.usuario.razonSocial").toString())
+                .isEqualTo("Ferretería La Paz S.R.L.");
+        assertThat(JsonPath.read(cuerpo, "$.usuario.nit").toString()).isEqualTo("1234567021");
+
+        Jwt jwt = jwtDecoder.decode(JsonPath.read(cuerpo, "$.token"));
+        assertThat(jwt.getClaimAsString("rol")).isEqualTo("cliente");
+        assertThat(jwt.getClaimAsString("tipoCliente")).isEqualTo("empresa");
     }
 
     @Test
@@ -184,7 +210,37 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.nombre").value("Diego Vargas"))
                 .andExpect(jsonPath("$.email").value(EMAIL_TECNICO))
                 .andExpect(jsonPath("$.rol").value("tecnico"))
+                .andExpect(jsonPath("$.tipoCliente").value("persona"))
+                .andExpect(jsonPath("$.razonSocial").doesNotExist())
+                .andExpect(jsonPath("$.nit").doesNotExist())
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    void me_devuelve_el_perfil_de_empresa_recien_leido_de_la_base() throws Exception {
+        String token = JsonPath.read(
+                cuerpo(login("contacto@ferreteria-lapaz.bo", CLAVE)), "$.token");
+
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("cliente"))
+                .andExpect(jsonPath("$.tipoCliente").value("empresa"))
+                .andExpect(jsonPath("$.nombre").value("Ferretería La Paz S.R.L."))
+                .andExpect(jsonPath("$.razonSocial").value("Ferretería La Paz S.R.L."))
+                .andExpect(jsonPath("$.nit").value("1234567021"));
+    }
+
+    @Test
+    void me_corta_el_acceso_si_la_cuenta_fue_desactivada_despues_del_login() throws Exception {
+        Usuario usuario = crearUsuario("se-desactiva@prueba.bo", true, null);
+        String token = JsonPath.read(cuerpo(login("se-desactiva@prueba.bo", CLAVE)), "$.token");
+
+        usuario.setActivo(false);
+        usuarios.saveAndFlush(usuario);
+
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"));
     }
 
     @Test
