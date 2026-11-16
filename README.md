@@ -281,9 +281,12 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
 | GET | `/api/auth/me` | ✅ implementado; perfil fresco desde la base (incluye `tipoCliente`, `razonSocial`, `nit`) |
+| GET | `/api/admin/resumen` | ✅ implementado; conteos reales (usuarios por rol, técnicos pendientes/aprobados, categorías activas) |
+| GET | `/api/admin/usuarios` | ✅ implementado; listado con perfil visible, sin hash |
+| GET | `/api/admin/categorias` | ✅ implementado; categoría + tarifa + comisión |
+| GET | `/api/admin/tecnicos/pendientes` | ✅ implementado; perfiles con validación pendiente (vacío con los seeds) |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
-| GET/PATCH | `/api/admin/usuarios` | pendiente |
-| GET | `/api/admin/tecnicos/pendientes` | pendiente |
+| GET/PATCH | `/api/admin/usuarios` | pendiente (lectura implementada arriba) |
 | POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
 | POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
 

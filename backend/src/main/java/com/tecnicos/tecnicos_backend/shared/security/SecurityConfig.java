@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // El backoffice solo lo abre el administrador.
+                        .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(errores -> errores
