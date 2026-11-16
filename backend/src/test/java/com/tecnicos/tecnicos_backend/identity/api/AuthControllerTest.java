@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.tecnicos.tecnicos_backend.identity.domain.RolUsuario;
 import com.tecnicos.tecnicos_backend.identity.domain.Usuario;
 import com.tecnicos.tecnicos_backend.identity.infrastructure.UsuarioRepository;
+import com.tecnicos.tecnicos_backend.shared.persistence.AuditoriaContexto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +52,9 @@ class AuthControllerTest {
 
     @Autowired
     private JwtDecoder jwtDecoder;
+
+    @Autowired
+    private AuditoriaContexto auditoria;
 
     @Test
     void un_tecnico_sembrado_entra_y_recibe_su_token() throws Exception {
@@ -166,6 +170,38 @@ class AuthControllerTest {
         // seguridad aceptó el token emitido por el login.
         mvc.perform(get("/api/ordenes").header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void me_devuelve_los_datos_del_usuario_del_token() throws Exception {
+        String cuerpoLogin = cuerpo(login(EMAIL_TECNICO, CLAVE));
+        String token = JsonPath.read(cuerpoLogin, "$.token");
+        Object id = JsonPath.read(cuerpoLogin, "$.usuario.id");
+
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.nombre").value("Diego Vargas"))
+                .andExpect(jsonPath("$.email").value(EMAIL_TECNICO))
+                .andExpect(jsonPath("$.rol").value("tecnico"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    void me_sin_token_responde_401() throws Exception {
+        mvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
+    }
+
+    @Test
+    void el_contexto_de_auditoria_queda_limpio_al_terminar_el_request() throws Exception {
+        String token = JsonPath.read(cuerpo(login(EMAIL_TECNICO, CLAVE)), "$.token");
+
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        assertThat(auditoria.usuarioActual()).isNull();
     }
 
     private MvcResult login(String email, String password) throws Exception {

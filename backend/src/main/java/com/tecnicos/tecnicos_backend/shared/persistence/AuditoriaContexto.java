@@ -48,6 +48,16 @@ public class AuditoriaContexto {
     }
 
     /**
+     * Borra el ThreadLocal. Lo llama el filtro de cada request en {@code finally},
+     * porque las peticiones de solo lectura no abren transacción y nunca llegan a
+     * registrar la limpieza automática.
+     */
+    public void limpiar() {
+        USUARIO_ACTUAL.remove();
+        LIMPIEZA_REGISTRADA.remove();
+    }
+
+    /**
      * Primera línea de todo método {@code @Transactional}.
      *
      * <p>Si no hay transacción activa lanza {@link IllegalStateException}: es
@@ -76,8 +86,7 @@ public class AuditoriaContexto {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {
-                USUARIO_ACTUAL.remove();
-                LIMPIEZA_REGISTRADA.remove();
+                limpiar();
             }
         });
         LIMPIEZA_REGISTRADA.set(Boolean.TRUE);

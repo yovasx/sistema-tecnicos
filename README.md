@@ -264,7 +264,7 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 |---|---|---|
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
-| GET | `/api/auth/me` | pendiente |
+| GET | `/api/auth/me` | ✅ implementado; devuelve el usuario del token |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
 | GET/PATCH | `/api/admin/usuarios` | pendiente |
 | GET | `/api/admin/tecnicos/pendientes` | pendiente |
