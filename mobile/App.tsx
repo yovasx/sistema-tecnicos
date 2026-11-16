@@ -1,25 +1,31 @@
-import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import { apiClient } from './src/infrastructure/http/apiClient';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SesionProvider } from './src/session/SesionProvider';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { authRepository, tokenStorage } from './src/infrastructure/di';
+import { useFuentes } from './src/theme/useFuentes';
 
+/**
+ * Raíz de la app.
+ *
+ * Mientras las fuentes no cargan no se pinta nada, para evitar el salto de
+ * tipografía del primer frame. Después: proveedores (safe area + sesión) y el
+ * navegador raíz.
+ */
 export default function App() {
-  const [estado, setEstado] = useState('Probando conexión...');
+  const { cargadas, error } = useFuentes();
 
-  useEffect(() => {
-    apiClient.get('/api/ping')
-      .then(() => setEstado('SE CONECTO WACHIN'))
-      .catch((e) => {
-        if (e.response) {
-          setEstado(`Hay conexión: el backend respondió ${e.response.status}`);
-        } else {
-          setEstado('Sin conexión: revisa IP, puerto y firewall');
-        }
-      });
-  }, []);
+  if (error) {
+    console.error('Error cargando fuentes:', error);
+  }
+  if (!cargadas) {
+    return null;
+  }
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>{estado}</Text>
-    </View>
+    <SafeAreaProvider>
+      <SesionProvider authRepository={authRepository} tokenStorage={tokenStorage}>
+        <RootNavigator />
+      </SesionProvider>
+    </SafeAreaProvider>
   );
 }

@@ -24,8 +24,10 @@ No uses `npx expo lint`: no hay ESLint instalado ni configuración.
 ## Arquitectura
 
 - Entrypoint `index.ts` → `App.tsx` con `registerRootComponent`. **No es Expo Router**: no hay `app/` ni dependencia `expo-router`.
-- Navegación: `@react-navigation/native` + `@react-navigation/native-stack` (instalados, todavía sin usar).
+- Navegación real: `@react-navigation/native` + `native-stack` + `bottom-tabs`; `src/navigation/RootNavigator.tsx` elige tabs por rol y por perfil de cliente (`persona` | `empresa`).
+- Estado global de sesión: `src/session/SesionProvider.tsx` + `useSesion()`; restaura con el token del storage y `GET /api/auth/me`. `apiClient` manda `Authorization: Bearer` y ante 401 cierra sesión (excepto en `/login`, donde el 401 es del formulario).
 - `src/domain/`: puertos/interfaces. `src/infrastructure/`: adaptadores (axios, storage). `src/infrastructure/di.ts`: composition root manual; `Platform.OS` elige SecureStore o localStorage.
+- Design system en `src/theme/tokens.ts` + `src/ui/`; fuentes Hanken Grotesk + Inter cargadas con `expo-font`. En web la app se ve como columna centrada de 420 px sobre fondo gris.
 - El cliente HTTP lee solo `EXPO_PUBLIC_API_URL`, sin fallback. Valores: `http://localhost:9080` (web/iOS), `http://10.0.2.2:9080` (emulador Android), IP LAN en dispositivo físico.
 
 ## Nativos

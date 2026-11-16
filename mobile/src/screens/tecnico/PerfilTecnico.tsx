@@ -1,0 +1,58 @@
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSesion } from '../../session/SesionProvider';
+import { Chip } from '../../ui/Chip';
+import { ContenedorApp } from '../../ui/ContenedorApp';
+import { Encabezado } from '../../ui/Encabezado';
+import { Texto } from '../../ui/Texto';
+import { colores, espacio } from '../../theme/tokens';
+
+export function PerfilTecnico() {
+  const { usuario, cerrarSesion } = useSesion();
+
+  return (
+    <ContenedorApp>
+      <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
+        <View style={estilos.contenido}>
+          <Encabezado titulo="Perfil técnico" />
+          <View style={estilos.ficha}>
+            <Texto variante="cuerpoFuerte">{usuario?.nombre ?? '—'}</Texto>
+            <Texto variante="caption" color={colores.secundario}>
+              {usuario?.email ?? '—'}
+            </Texto>
+            <Chip texto="Técnico" />
+            <Chip texto="Plomería, Electricidad" />
+            <Chip tono="exito" texto="Validado" />
+          </View>
+          <View style={estilos.botonCerrar}>
+            <Texto onPress={cerrarSesion} variante="etiqueta" color="#B42318">
+              Cerrar sesión
+            </Texto>
+          </View>
+        </View>
+      </SafeAreaView>
+    </ContenedorApp>
+  );
+}
+
+const estilos = StyleSheet.create({
+  seguro: { flex: 1 },
+  contenido: {
+    flex: 1,
+    paddingHorizontal: espacio.lg,
+    paddingTop: espacio.lg,
+    gap: espacio.lg,
+  },
+  ficha: {
+    padding: espacio.lg,
+    backgroundColor: colores.fondo,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colores.linea,
+    gap: 8,
+  },
+  botonCerrar: {
+    alignItems: 'center',
+    paddingTop: espacio.base,
+  },
+});

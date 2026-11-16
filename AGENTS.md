@@ -48,8 +48,10 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 
 - No es Expo Router: el entrypoint es `index.ts` → `App.tsx` con `registerRootComponent`; no existe `src/app/` ni la dependencia `expo-router`.
 - `EXPO_PUBLIC_API_URL` es obligatorio y no tiene fallback (`src/infrastructure/http/apiClient.ts`). Copiá `mobile/.env.example` a `mobile/.env.local`. Web/iOS: `http://localhost:9080`; emulador Android: `http://10.0.2.2:9080`; dispositivo físico: IP LAN de la máquina.
-- Capas: `src/domain/` (puertos/interfaces), `src/infrastructure/` (adaptadores), `src/infrastructure/di.ts` (composition root manual que elige SecureStore o localStorage según `Platform.OS`).
-- Sin framework de DI ni estado global todavía.
+- Capas: `src/domain/` (puertos/interfaces, modelos y repositorios), `src/session/` (estado global de sesión con `SesionProvider` + `useSesion`), `src/infrastructure/` (adaptadores), `src/infrastructure/di.ts` (composition root manual que elige SecureStore o localStorage según `Platform.OS`).
+- Navegación real con `@react-navigation/native` + `native-stack` + `bottom-tabs`: `src/navigation/RootNavigator.tsx` elige las tabs por `rol` y por `tipoCliente` (`persona` | `empresa`). El admin entra pero ve aviso de que el panel es el backoffice web.
+- `src/ui/` tiene los componentes del design system (BotonPrimario, CampoTexto, Tarjeta, Chip, Texto, Aviso, ContenedorApp, PantallaPendiente). En web la app se ve como columna centrada de 420 px sobre fondo gris, igual que en el teléfono.
+- Las pantallas sin backend muestran el banner ámbar "Pendiente de V2" de `PantallaPendiente`, con la pantalla de Stitch que las va a implementar. No se inventan datos ni columnas.
 
 ## Git
 
