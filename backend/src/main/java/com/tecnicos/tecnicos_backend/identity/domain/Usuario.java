@@ -90,6 +90,10 @@ public class Usuario {
         return activo;
     }
 
+    public boolean isEliminado() {
+        return eliminadoEn != null;
+    }
+
     public String getNombreCompleto() {
         return nombre + " " + apellido;
     }
@@ -120,5 +124,9 @@ public class Usuario {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public void setEliminadoEn(OffsetDateTime eliminadoEn) {
+        this.eliminadoEn = eliminadoEn;
     }
 }

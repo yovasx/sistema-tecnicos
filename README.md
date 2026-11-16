@@ -263,7 +263,7 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | Método | Endpoint | Estado |
 |---|---|---|
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
-| POST | `/api/auth/login` | pendiente |
+| POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
 | GET | `/api/auth/me` | pendiente |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
 | GET/PATCH | `/api/admin/usuarios` | pendiente |
@@ -271,7 +271,20 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
 | POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
 
-Hoy el resto de la API devuelve **403**: `SecurityConfig` exige autenticación pero todavía no hay JWT. Eso se cierra con el login.
+El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**.
+
+### Probar el login
+
+```powershell
+curl.exe -s -X POST http://localhost:8080/api/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"diego.vargas@ejemplo.bo","password":"Fixly2026!"}'
+
+# Con el token de la respuesta:
+curl.exe -s -H "Authorization: Bearer <token>" http://localhost:8080/api/ordenes
+```
+
+Una cuenta inactiva o eliminada solo recibe `CUENTA_INACTIVA` si la contraseña es correcta; con contraseña incorrecta se responde igual que un email inexistente.
 
 ### Formato de errores
 
@@ -285,10 +298,12 @@ Todos los errores usan la misma forma, en español:
 
 | HTTP | Cuándo |
 |---|---|
-| 400 | `DATOS_INVALIDOS` — validación de campos |
-| 401 | sin token (cuando exista JWT) |
+| 400 | `DATOS_INVALIDOS` — validación de campos o cuerpo ilegible |
+| 401 | `NO_AUTENTICADO` (sin token o token inválido), `CREDENCIALES_INVALIDAS`, `CUENTA_INACTIVA` |
 | 403 | `PERMISO_INSUFICIENTE` — rol insuficiente o `42501` en la base |
+| 405 | `METODO_NO_PERMITIDO` — método HTTP no soportado en la ruta |
 | 409 | `REGISTRO_DUPLICADO` (SQLSTATE `23505`), `REFERENCIA_INVALIDA` (`23503`) |
+| 415 | `TIPO_CONTENIDO_NO_SOPORTADO` — el cuerpo no es `application/json` |
 | 422 | `REGLA_NEGOCIO` — `23502`/`23514` o `RAISE` de una función PL/pgSQL |
 | 503 | `BASE_NO_DISPONIBLE` en `/api/ping` |
 | 500 | `ERROR_INTERNO`; jamás se filtra el mensaje crudo de Postgres |

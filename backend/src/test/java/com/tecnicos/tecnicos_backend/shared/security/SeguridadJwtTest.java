@@ -118,10 +118,11 @@ class SeguridadJwtTest {
     }
 
     @Test
-    void el_login_queda_abierto_para_el_sprint_siguiente() throws Exception {
-        // El controlador llega en T2; lo importante es que la seguridad no lo corte con 401.
+    void el_login_esta_abierto_y_valida_el_cuerpo_sin_pedir_token() throws Exception {
+        // Sin token llega al controlador: 400 por datos faltantes, no 401.
         mvc.perform(post("/api/auth/login"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("DATOS_INVALIDOS"));
     }
 
     private JwtClaimsSet.Builder claimsValidos() {

@@ -5,7 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -26,6 +29,38 @@ import java.util.List;
 public class ApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+    /**
+     * Cuerpo ausente o JSON mal formado. Sin este handler el catch-all lo
+     * convierte en 500, cuando en realidad es un error del cliente.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> cuerpoIlegible(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.de("DATOS_INVALIDOS", "El cuerpo de la petición no es válido."));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> tipoContenidoNoSoportado(
+            HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(ApiError.de("TIPO_CONTENIDO_NO_SOPORTADO",
+                        "Enviá el contenido como application/json."));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiError> metodoNoPermitido(
+            HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiError.de("METODO_NO_PERMITIDO",
+                        "Ese método no está permitido en esta ruta."));
+    }
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiError> errorDeNegocio(ApiException ex) {
+        return ResponseEntity.status(ex.estado())
+                .body(ApiError.de(ex.codigo(), ex.getMessage()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> validacion(MethodArgumentNotValidException ex) {
