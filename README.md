@@ -98,6 +98,8 @@ Editá `mobile/.env.local` según dónde corras la app:
 | Servicio | Puerto |
 |---|---|
 | PostgreSQL | `5432` |
+| RabbitMQ (AMQP) | `5672` |
+| RabbitMQ (consola) | `15672` — http://localhost:15672 |
 | Backend en Docker | `9080` (host) → `8080` (contenedor) |
 | Backend con `bootRun` | `8080` |
 | Expo / Metro | `9081` |
@@ -113,14 +115,18 @@ Editá `mobile/.env.local` según dónde corras la app:
 | `POSTGRES_PASSWORD` | `password` | contraseña de Postgres |
 | `POSTGRES_PORT` | `5432` | puerto publicado de Postgres |
 | `BACKEND_PORT` | `9080` | puerto publicado del backend |
-| `JWT_SECRET` | — | secreto HMAC (mínimo 32 bytes); lo usa el módulo de auth |
-| `JWT_ISSUER` | `tecnicos-api` | emisor del token |
+| `JWT_SECRET` | — | secreto HMAC en Base64 (mínimo 32 bytes); vacío usa el de desarrollo |
+| `JWT_ISSUER` | `https://api.fixly.bo` | emisor del token; debe ser URL http(s) |
 | `JWT_TTL_MINUTES` | `30` | vigencia del access token |
+| `RABBITMQ_USER` | `tecnicos` | usuario de RabbitMQ |
+| `RABBITMQ_PASSWORD` | `tecnicos` | contraseña de RabbitMQ |
+| `RABBITMQ_PORT` | `5672` | puerto AMQP publicado |
+| `RABBITMQ_MANAGEMENT_PORT` | `15672` | consola web de RabbitMQ |
 | `ADMIN_EMAIL` | `admin@tecnicos.local` | admin inicial (bootstrap) |
 | `ADMIN_PASSWORD` | — | contraseña del admin inicial |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:9081` | orígenes permitidos para Expo web |
 
-`JWT_*` y `ADMIN_*` quedan preparadas para el módulo de autenticación; todavía no las consume el backend.
+`JWT_*` ya lo consume el backend. `ADMIN_*` sigue reservado para el bootstrap del administrador. RabbitMQ está levantado pero todavía no hay publishers ni consumers: el backend arranca aunque el contenedor no esté.
 
 ### Mobile (`mobile/.env.local`)
 
