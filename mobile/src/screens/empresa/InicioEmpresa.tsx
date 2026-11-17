@@ -18,7 +18,9 @@ export function InicioEmpresa() {
         <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
             titulo={usuario?.nombre ?? 'Empresa'}
-            subtitulo={usuario?.razonSocial ?? 'Cliente empresa'}
+            subtitulo={
+              usuario?.nit ? `Cuenta empresarial · NIT ${usuario.nit}` : 'Cuenta empresarial'
+            }
           />
           <View style={[estilos.datos, esDesktop && estilos.datosDesktop]}>
             <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
