@@ -48,6 +48,7 @@ public class SecurityConfig {
                         // El controlador de login llega en T2; la ruta se abre ya para no
                         // volver a tocar este archivo.
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/recuperacion/*", "/api/auth/google", "/api/auth/google/desafio").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
                         // Alta pública del técnico (nivel 0 del expediente).
                         .requestMatchers(HttpMethod.POST, "/api/tecnicos/registro").permitAll()

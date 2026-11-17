@@ -52,8 +52,10 @@ class AdminControllerTest {
                         "SELECT count(*) FROM identity.usuarios WHERE rol='tecnico' AND eliminado_en IS NULL", Integer.class)))
                 .andExpect(jsonPath("$.administradores").value(jdbc.queryForObject(
                         "SELECT count(*) FROM identity.usuarios WHERE rol='administrador' AND eliminado_en IS NULL", Integer.class)))
-                .andExpect(jsonPath("$.tecnicosPendientes").value(0))
-                .andExpect(jsonPath("$.tecnicosAprobados").value(3))
+                .andExpect(jsonPath("$.tecnicosPendientes").value(jdbc.queryForObject(
+                    "SELECT count(*) FROM identity.perfiles_tecnico WHERE estado_validacion='pendiente'",Integer.class)))
+                .andExpect(jsonPath("$.tecnicosAprobados").value(jdbc.queryForObject(
+                    "SELECT count(*) FROM identity.perfiles_tecnico WHERE estado_validacion='aprobado'",Integer.class)))
                 .andExpect(jsonPath("$.categoriasActivas").value(3));
     }
 
@@ -101,7 +103,8 @@ class AdminControllerTest {
 
         mvc.perform(get("/api/admin/tecnicos/pendientes").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(jdbc.queryForObject(
+                    "SELECT count(*) FROM identity.perfiles_tecnico WHERE estado_validacion='pendiente'",Integer.class)));
     }
 
     @Test

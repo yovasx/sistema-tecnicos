@@ -1,10 +1,9 @@
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ContenedorApp } from '../../ui/ContenedorApp';
-import { useResponsive } from '../../theme/responsive';
+import { Texto } from '../../ui/Texto';
 import { colores } from '../../theme/tokens';
-import { PanelMarcaPublico } from './PanelMarcaPublico';
+import { useResponsive } from '../../theme/responsive';
 
 export interface MarcoPublicoProps {
   children: ReactNode;
@@ -13,44 +12,23 @@ export interface MarcoPublicoProps {
   destacados?: string[];
 }
 
-/**
- * Marco de las pantallas públicas (elegir cuenta, registro).
- *
- * En el teléfono es la columna de 420 px de siempre; en escritorio, el panel de
- * marca a la izquierda y el contenido a la derecha, igual que el login W63.
- */
-export function MarcoPublico({
-  children,
-  onVolver,
-  volverTexto,
-  destacados,
-}: MarcoPublicoProps) {
+/** Cabecera discreta y contenido fluido; sin paneles vacíos ni marcos de dispositivo. */
+export function MarcoPublico({ children }: MarcoPublicoProps) {
   const { esDesktop } = useResponsive();
-
-  if (!esDesktop) {
-    return <ContenedorApp>{children}</ContenedorApp>;
-  }
-
   return (
-    <View style={estilos.raiz}>
-      <PanelMarcaPublico
-        onVolver={onVolver}
-        volverTexto={volverTexto}
-        destacados={destacados}
-      />
-      <SafeAreaView style={estilos.lado}>{children}</SafeAreaView>
-    </View>
+    <SafeAreaView style={s.raiz} edges={['top', 'left', 'right']}>
+      <View style={[s.cabecera, esDesktop && s.cabeceraDesktop]}>
+        <Texto variante="titulo" color={colores.marca}>Fixly<Texto color={colores.marca}>.</Texto></Texto>
+        <Texto variante="caption" color={colores.terciario}>La Paz, Bolivia</Texto>
+      </View>
+      <View style={s.contenido}>{children}</View>
+    </SafeAreaView>
   );
 }
-
-const estilos = StyleSheet.create({
-  raiz: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: colores.superficie,
-  },
-  lado: {
-    flex: 1,
-    backgroundColor: colores.fondo,
-  },
+const s = StyleSheet.create({
+  raiz: { flex: 1, backgroundColor: colores.fondo },
+  cabecera: { minHeight: 64, paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: colores.superficie, borderBottomWidth: 1, borderColor: colores.linea },
+  cabeceraDesktop: { paddingHorizontal: 48, minHeight: 72 },
+  contenido: { flex: 1, minHeight: 0 },
 });

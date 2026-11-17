@@ -43,6 +43,8 @@ spring:
       mail.smtp.writetimeout: 5000
 
 app:
+  google:
+    client-ids: ${GOOGLE_CLIENT_IDS:}
   jwt:
     # Base64 de al menos 32 bytes. Vacío en local: se usa el secreto de desarrollo
     # con un WARN al arrancar. En producción se inyecta JWT_SECRET.

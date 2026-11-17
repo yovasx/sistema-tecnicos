@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { colores, fuentes, radio, tamanos } from '../theme/tokens';
 import { Texto } from './Texto';
 
@@ -26,6 +27,8 @@ export function BotonPrimario({
 }: BotonPrimarioProps) {
   const inactivo = deshabilitado || cargando;
   const secundario = variante === 'secundario';
+  const [enfocado, setEnfocado] = useState(false);
+  const [hover, setHover] = useState(false);
 
   return (
     <Pressable
@@ -34,12 +37,18 @@ export function BotonPrimario({
       accessibilityState={{ disabled: inactivo, busy: cargando }}
       disabled={inactivo}
       onPress={onPress}
+      onFocus={() => setEnfocado(true)}
+      onBlur={() => setEnfocado(false)}
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
       style={({ pressed }) => [
         estilos.base,
         tamano === 'escritorio' ? estilos.escritorio : null,
         secundario ? estilos.secundario : estilos.primario,
         pressed && !inactivo ? estilos.presionado : null,
         inactivo ? estilos.inactivo : null,
+        hover && !inactivo && !secundario ? { backgroundColor: colores.marcaFuerte } : null,
+        enfocado && Platform.OS === 'web' ? { outlineColor: colores.marca, outlineStyle: 'solid', outlineWidth: 2, outlineOffset: 3 } as never : null,
       ]}
     >
       {cargando ? (
@@ -60,14 +69,14 @@ export function BotonPrimario({
 
 const estilos = StyleSheet.create({
   base: {
-    height: 52,
+    minHeight: 52,
     borderRadius: radio.control,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   escritorio: {
-    height: 40,
+    minHeight: 44,
     paddingHorizontal: 16,
   },
   primario: {

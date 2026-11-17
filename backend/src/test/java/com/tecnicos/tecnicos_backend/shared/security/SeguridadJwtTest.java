@@ -145,7 +145,7 @@ class SeguridadJwtTest {
         Instant ahora = Instant.now();
         return JwtClaimsSet.builder()
                 .issuer(propiedades.issuer())
-                .subject("7")
+                .subject("1")
                 .issuedAt(ahora)
                 .expiresAt(ahora.plus(Duration.ofMinutes(5)))
                 .claim("rol", "tecnico")

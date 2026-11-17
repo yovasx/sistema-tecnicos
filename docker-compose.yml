@@ -71,6 +71,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-}
       JWT_ISSUER: ${JWT_ISSUER:-https://api.fixly.bo}
       JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-30}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PORT: ${SMTP_PORT:-1025}
       SMTP_USERNAME: ${SMTP_USERNAME:-}

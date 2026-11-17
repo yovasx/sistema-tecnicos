@@ -15,7 +15,7 @@ export interface ContenedorAppProps {
  * pantalla sirve en los dos shells sin tocar su contenido.
  */
 export function ContenedorApp({ children }: ContenedorAppProps) {
-  const { esDesktop } = useResponsive();
+  const { esDesktop, ancho } = useResponsive();
 
   if (esDesktop) {
     return <View style={estilos.escritorio}>{children}</View>;
@@ -23,7 +23,7 @@ export function ContenedorApp({ children }: ContenedorAppProps) {
 
   return (
     <View style={estilos.exterior}>
-      <View style={estilos.columna}>{children}</View>
+      <View style={[estilos.columna, ancho >= 600 && { maxWidth: 640 }]}>{children}</View>
     </View>
   );
 }
@@ -31,7 +31,7 @@ export function ContenedorApp({ children }: ContenedorAppProps) {
 const estilos = StyleSheet.create({
   exterior: {
     flex: 1,
-    backgroundColor: colores.fondoExterior,
+    backgroundColor: colores.fondo,
     alignItems: 'center',
   },
   columna: {
@@ -39,9 +39,6 @@ const estilos = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     backgroundColor: colores.fondo,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colores.linea,
   },
   escritorio: {
     flex: 1,

@@ -18,6 +18,18 @@ public class SmtpEmailAdapter implements ServicioEmail {
     }
 
     @Override
+    public void enviarRecuperacion(String destinatario, String codigo) {
+        var mensaje = new SimpleMailMessage();
+        mensaje.setFrom(remitente);
+        mensaje.setTo(destinatario);
+        mensaje.setSubject("Recuperá tu contraseña de Fixly");
+        mensaje.setText("Tu código para recuperar el acceso a Fixly es: " + codigo
+            + "\nVence en 10 minutos y admite 5 intentos. No lo compartas."
+            + "\nSi no solicitaste cambiar tu contraseña, ignorá este mensaje.");
+        correo.send(mensaje);
+    }
+
+    @Override
     public void enviarCodigo(String destinatario, String codigo) {
         var mensaje = new SimpleMailMessage();
         mensaje.setFrom(remitente);

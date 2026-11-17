@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Texto } from '../../ui/Texto';
@@ -31,7 +31,7 @@ export function BienvenidaMovilScreen({
 
   return (
     <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={estilos.contenido}>
+      <ScrollView contentContainerStyle={estilos.contenido}>
         <View style={estilos.header}>
           <View style={estilos.marca}>
             <View style={estilos.logo}>
@@ -61,7 +61,7 @@ export function BienvenidaMovilScreen({
           </Texto>
           <Texto style={estilos.titular}>Un técnico verificado para tu hogar</Texto>
           <Texto variante="cuerpo" color={colores.secundario}>
-            Precio estimado antes de confirmar y seguimiento del servicio.
+            Encontrá servicios técnicos y conocé las tarifas base, sin vueltas.
           </Texto>
         </View>
 
@@ -108,7 +108,7 @@ export function BienvenidaMovilScreen({
         <View style={estilos.confianza}>
           <Ionicons name="shield-checkmark" size={16} color={colores.exito} />
           <Texto variante="caption" color={colores.secundario}>
-            Técnicos validados por Fixly · Pago con QR al finalizar
+            Identidad y certificados revisados por Fixly
           </Texto>
         </View>
 
@@ -130,7 +130,7 @@ export function BienvenidaMovilScreen({
             Soy técnico
           </Texto>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -171,9 +171,13 @@ function FilaCategoria({
 const estilos = StyleSheet.create({
   seguro: {
     flex: 1,
+    backgroundColor: colores.fondo,
   },
   contenido: {
-    flex: 1,
+    flexGrow: 1,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
     paddingHorizontal: espacio.lg,
     paddingTop: espacio.base,
     paddingBottom: espacio.lg,
@@ -205,7 +209,8 @@ const estilos = StyleSheet.create({
   },
   hero: {
     gap: espacio.sm,
-    marginTop: espacio.sm,
+    marginTop: 16,
+    paddingVertical: 12,
   },
   titular: {
     fontFamily: 'HankenGrotesk_700Bold',

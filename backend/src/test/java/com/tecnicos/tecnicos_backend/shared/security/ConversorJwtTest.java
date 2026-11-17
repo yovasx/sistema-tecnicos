@@ -14,7 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ConversorJwtTest {
 
-    private final ConversorJwt conversor = new ConversorJwt();
+    private final VersionSesion versiones = org.mockito.Mockito.mock(VersionSesion.class);
+    private final ConversorJwt conversor = new ConversorJwt(versiones);
+    @org.junit.jupiter.api.BeforeEach void versiones() {
+        org.mockito.Mockito.when(versiones.actual(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0L);
+    }
 
     @Test
     void un_tecnico_recibe_la_autoridad_role_tecnico_y_el_principal_tipado() {

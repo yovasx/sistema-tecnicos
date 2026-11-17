@@ -9,6 +9,7 @@ import { Texto } from '../../ui/Texto';
 import { Aviso } from '../../ui/Aviso';
 import { Encabezado } from '../../ui/Encabezado';
 import { colores } from '../../theme/tokens';
+import { useResponsive } from '../../theme/responsive';
 
 const CAMPOS = [
   ['ci', 'CI'], ['fechaNacimiento', 'Fecha de nacimiento'], ['ciFrenteUrl', 'CI frente'],
@@ -18,6 +19,7 @@ const CAMPOS = [
 
 /** Cola real: solo expedientes enviados, no todas las cuentas en borrador. */
 export function ValidacionAdminScreen() {
+  const { esDesktop, ancho } = useResponsive();
   const [estado, setEstado] = useState('en_revision');
   const [lista, setLista] = useState<ExpedienteAdmin[]>([]);
   const [seleccionado, setSeleccionado] = useState<ExpedienteAdmin | null>(null);
@@ -25,6 +27,7 @@ export function ValidacionAdminScreen() {
   const [observaciones, setObservaciones] = useState<Record<string, string>>({});
   const [motivo, setMotivo] = useState('');
   const [confirmar, setConfirmar] = useState<'aprobar' | 'rechazar' | null>(null);
+  const [rechazando, setRechazando] = useState(false);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -42,7 +45,7 @@ export function ValidacionAdminScreen() {
     if (bloqueo.current) return;
     const actual = ++consulta.current;
     setError(''); setDetalle(null); setSeleccionado(fila); setOcupado(true);
-    setObservaciones({}); setMotivo(''); setConfirmar(null); setMensaje('');
+    setObservaciones({}); setMotivo(''); setConfirmar(null); setMensaje(''); setRechazando(false);
     try { const datos = await repo.detalleAdmin(fila.tecnicoId); if (actual === consulta.current) setDetalle(datos); }
     catch (e) { if (actual === consulta.current) setError(e instanceof Error ? e.message : 'No pudimos cargar el expediente.'); }
     finally { if (actual === consulta.current) setOcupado(false); }
@@ -64,7 +67,7 @@ export function ValidacionAdminScreen() {
   }
   return (
     <View style={s.raiz}>
-      <Encabezado titulo="Validar técnicos" subtitulo="Email y completitud automáticos. La identidad y los certificados requieren revisión documental." />
+      <Encabezado titulo="Revisión de técnicos" subtitulo="Revisá la identidad y los certificados antes de habilitar a cada profesional." />
       <View style={s.fila}>
         {[['en_revision', 'En revisión'], ['observado', 'Observados'], ['aprobado', 'Aprobados'], ['rechazado', 'Rechazados']].map(([valor, titulo]) => (
           <Pressable key={valor} accessibilityRole="button" accessibilityState={{ selected: estado === valor }}
@@ -78,17 +81,25 @@ export function ValidacionAdminScreen() {
       {mensaje ? <Aviso tono="exito">{mensaje}</Aviso> : null}
       {ocupado ? <Texto variante="caption">Procesando…</Texto> : null}
       {!lista.length && !ocupado && !error ? <Aviso titulo="Nada por validar">No hay expedientes en este estado. Los borradores no aparecen en esta cola.</Aviso> : null}
+      <View style={{ flexDirection: esDesktop && ancho >= 1280 ? 'row' : 'column', gap: 24, alignItems: 'flex-start' }}>
+      <View style={{ width: esDesktop && ancho >= 1280 ? 300 : '100%', gap: 12 }}>
+      <Texto variante="etiqueta">{lista.length} expediente(s)</Texto>
       {lista.map((t) => (
-        <Pressable key={t.tecnicoId} accessibilityRole="button" disabled={ocupado} onPress={() => void abrir(t)} style={s.tarjeta}>
+        <Pressable key={t.tecnicoId} accessibilityRole="button" accessibilityLabel={`Revisar expediente de ${t.nombre}`}
+          accessibilityState={{ selected: seleccionado?.tecnicoId === t.tecnicoId }}
+          disabled={ocupado} onPress={() => void abrir(t)} style={[s.tarjeta, seleccionado?.tecnicoId === t.tecnicoId && s.activo]}>
           <Texto variante="cuerpoFuerte">{t.nombre}</Texto>
           <Texto variante="caption">{t.email} · CI {t.ci} · {t.estadoExpediente.replace('_', ' ')}</Texto>
           <Texto variante="etiqueta" color={colores.marca}>Revisar expediente →</Texto>
         </Pressable>
       ))}
-      {seleccionado && detalle ? <View style={s.tarjeta}>
+      </View>
+      {seleccionado && detalle ? <View style={[s.tarjeta, { flex: 1, minWidth: 0, width: '100%' }]}>
+        <Texto color={colores.marca} variante="etiqueta" accessibilityRole="button"
+          onPress={() => { if (!ocupado) { setSeleccionado(null); setDetalle(null); } }}>Cerrar detalle</Texto>
         <Texto variante="titulo">{seleccionado.nombre}</Texto>
         <Texto>CI: {detalle.ci} · Nacimiento: {detalle.fechaNacimiento}</Texto>
-        <Texto variante="caption">Email: {detalle.emailVerificadoEn ? 'Verificado' : 'Sin verificar'} · {detalle.email}</Texto>
+        <Texto variante="caption">Email: {detalle.email} · {detalle.emailVerificadoEn ? 'Verificado previamente' : 'Sin verificación (no requerida)'}</Texto>
         <Texto variante="caption">Especialidades: {detalle.especialidades.map((c) => c.nombre).join(', ')}</Texto>
         <Texto variante="caption">Cobertura: {detalle.zonas.map((z) => `${z.nombre} (${z.radio} m)`).join(', ')}</Texto>
         <Aviso titulo="Revisión manual">Compará nombre, CI y fecha con el documento. Comprobá que los certificados sean legibles y correspondan a la especialidad. La carga de archivos no prueba por sí sola su autenticidad.</Aviso>
@@ -106,21 +117,36 @@ export function ValidacionAdminScreen() {
         {detalle.estadoExpediente === 'en_revision' ? <>
           <Texto variante="subtitulo">Observar campos concretos</Texto>
           <Texto variante="caption">Completá solo los campos que deban corregirse. El técnico conservará el resto del expediente.</Texto>
-          {CAMPOS.map(([campo, etiqueta]) => <CampoTexto key={campo} etiqueta={etiqueta} accessibilityLabel={`Observación ${etiqueta}`}
+          <View style={s.fila}>
+            {CAMPOS.map(([campo, etiqueta]) => <Pressable key={campo} accessibilityRole="checkbox"
+              accessibilityState={{ checked: campo in observaciones }} disabled={ocupado}
+              onPress={() => setObservaciones((prev) => {
+                const proximo = { ...prev };
+                if (campo in proximo) delete proximo[campo]; else proximo[campo] = '';
+                setConfirmar(null); return proximo;
+              })} style={[s.filtro, campo in observaciones && s.activo]}>
+              <Texto variante="etiqueta">{campo in observaciones ? '✓ ' : '+ '}{etiqueta}</Texto>
+            </Pressable>)}
+          </View>
+          {CAMPOS.filter(([campo]) => campo in observaciones).map(([campo, etiqueta]) => <CampoTexto key={campo} etiqueta={`Corregir ${etiqueta}`} accessibilityLabel={`Observación ${etiqueta}`}
             value={observaciones[campo] ?? ''} maxLength={500}
             onChangeText={(valor) => setObservaciones((p) => ({ ...p, [campo]: valor }))} placeholder="Sin observación" />)}
-          <BotonPrimario titulo="Enviar observaciones" variante="secundario" tamano="escritorio" cargando={ocupado} onPress={() => {
+          {Object.keys(observaciones).length ? <BotonPrimario titulo="Enviar observaciones" variante="secundario" tamano="escritorio" cargando={ocupado} onPress={() => {
             const obs = Object.fromEntries(Object.entries(observaciones).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()]));
             if (!Object.keys(obs).length || Object.values(obs).some((v) => v.length < 3)) { setError('Escribí al menos una observación de 3 caracteres.'); return; }
             void accion(() => repo.observar(seleccionado.tecnicoId, obs), 'Observaciones enviadas al expediente.');
-          }} />
+          }} /> : null}
           <BotonPrimario titulo="Aprobar expediente" tamano="escritorio"
-            deshabilitado={ocupado || Object.values(observaciones).some((v) => v.trim().length > 0)}
+            deshabilitado={ocupado || Object.keys(observaciones).length > 0}
             onPress={() => setConfirmar('aprobar')} />
         </> : null}
         {['en_revision', 'observado'].includes(detalle.estadoExpediente) ? <>
-          <CampoTexto etiqueta="Motivo del rechazo" accessibilityLabel="Motivo del rechazo" value={motivo} onChangeText={setMotivo} maxLength={500} />
-          <BotonPrimario titulo="Rechazar expediente" tamano="escritorio" variante="secundario" deshabilitado={ocupado || motivo.trim().length < 3} onPress={() => setConfirmar('rechazar')} />
+          <Texto variante="etiqueta" color={colores.peligro} accessibilityRole="button"
+            onPress={() => { if (!ocupado) { setRechazando((v) => !v); setConfirmar(null); } }}>Rechazar expediente</Texto>
+          {rechazando ? <>
+            <CampoTexto etiqueta="Motivo del rechazo" accessibilityLabel="Motivo del rechazo" value={motivo} onChangeText={setMotivo} maxLength={500} />
+            <BotonPrimario titulo="Revisar rechazo" tamano="escritorio" variante="secundario" deshabilitado={ocupado || motivo.trim().length < 3} onPress={() => setConfirmar('rechazar')} />
+          </> : null}
         </> : null}
         {confirmar ? <View style={{ gap: 12 }}>
           <Aviso tono="info" titulo="Confirmá tu decisión">{confirmar === 'aprobar' ? 'Al aprobar, el técnico quedará habilitado para recibir servicios.' : 'El técnico verá el motivo y no podrá recibir servicios.'}</Aviso>
@@ -128,7 +154,9 @@ export function ValidacionAdminScreen() {
             onPress={() => void accion(() => confirmar === 'aprobar' ? repo.aprobar(seleccionado.tecnicoId) : repo.rechazar(seleccionado.tecnicoId, motivo.trim()), 'Revisión completada.')} />
           <BotonPrimario titulo="Cancelar decisión" variante="secundario" tamano="escritorio" deshabilitado={ocupado} onPress={() => setConfirmar(null)} />
         </View> : null}
-      </View> : null}
+      </View> : <View style={[s.tarjeta, { flex: 1 }]}><Texto variante="subtitulo">Seleccioná un expediente</Texto>
+        <Texto color={colores.secundario}>Los datos y documentos aparecerán acá. Las decisiones quedan registradas en la auditoría.</Texto></View>}
+      </View>
     </View>
   );
 }

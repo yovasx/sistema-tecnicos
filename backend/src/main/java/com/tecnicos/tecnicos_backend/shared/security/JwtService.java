@@ -25,10 +25,12 @@ public class JwtService {
 
     private final JwtEncoder codificador;
     private final JwtProperties propiedades;
+    private final VersionSesion versiones;
 
-    public JwtService(JwtEncoder codificador, JwtProperties propiedades) {
+    public JwtService(JwtEncoder codificador, JwtProperties propiedades, VersionSesion versiones) {
         this.codificador = codificador;
         this.propiedades = propiedades;
+        this.versiones = versiones;
     }
 
     public TokenGenerado generar(Long usuarioId, RolUsuario rol, TipoCliente tipoCliente,
@@ -47,6 +49,7 @@ public class JwtService {
                 .claim("tipoCliente", tipoCliente.name())
                 .claim("nombre", nombre)
                 .claim("email", email)
+                .claim("versionSesion", versiones.actual(usuarioId))
                 .build();
 
         Jwt jwt = codificador.encode(JwtEncoderParameters.from(claims));

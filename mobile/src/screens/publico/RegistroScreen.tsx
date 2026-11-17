@@ -20,6 +20,7 @@ import { TipoCliente } from '../../domain/models/Sesion';
 import { ErrorApi } from '../../infrastructure/http/errores';
 import { useSesion } from '../../session/SesionProvider';
 import { MarcoPublico } from './MarcoPublico';
+import { AccesoGoogle } from '../auth/AccesoGoogle';
 
 export interface RegistroScreenProps {
   tecnico?: boolean;
@@ -288,6 +289,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               {paso === 1 ? (
                 <View style={estilos.formulario}>
+                  {!esEmpresa && !tecnico ? <AccesoGoogle /> : null}
                   {esEmpresa ? (
                     <>
                       <CampoTexto
@@ -425,7 +427,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
                   />
                 )}
                 <Texto variante="caption" color={colores.terciario} centrado>
-                  {tecnico ? 'Crear la cuenta no te habilita para trabajar. Primero verificamos tu email y revisamos tus documentos.' : 'Tu cuenta te permite gestionar servicios en Fixly Bolivia.'}
+                  {tecnico ? 'Tu cuenta es el primer paso. Revisaremos tu CI y certificados antes de habilitarte para trabajar.' : 'Tu cuenta te permite gestionar servicios en Fixly Bolivia.'}
                 </Texto>
               </View>
 
@@ -474,6 +476,7 @@ const estilos = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
+    alignItems: 'center',
     paddingHorizontal: espacio.lg,
     paddingTop: espacio.base,
     paddingBottom: espacio.xl,
@@ -483,7 +486,8 @@ const estilos = StyleSheet.create({
     paddingVertical: espacio.xl,
   },
   caja: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 520,
     gap: espacio.base,
   },
   cajaEscritorio: {

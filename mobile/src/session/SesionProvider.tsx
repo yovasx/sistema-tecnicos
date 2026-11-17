@@ -24,6 +24,7 @@ interface ContextoSesion {
   /** Alta pública de cliente; deja la sesión iniciada, igual que el login. */
   registrar: (datos: DatosRegistroCliente) => Promise<void>;
   registrarTecnico: (datos: DatosRegistroTecnico) => Promise<void>;
+  iniciarGoogle: (idToken: string, nonce: string, nombre?: string, apellido?: string) => Promise<void>;
   cerrarSesion: () => Promise<void>;
 }
 
@@ -126,9 +127,14 @@ export function SesionProvider({
     setEstado('autenticado');
   }, [authRepository, tokenStorage]);
 
+  const iniciarGoogle = useCallback(async (idToken: string, nonce: string, nombre?: string, apellido?: string) => {
+    const sesion = await authRepository.google(idToken, nonce, nombre, apellido);
+    await tokenStorage.save(sesion.token);
+    definirToken(sesion.token); setUsuario(sesion.usuario); setEstado('autenticado');
+  }, [authRepository, tokenStorage]);
   const valor = useMemo(
-    () => ({ estado, usuario, iniciarSesion, registrar, registrarTecnico, cerrarSesion }),
-    [estado, usuario, iniciarSesion, registrar, registrarTecnico, cerrarSesion],
+    () => ({ estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion }),
+    [estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

@@ -28,7 +28,8 @@ class JwtServiceTest {
     private final SecretKey clave = configuracion.claveJwt(propiedades);
     private final JwtEncoder codificador = configuracion.codificadorJwt(clave);
     private final JwtDecoder decodificador = configuracion.decodificadorJwt(clave, propiedades);
-    private final JwtService servicio = new JwtService(codificador, propiedades);
+    private final VersionSesion versiones = org.mockito.Mockito.mock(VersionSesion.class);
+    private final JwtService servicio = new JwtService(codificador, propiedades, versiones);
 
     @Test
     void el_token_lleva_los_claims_que_necesita_la_app() {

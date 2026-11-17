@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { VincularGoogle } from '../auth/VincularGoogle';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSesion } from '../../session/SesionProvider';
 import { Chip } from '../../ui/Chip';
@@ -17,7 +18,7 @@ export function PerfilCliente() {
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
+        <ScrollView contentContainerStyle={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado titulo="Perfil" />
           <View style={estilos.ficha}>
             <Texto variante="cuerpoFuerte">{usuario?.nombre ?? '—'}</Texto>
@@ -45,12 +46,13 @@ export function PerfilCliente() {
               </>
             )}
           </View>
+          {!esEmpresa ? <VincularGoogle /> : null}
           <View style={estilos.botonCerrar}>
             <Texto onPress={cerrarSesion} variante="etiqueta" color="#B42318">
               Cerrar sesión
             </Texto>
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </ContenedorApp>
   );
@@ -59,7 +61,7 @@ export function PerfilCliente() {
 const estilos = StyleSheet.create({
   seguro: { flex: 1 },
   contenido: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: espacio.lg,
     paddingTop: espacio.lg,
     gap: espacio.lg,

@@ -88,7 +88,7 @@ class TecnicoControllerTest {
                 "%PDF-1.7\nDocumento de prueba\n%%EOF".getBytes(StandardCharsets.UTF_8));
     }
     private void completar() throws Exception {
-        verificar();
+        // Alta nueva: no verifica email ni salta documentación obligatoria.
         llamada(put("/api/tecnicos/expediente/datos-personales").contentType("application/json")
                 .content("{\"ci\":\""+(10000000+id)+"\",\"fechaNacimiento\":\"1990-01-02\"}"))
                 .andExpect(status().isOk());
@@ -153,9 +153,10 @@ class TecnicoControllerTest {
                 .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.codigo").value("EMAIL_NO_DISPONIBLE"));
         assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.codigos_verificacion WHERE usuario_id=?",Integer.class,id)).isZero();
     }
-    @Test void no_envia_incompleto_ni_salta_email() throws Exception {
+    @Test void no_envia_incompleto_pero_puede_editar_sin_verificar_email() throws Exception {
         llamada(post("/api/tecnicos/expediente/enviar")).andExpect(status().isUnprocessableContent());
-        verificar();
+        llamada(put("/api/tecnicos/expediente/datos-personales").contentType("application/json")
+            .content("{\"ci\":\""+(10000000+id)+"\",\"fechaNacimiento\":\"1990-01-02\"}")).andExpect(status().isOk());
         llamada(post("/api/tecnicos/expediente/enviar")).andExpect(status().isUnprocessableContent());
     }
     @Test void ci_duplicado_responde_409() throws Exception {
@@ -182,6 +183,8 @@ class TecnicoControllerTest {
     }
     @Test void observar_corregir_solo_un_documento_aprobar_y_bloquear_edicion() throws Exception {
         completar();
+        assertThat(jdbc.queryForObject("SELECT email_verificado_en FROM identity.perfiles_tecnico WHERE usuario_id=?",
+            java.time.OffsetDateTime.class,id)).isNull();
         String administrador=admin();
         String ruta="/api/admin/tecnicos/expedientes/"+id;
         mvc.perform(json(ruta+"/observar","{\"observaciones\":{\"ciDorsoUrl\":\"La foto está borrosa\"}}")

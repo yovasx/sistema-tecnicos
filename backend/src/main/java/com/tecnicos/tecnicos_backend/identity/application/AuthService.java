@@ -61,7 +61,8 @@ public class AuthService {
         }
 
         Usuario usuario = encontrado.get();
-        if (!passwordEncoder.matches(clave, usuario.getPasswordHash())) {
+        if (!passwordEncoder.matches(clave, usuario.getPasswordHash()==null?HASH_FANTASMA:usuario.getPasswordHash())
+            || usuario.getPasswordHash()==null) {
             throw credencialesInvalidas();
         }
 

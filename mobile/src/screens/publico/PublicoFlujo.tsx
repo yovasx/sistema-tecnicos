@@ -8,8 +8,9 @@ import { LandingPublicaScreen } from './LandingPublicaScreen';
 import { LoginDesktopScreen } from './LoginDesktopScreen';
 import { RegistroScreen } from './RegistroScreen';
 import { TipoCuentaScreen } from './TipoCuentaScreen';
+import { RecuperacionScreen } from '../auth/RecuperacionScreen';
 
-type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login';
+type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login' | 'recuperacion';
 
 /**
  * Flujo público compartido por teléfono y escritorio:
@@ -75,15 +76,13 @@ export function PublicoFlujo() {
     );
   }
 
-  return esDesktop ? (
-    <LoginDesktopScreen
-      onVolver={() => setVista('bienvenida')}
-      onCrearCuenta={() => setVista('tipoCuenta')}
-    />
-  ) : (
+  if (vista === 'recuperacion') return <RecuperacionScreen onEntrar={() => setVista('login')} />;
+
+  return (
     <LoginScreen
       onVolver={() => setVista('bienvenida')}
       onCrearCuenta={() => setVista('tipoCuenta')}
+      onRecuperar={() => setVista('recuperacion')}
     />
   );
 }

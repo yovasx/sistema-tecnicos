@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native';
+import { useResponsive } from '../theme/responsive';
 import { colores, fuentes, radio, tamanos } from '../theme/tokens';
 import { Texto } from './Texto';
 
@@ -22,6 +23,7 @@ export function CampoTexto({
 }: CampoTextoProps) {
   const [enfocado, setEnfocado] = useState(false);
   const [verClave, setVerClave] = useState(false);
+  const { esDesktop } = useResponsive();
 
   return (
     <View style={estilos.contenedor}>
@@ -31,6 +33,8 @@ export function CampoTexto({
       <View
         style={[
           estilos.caja,
+          esDesktop && estilos.cajaDesktop,
+          rest.editable === false && estilos.cajaDeshabilitada,
           enfocado ? estilos.cajaEnfocada : null,
           error ? estilos.cajaError : null,
         ]}
@@ -38,7 +42,9 @@ export function CampoTexto({
         <TextInput
           {...rest}
           accessibilityLabel={rest.accessibilityLabel ?? etiqueta}
-          style={estilos.entrada}
+          style={[estilos.entrada, esDesktop && estilos.entradaDesktop,
+            Platform.OS === 'web' && ({ outlineStyle: 'none' } as unknown as TextStyle)]}
+          underlineColorAndroid="transparent"
           placeholderTextColor={colores.deshabilitado}
           secureTextEntry={esPassword && !verClave}
           onFocus={(e) => {
@@ -53,6 +59,8 @@ export function CampoTexto({
         {esPassword ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            disabled={rest.editable === false}
             onPress={() => setVerClave((v) => !v)}
             hitSlop={8}
           >
@@ -91,12 +99,19 @@ const estilos = StyleSheet.create({
   },
   cajaEnfocada: {
     borderColor: colores.marca,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(47,107,255,0.14)' } : {}),
   },
+  cajaDesktop: { minHeight: 44 },
+  entradaDesktop: { paddingVertical: 10, fontSize: 14 },
+  cajaDeshabilitada: { backgroundColor: colores.fondo, opacity: 0.65 },
   cajaError: {
     borderColor: colores.peligro,
   },
   entrada: {
     flex: 1,
+    minWidth: 0,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
     fontFamily: fuentes.cuerpo,
     fontSize: tamanos.cuerpo,
     color: colores.tinta,

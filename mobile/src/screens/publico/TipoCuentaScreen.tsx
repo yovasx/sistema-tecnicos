@@ -157,6 +157,7 @@ const estilos = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
+    alignItems: 'center',
     paddingHorizontal: espacio.lg,
     paddingTop: espacio.base,
     paddingBottom: espacio.xl,
@@ -167,7 +168,8 @@ const estilos = StyleSheet.create({
     padding: espacio.xl,
   },
   caja: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 560,
     gap: espacio.lg,
   },
   cajaEscritorio: {

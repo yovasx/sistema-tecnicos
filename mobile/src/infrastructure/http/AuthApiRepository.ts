@@ -7,6 +7,18 @@ import { traducirError } from './errores';
 
 /** Adaptador HTTP del puerto de autenticación. */
 export class AuthApiRepository implements AuthRepository {
+  async vincularGoogle(idToken: string, nonce: string, password: string): Promise<void> {
+    try { await apiClient.post('/api/auth/google/vincular', { idToken, nonce, password }); }
+    catch (e) { throw traducirError(e); }
+  }
+  async desafioGoogle(): Promise<{ nonce: string }> {
+    try { return (await apiClient.post<{ nonce: string }>('/api/auth/google/desafio')).data; }
+    catch (e) { throw traducirError(e); }
+  }
+  async google(idToken: string, nonce: string, nombre?: string, apellido?: string): Promise<SesionIniciada> {
+    try { return (await apiClient.post<SesionIniciada>('/api/auth/google', { idToken, nonce, nombre, apellido })).data; }
+    catch (e) { throw traducirError(e); }
+  }
   async registrarTecnico(datos: DatosRegistroTecnico): Promise<SesionIniciada> {
     try { return (await apiClient.post<SesionIniciada>('/api/tecnicos/registro', datos)).data; }
     catch (e) { throw traducirError(e); }

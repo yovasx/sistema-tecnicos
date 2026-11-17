@@ -22,9 +22,17 @@ import java.util.Locale;
  */
 @Component
 public class ConversorJwt implements Converter<Jwt, AbstractAuthenticationToken> {
+    private final VersionSesion versiones;
+    public ConversorJwt(VersionSesion versiones) { this.versiones=versiones; }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+        Long actual=versiones.actual(Long.valueOf(jwt.getSubject()));
+        Object valor=jwt.getClaims().get("versionSesion");
+        long version=valor instanceof Number n?n.longValue():0L;
+        if (actual==null || actual!=version) {
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("La sesión venció.");
+        }
         RolUsuario rol = RolUsuario.valueOf(jwt.getClaimAsString("rol"));
         TipoCliente tipoCliente = TipoCliente.valueOf(jwt.getClaimAsString("tipoCliente"));
         UsuarioAutenticado usuario = new UsuarioAutenticado(
