@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { DatosRegistroCliente } from '../domain/models/Registro';
 import { EstadoSesion, UsuarioSesion } from '../domain/models/Sesion';
 import { AuthRepository } from '../domain/repositories/AuthRepository';
 import { TokenStorage } from '../domain/repositories/TokenStorage';
@@ -19,6 +20,8 @@ interface ContextoSesion {
   estado: EstadoSesion;
   usuario: UsuarioSesion | null;
   iniciarSesion: (email: string, password: string) => Promise<void>;
+  /** Alta pública de cliente; deja la sesión iniciada, igual que el login. */
+  registrar: (datos: DatosRegistroCliente) => Promise<void>;
   cerrarSesion: () => Promise<void>;
 }
 
@@ -102,9 +105,20 @@ export function SesionProvider({
     [authRepository, tokenStorage],
   );
 
+  const registrar = useCallback(
+    async (datos: DatosRegistroCliente) => {
+      const sesion = await authRepository.registrar(datos);
+      await tokenStorage.save(sesion.token);
+      definirToken(sesion.token);
+      setUsuario(sesion.usuario);
+      setEstado('autenticado');
+    },
+    [authRepository, tokenStorage],
+  );
+
   const valor = useMemo(
-    () => ({ estado, usuario, iniciarSesion, cerrarSesion }),
-    [estado, usuario, iniciarSesion, cerrarSesion],
+    () => ({ estado, usuario, iniciarSesion, registrar, cerrarSesion }),
+    [estado, usuario, iniciarSesion, registrar, cerrarSesion],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

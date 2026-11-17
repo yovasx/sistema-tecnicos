@@ -1,36 +1,21 @@
 import { ComponentRef, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Chip } from '../../ui/Chip';
 import { Texto } from '../../ui/Texto';
+import { bolivianos } from '../../ui/formato';
 import { colores, espacio, radio } from '../../theme/tokens';
+import { desdeCategoria, iconoCategoria } from './categorias';
+import { useCategoriasPublicas } from './useCategoriasPublicas';
 
 export interface LandingPublicaScreenProps {
   /** Lleva al login de escritorio (W63). */
   onEntrar: () => void;
+  /** Abre el selector de cuenta para registrarse. */
+  onCrearCuenta: () => void;
 }
-
-const CATEGORIAS = [
-  {
-    icono: 'water' as const,
-    nombre: 'Plomería',
-    detalle: 'Fugas, grifería e instalaciones sanitarias',
-    desde: 'Bs 50',
-  },
-  {
-    icono: 'flash' as const,
-    nombre: 'Electricidad',
-    detalle: 'Cortocircuitos, tableros y cableado',
-    desde: 'Bs 60',
-  },
-  {
-    icono: 'thermometer' as const,
-    nombre: 'Climatización y gas',
-    detalle: 'Calefones, estufas e instalaciones',
-    desde: 'Bs 80',
-  },
-];
 
 const PASOS = [
   { numero: '1', titulo: 'Elegís tu problema', detalle: 'Contás qué pasa y en qué zona estás.' },
@@ -46,16 +31,25 @@ const PASOS = [
   },
 ];
 
+const ZONAS = ['Sopocachi', 'San Miguel', 'Calacoto'];
+
+const SOPORTE = 'soporte@fixly.bo';
+
 /**
  * W62 · Landing pública de escritorio.
  *
  * Es la cara del producto para quien todavía no tiene cuenta: explica el
- * servicio, muestra las tarifas base reales y lleva al login (W63). En el
- * teléfono no se muestra: ahí la app abre directo en el login (F03).
+ * servicio, muestra las tarifas base reales del catálogo y lleva al registro o
+ * al login (W63). En el teléfono se usa una bienvenida compacta, no esta
+ * landing.
  */
-export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
+export function LandingPublicaScreen({ onEntrar, onCrearCuenta }: LandingPublicaScreenProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [yCategorias, setYCategorias] = useState(0);
+  const [yComoFunciona, setYComoFunciona] = useState(0);
+  const { categorias, cargando, error, recargar } = useCategoriasPublicas();
+
+  const irA = (y: number) => scroll.current?.scrollTo({ y, animated: true });
 
   return (
     <View style={estilos.raiz}>
@@ -74,35 +68,51 @@ export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
         </View>
 
         <View style={estilos.nav}>
-          <Texto variante="etiqueta" color={colores.secundario}>
+          <Texto
+            variante="etiqueta"
+            color={colores.secundario}
+            onPress={() => irA(yComoFunciona)}
+            accessibilityRole="button"
+          >
             Cómo funciona
           </Texto>
           <Texto
             variante="etiqueta"
             color={colores.secundario}
-            onPress={() => scroll.current?.scrollTo({ y: yCategorias, animated: true })}
+            onPress={() => irA(yCategorias)}
+            accessibilityRole="button"
           >
             Categorías
           </Texto>
-          <Texto variante="etiqueta" color={colores.secundario}>
+          <Texto
+            variante="etiqueta"
+            color={colores.secundario}
+            onPress={onEntrar}
+            accessibilityRole="button"
+          >
             Para técnicos
           </Texto>
-          <Texto variante="etiqueta" color={colores.secundario}>
+          <Texto
+            variante="etiqueta"
+            color={colores.secundario}
+            onPress={() => void Linking.openURL(`mailto:${SOPORTE}`)}
+            accessibilityRole="link"
+          >
             Ayuda
           </Texto>
         </View>
 
         <View style={estilos.accionesHeader}>
           <BotonPrimario
-            titulo="Soy técnico"
+            titulo="Ya tengo cuenta"
             variante="secundario"
             tamano="escritorio"
             onPress={onEntrar}
           />
           <BotonPrimario
-            titulo="Solicitar un técnico"
+            titulo="Crear cuenta"
             tamano="escritorio"
-            onPress={onEntrar}
+            onPress={onCrearCuenta}
           />
         </View>
       </View>
@@ -128,15 +138,15 @@ export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
 
             <View style={estilos.ctaHero}>
               <BotonPrimario
-                titulo="Pedir técnico ahora"
+                titulo="Crear cuenta"
                 tamano="escritorio"
-                onPress={onEntrar}
+                onPress={onCrearCuenta}
               />
               <BotonPrimario
                 titulo="Ver tarifas base"
                 variante="secundario"
                 tamano="escritorio"
-                onPress={() => scroll.current?.scrollTo({ y: yCategorias, animated: true })}
+                onPress={() => irA(yCategorias)}
               />
             </View>
 
@@ -154,22 +164,23 @@ export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
 
           <View style={estilos.heroTarjeta}>
             <View style={estilos.heroTarjetaArriba}>
-              <Ionicons name="navigate" size={18} color={colores.marca} />
+              <Ionicons name="shield-checkmark" size={18} color={colores.marca} />
               <Texto variante="etiqueta" color={colores.marcaFuerte}>
-                GPS activo
+                Servicio verificado
               </Texto>
             </View>
+            <Texto variante="subtitulo">Identidad y antecedentes revisados</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Tiempo promedio de arribo
+              El técnico que llega a tu casa pasó la validación de Fixly antes de
+              recibir órdenes.
             </Texto>
-            <Texto style={estilos.arribo}>18 min</Texto>
             <View style={estilos.lineaHero} />
             <Texto variante="caption" color={colores.secundario}>
-              Cobertura activa en Sopocachi, San Miguel y Calacoto.
+              Cobertura activa en:
             </Texto>
             <View style={estilos.puntos}>
-              {['Sopocachi', 'San Miguel', 'Calacoto'].map((z) => (
-                <Chip key={z} texto={z} />
+              {ZONAS.map((zona) => (
+                <Chip key={zona} texto={zona} />
               ))}
             </View>
           </View>
@@ -181,35 +192,72 @@ export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
         >
           <Texto variante="titulo">Servicios por categoría</Texto>
           <Texto variante="caption" color={colores.secundario}>
-            Tarifas base publicadas. El precio final se confirma antes de empezar.
+            Tarifas base publicadas por Fixly. El precio final se confirma antes de
+            empezar.
           </Texto>
-          <View style={estilos.grillaCategorias}>
-            {CATEGORIAS.map((c) => (
-              <View key={c.nombre} style={estilos.tarjetaCategoria}>
-                <View style={estilos.iconoCategoria}>
-                  <Ionicons name={c.icono} size={20} color={colores.marca} />
-                </View>
-                <Texto variante="subtitulo">{c.nombre}</Texto>
-                <Texto variante="caption" color={colores.secundario} style={estilos.detalle}>
-                  {c.detalle}
-                </Texto>
-                <View style={estilos.pieCategoria}>
-                  <Texto variante="etiqueta">Desde {c.desde}</Texto>
+
+          {cargando ? (
+            <View style={estilos.cargandoCategorias}>
+              <ActivityIndicator color={colores.marca} />
+            </View>
+          ) : null}
+
+          {!cargando && error ? (
+            <View style={estilos.errorCategorias}>
+              <Aviso tono="advertencia" titulo="No pudimos cargar las tarifas">
+                {error}
+              </Aviso>
+              <Texto
+                variante="etiqueta"
+                color={colores.marca}
+                onPress={recargar}
+                accessibilityRole="button"
+              >
+                Reintentar
+              </Texto>
+            </View>
+          ) : null}
+
+          {!cargando && !error ? (
+            <View style={estilos.grillaCategorias}>
+              {categorias.map((categoria) => (
+                <View key={categoria.nombre} style={estilos.tarjetaCategoria}>
+                  <View style={estilos.iconoCategoria}>
+                    <Ionicons
+                      name={iconoCategoria(categoria.nombre)}
+                      size={20}
+                      color={colores.marca}
+                    />
+                  </View>
+                  <Texto variante="subtitulo">{categoria.nombre}</Texto>
                   <Texto
-                    variante="etiqueta"
-                    color={colores.marca}
-                    onPress={onEntrar}
+                    variante="caption"
+                    color={colores.secundario}
+                    style={estilos.detalle}
                   >
-                    Ver tarifas
+                    {categoria.descripcion ?? 'Servicio a domicilio con técnico validado.'}
                   </Texto>
+                  <View style={estilos.pieCategoria}>
+                    <Texto variante="etiqueta">
+                      {desdeCategoria(categoria) ?? 'Tarifa a confirmar'}
+                    </Texto>
+                    {categoria.tarifaHora !== null ? (
+                      <Texto variante="caption" color={colores.terciario}>
+                        Hora {bolivianos(categoria.tarifaHora)}
+                      </Texto>
+                    ) : null}
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          ) : null}
         </View>
 
-        <View style={estilos.bloque}>
-          <Texto variante="titulo">Proceso simple</Texto>
+        <View
+          style={estilos.bloque}
+          onLayout={(e) => setYComoFunciona(e.nativeEvent.layout.y)}
+        >
+          <Texto variante="titulo">Cómo funciona</Texto>
           <View style={estilos.pasos}>
             {PASOS.map((p) => (
               <View key={p.numero} style={estilos.paso}>
@@ -243,8 +291,13 @@ export function LandingPublicaScreen({ onEntrar }: LandingPublicaScreenProps) {
         </View>
 
         <View style={estilos.footer}>
-          <Texto variante="caption" color={colores.terciario}>
-            Fixly Bolivia S.R.L. · La Paz, Bolivia · Soporte: soporte@fixly.bo
+          <Texto
+            variante="caption"
+            color={colores.terciario}
+            onPress={() => void Linking.openURL(`mailto:${SOPORTE}`)}
+            accessibilityRole="link"
+          >
+            Fixly Bolivia S.R.L. · La Paz, Bolivia · Soporte: {SOPORTE}
           </Texto>
         </View>
       </ScrollView>
@@ -358,12 +411,6 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  arribo: {
-    fontFamily: 'HankenGrotesk_700Bold',
-    fontSize: 40,
-    lineHeight: 46,
-    color: colores.tinta,
-  },
   lineaHero: {
     height: 1,
     backgroundColor: colores.linea,
@@ -378,13 +425,23 @@ const estilos = StyleSheet.create({
   bloque: {
     gap: espacio.base,
   },
+  cargandoCategorias: {
+    paddingVertical: espacio.xxl,
+    alignItems: 'center',
+  },
+  errorCategorias: {
+    gap: espacio.sm,
+    alignItems: 'flex-start',
+  },
   grillaCategorias: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: espacio.base,
     marginTop: espacio.sm,
   },
   tarjetaCategoria: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 260,
     backgroundColor: colores.superficie,
     borderRadius: radio.tarjeta,
     borderWidth: 1,
@@ -407,6 +464,7 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: espacio.sm,
     marginTop: espacio.sm,
   },
   pasos: {

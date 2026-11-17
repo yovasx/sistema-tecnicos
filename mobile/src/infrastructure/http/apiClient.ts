@@ -27,9 +27,11 @@ apiClient.interceptors.response.use(
   (respuesta) => respuesta,
   (error) => {
     const url: string = error?.config?.url ?? '';
-    const esLogin = url.includes('/api/auth/login');
+    // En login y registro un 401/409 es del formulario, no una sesión vencida.
+    const esFormularioPublico =
+      url.includes('/api/auth/login') || url.includes('/api/auth/registro');
 
-    if (error?.response?.status === 401 && !esLogin) {
+    if (error?.response?.status === 401 && !esFormularioPublico) {
       alVencerSesion?.();
     }
 

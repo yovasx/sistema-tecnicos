@@ -48,6 +48,9 @@ public class SecurityConfig {
                         // El controlador de login llega en T2; la ruta se abre ya para no
                         // volver a tocar este archivo.
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
+                        // Catálogo público: solo nombre, descripción y tarifas.
+                        .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
                         .requestMatchers("/error").permitAll()
                         // El backoffice solo lo abre el administrador.

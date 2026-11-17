@@ -1,3 +1,4 @@
+import { DatosRegistroCliente } from '../../domain/models/Registro';
 import { SesionIniciada, UsuarioSesion } from '../../domain/models/Sesion';
 import { AuthRepository } from '../../domain/repositories/AuthRepository';
 import { apiClient } from './apiClient';
@@ -11,6 +12,15 @@ export class AuthApiRepository implements AuthRepository {
         email,
         password,
       });
+      return data;
+    } catch (error) {
+      throw traducirError(error);
+    }
+  }
+
+  async registrar(datos: DatosRegistroCliente): Promise<SesionIniciada> {
+    try {
+      const { data } = await apiClient.post<SesionIniciada>('/api/auth/registro', datos);
       return data;
     } catch (error) {
       throw traducirError(error);

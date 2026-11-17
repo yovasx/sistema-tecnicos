@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLoginForm } from '../auth/useLoginForm';
@@ -7,51 +6,25 @@ import { CampoTexto } from '../../ui/CampoTexto';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Texto } from '../../ui/Texto';
 import { colores, espacio } from '../../theme/tokens';
+import { PanelMarcaPublico } from './PanelMarcaPublico';
 
 export interface LoginDesktopScreenProps {
   /** Vuelve a la landing pública (W62). */
   onVolver?: () => void;
+  /** Lleva al selector de cuenta para registrarse. */
+  onCrearCuenta?: () => void;
 }
 
 /**
  * Login público de escritorio (W63): panel de marca a la izquierda, formulario
  * a la derecha. Mismo contrato que el login del teléfono.
  */
-export function LoginDesktopScreen({ onVolver }: LoginDesktopScreenProps) {
+export function LoginDesktopScreen({ onVolver, onCrearCuenta }: LoginDesktopScreenProps) {
   const { email, setEmail, password, setPassword, errorLogin, manejarSubmit } = useLoginForm();
-  const [aviso, setAviso] = useState<string | null>(null);
 
   return (
     <View style={estilos.raiz}>
-      <View style={estilos.marca}>
-        <View style={estilos.marcaTop}>
-          {onVolver ? (
-            <Texto onPress={onVolver} variante="etiqueta" color="#DCE7FF">
-              ← Volver al inicio
-            </Texto>
-          ) : null}
-          <View style={estilos.marcaArriba}>
-            <Ionicons name="build" size={22} color={colores.superficie} />
-            <Texto variante="titulo" color={colores.superficie}>
-              Fixly
-            </Texto>
-          </View>
-        </View>
-        <View style={estilos.marcaCentro}>
-          <Texto variante="display" color={colores.superficie}>
-            La Paz, Bolivia
-          </Texto>
-          <Texto variante="cuerpo" color="#DCE7FF">
-            Servicios técnicos verificados para el hogar.
-          </Texto>
-        </View>
-        <View style={estilos.marcaAbajo}>
-          <Ionicons name="help-circle-outline" size={18} color={colores.superficie} />
-          <Texto variante="caption" color="#DCE7FF">
-            Centro de ayuda
-          </Texto>
-        </View>
-      </View>
+      <PanelMarcaPublico onVolver={onVolver} />
 
       <SafeAreaView style={estilos.formularioLado}>
         <KeyboardAvoidingView
@@ -68,11 +41,6 @@ export function LoginDesktopScreen({ onVolver }: LoginDesktopScreenProps) {
             {errorLogin ? (
               <Texto variante="caption" color={colores.peligro}>
                 {errorLogin}
-              </Texto>
-            ) : null}
-            {aviso ? (
-              <Texto variante="caption" color={colores.advertencia}>
-                {aviso}
               </Texto>
             ) : null}
 
@@ -92,11 +60,19 @@ export function LoginDesktopScreen({ onVolver }: LoginDesktopScreenProps) {
               esPassword
               autoComplete="current-password"
               textContentType="password"
-              onSubmitEditing={manejarSubmit}
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                void manejarSubmit();
+              }}
             />
 
-            <Texto variante="caption" color={colores.marca}>
-              ¿Olvidaste tu contraseña?
+            <Texto
+              variante="caption"
+              color={colores.marca}
+              onPress={() => void Linking.openURL('mailto:soporte@fixly.bo')}
+              accessibilityRole="link"
+            >
+              ¿Olvidaste tu contraseña? Escribí a soporte@fixly.bo
             </Texto>
 
             <BotonPrimario
@@ -104,23 +80,26 @@ export function LoginDesktopScreen({ onVolver }: LoginDesktopScreenProps) {
               tamano="escritorio"
               onPress={() => {
                 Keyboard.dismiss();
-                setAviso(null);
                 void manejarSubmit();
               }}
             />
 
-            <View style={estilos.separador}>
-              <View style={estilos.linea} />
-              <Texto variante="caption">o</Texto>
-              <View style={estilos.linea} />
-            </View>
+            {onCrearCuenta ? (
+              <>
+                <View style={estilos.separador}>
+                  <View style={estilos.linea} />
+                  <Texto variante="caption">o</Texto>
+                  <View style={estilos.linea} />
+                </View>
 
-            <BotonPrimario
-              variante="secundario"
-              tamano="escritorio"
-              titulo="Crear cuenta"
-              onPress={() => setAviso('El registro aún no está disponible: es parte de V2.')}
-            />
+                <BotonPrimario
+                  variante="secundario"
+                  tamano="escritorio"
+                  titulo="Crear cuenta"
+                  onPress={onCrearCuenta}
+                />
+              </>
+            ) : null}
 
             <View style={estilos.nota}>
               <Ionicons name="shield-checkmark" size={16} color={colores.exito} />
@@ -142,28 +121,6 @@ const estilos = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: colores.superficie,
-  },
-  marca: {
-    flex: 1,
-    backgroundColor: colores.marcaFuerte,
-    padding: espacio.xxl,
-    justifyContent: 'space-between',
-  },
-  marcaTop: {
-    gap: espacio.base,
-  },
-  marcaArriba: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacio.sm,
-  },
-  marcaCentro: {
-    gap: espacio.md,
-  },
-  marcaAbajo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacio.sm,
   },
   formularioLado: {
     flex: 1,

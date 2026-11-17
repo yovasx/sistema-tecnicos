@@ -1,4 +1,5 @@
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLoginForm } from './useLoginForm';
 import { CampoTexto } from '../../ui/CampoTexto';
@@ -6,9 +7,23 @@ import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Texto } from '../../ui/Texto';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
+import { colores } from '../../theme/tokens';
 
-/** Pantalla de login del teléfono (F03). */
-export function LoginScreen() {
+export interface LoginScreenProps {
+  /** Vuelve a la bienvenida (F01). */
+  onVolver?: () => void;
+  /** Lleva al selector de tipo de cuenta para registrarse. */
+  onCrearCuenta?: () => void;
+}
+
+/**
+ * F03 · Login del teléfono.
+ *
+ * Mantiene el contrato anti-enumeración del backend y suma las dos salidas del
+ * flujo público: volver a la bienvenida y crear una cuenta. La recuperación de
+ * contraseña todavía no existe como flujo, así que se ofrece soporte real.
+ */
+export function LoginScreen({ onVolver, onCrearCuenta }: LoginScreenProps) {
   const { email, setEmail, password, setPassword, errorLogin, manejarSubmit } = useLoginForm();
 
   return (
@@ -20,6 +35,20 @@ export function LoginScreen() {
           keyboardVerticalOffset={0}
         >
           <View style={estilos.contenido}>
+            {onVolver ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onVolver}
+                style={estilos.volver}
+                hitSlop={8}
+              >
+                <Ionicons name="arrow-back" size={18} color={colores.secundario} />
+                <Texto variante="etiqueta" color={colores.secundario}>
+                  Volver
+                </Texto>
+              </Pressable>
+            ) : null}
+
             <View style={estilos.logo}>
               <Texto variante="display" color="#2F6BFF">
                 Fixly
@@ -57,17 +86,46 @@ export function LoginScreen() {
                 esPassword
                 autoComplete="current-password"
                 textContentType="password"
-                onSubmitEditing={manejarSubmit}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                  void manejarSubmit();
+                }}
               />
             </View>
 
-            <BotonPrimario titulo="Entrar" onPress={manejarSubmit} />
+            <BotonPrimario
+              titulo="Entrar"
+              onPress={() => {
+                Keyboard.dismiss();
+                void manejarSubmit();
+              }}
+            />
 
-            <View style={estilos.pie}>
-              <Texto variante="caption" color="#667085">
-                ¿Olvidaste la contraseña? Próximamente.
-              </Texto>
-            </View>
+            {onCrearCuenta ? (
+              <View style={estilos.pie}>
+                <Texto variante="caption" color="#667085">
+                  ¿No tenés cuenta?
+                </Texto>
+                <Texto
+                  variante="etiqueta"
+                  color={colores.marca}
+                  onPress={onCrearCuenta}
+                  accessibilityRole="button"
+                >
+                  Crear cuenta
+                </Texto>
+              </View>
+            ) : null}
+
+            <Texto
+              variante="caption"
+              color="#667085"
+              centrado
+              onPress={() => void Linking.openURL('mailto:soporte@fixly.bo')}
+              accessibilityRole="link"
+            >
+              ¿Olvidaste tu contraseña? Escribí a soporte@fixly.bo
+            </Texto>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -81,10 +139,16 @@ const estilos = StyleSheet.create({
   contenido: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 16,
     paddingBottom: 40,
-    gap: 24,
+    gap: 20,
     justifyContent: 'center',
+  },
+  volver: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: -4,
   },
   logo: {
     alignItems: 'center',
@@ -97,7 +161,9 @@ const estilos = StyleSheet.create({
     textAlign: 'center',
   },
   pie: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
+    gap: 6,
   },
 });

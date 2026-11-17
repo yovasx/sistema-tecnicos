@@ -1,7 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSesion } from '../session/SesionProvider';
@@ -14,9 +12,7 @@ import {
   seccionesEmpresa,
   seccionesTecnico,
 } from './secciones';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { LoginDesktopScreen } from '../screens/publico/LoginDesktopScreen';
-import { LandingPublicaScreen } from '../screens/publico/LandingPublicaScreen';
+import { PublicoFlujo } from '../screens/publico/PublicoFlujo';
 import { InicioCliente } from '../screens/cliente/InicioCliente';
 import { MisServicios } from '../screens/cliente/MisServicios';
 import { NotificacionesCliente } from '../screens/cliente/NotificacionesCliente';
@@ -34,7 +30,6 @@ import { Texto } from '../ui/Texto';
 import { colores } from '../theme/tokens';
 
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
 
 const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Inicio: 'home',
@@ -56,8 +51,8 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
  * teléfono, o ventana angosta, las tabs de siempre. Las pantallas de contenido
  * son las mismas en los dos casos.
  *
- * `cargando` → splash; `anonimo` → landing/login (escritorio) o login (móvil);
- * `autenticado` → shell por rol y perfil de cliente.
+ * `cargando` → splash; `anonimo` → flujo público (bienvenida/landing → tipo de
+ * cuenta → registro o login); `autenticado` → shell por rol y perfil de cliente.
  */
 export function RootNavigator() {
   const { estado } = useSesion();
@@ -85,29 +80,11 @@ export function RootNavigator() {
     );
   }
 
-  if (esDesktop) {
-    return <PublicoDesktop />;
-  }
-
   return (
-    <NavigationContainer>
-      <View style={estilos.raiz}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-        </Stack.Navigator>
-      </View>
-    </NavigationContainer>
+    <View style={estilos.raiz}>
+      <PublicoFlujo />
+    </View>
   );
-}
-
-/** Flujo público de escritorio: landing (W62) → login (W63). */
-function PublicoDesktop() {
-  const [vista, setVista] = useState<'landing' | 'login'>('landing');
-
-  if (vista === 'landing') {
-    return <LandingPublicaScreen onEntrar={() => setVista('login')} />;
-  }
-  return <LoginDesktopScreen onVolver={() => setVista('landing')} />;
 }
 
 /** Sidebar de escritorio según rol y perfil de cliente. */
