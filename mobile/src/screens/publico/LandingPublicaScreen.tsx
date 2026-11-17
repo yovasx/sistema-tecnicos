@@ -15,6 +15,7 @@ export interface LandingPublicaScreenProps {
   onEntrar: () => void;
   /** Abre el selector de cuenta para registrarse. */
   onCrearCuenta: () => void;
+  onSoyTecnico: () => void;
 }
 
 const PASOS = [
@@ -43,7 +44,7 @@ const SOPORTE = 'soporte@fixly.bo';
  * al login (W63). En el teléfono se usa una bienvenida compacta, no esta
  * landing.
  */
-export function LandingPublicaScreen({ onEntrar, onCrearCuenta }: LandingPublicaScreenProps) {
+export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: LandingPublicaScreenProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [yCategorias, setYCategorias] = useState(0);
   const [yComoFunciona, setYComoFunciona] = useState(0);
@@ -87,7 +88,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta }: LandingPublica
           <Texto
             variante="etiqueta"
             color={colores.secundario}
-            onPress={onEntrar}
+            onPress={onSoyTecnico}
             accessibilityRole="button"
           >
             Para técnicos
@@ -129,11 +130,11 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta }: LandingPublica
               texto="Servicios verificados en La Paz · Valle Central y Zona Sur"
             />
             <Texto style={estilos.titular}>
-              Un técnico verificado,{'\n'}en tu puerta en minutos.
+              Servicios técnicos,{'\n'}con confianza y claridad.
             </Texto>
             <Texto variante="subtitulo" color={colores.secundario} style={estilos.bajada}>
               Servicios a domicilio en La Paz, con precio estimado antes de confirmar.
-              Profesionales auditados con antecedentes, seguro y garantía escrita.
+              Identidad y certificados técnicos revisados antes de habilitar al profesional.
             </Texto>
 
             <View style={estilos.ctaHero}>
@@ -169,7 +170,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta }: LandingPublica
                 Servicio verificado
               </Texto>
             </View>
-            <Texto variante="subtitulo">Identidad y antecedentes revisados</Texto>
+            <Texto variante="subtitulo">Identidad y certificados revisados</Texto>
             <Texto variante="caption" color={colores.secundario}>
               El técnico que llega a tu casa pasó la validación de Fixly antes de
               recibir órdenes.

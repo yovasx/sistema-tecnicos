@@ -22,13 +22,25 @@ spring:
     # igual aunque RabbitMQ no esté disponible.
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: ${SPRING_RABBITMQ_PORT:5672}
-    username: ${SPRING_RABBITMQ_USER:tecnicos}
+    username: ${SPRING_RABBITMQ_USERNAME:tecnicos}
     password: ${SPRING_RABBITMQ_PASSWORD:tecnicos}
 
   servlet:
     multipart:
       max-file-size: 10MB
-      max-request-size: 10MB
+      max-request-size: 40MB
+
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 app:
   jwt:
@@ -37,10 +49,8 @@ app:
     secret: ${JWT_SECRET:}
     issuer: ${JWT_ISSUER:https://api.fixly.bo}
     ttl-minutes: ${JWT_TTL_MINUTES:30}
-  otp:
-    # Solo desarrollo/test: expone el código plano en la respuesta. En producción
-    # SIEMPRE false; el código viaja por email y el campo viene null.
-    dev-mode: ${OTP_DEV_MODE:true}
+  mail:
+    remitente: ${SMTP_FROM:no-responder@fixly.bo}
   uploads:
     # Documentos del expediente. En producción apuntá a un volumen persistente
     # o cambiá AlmacenArchivosDisco por S3 detrás del mismo puerto.

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   Keyboard,
@@ -22,6 +22,7 @@ import { useSesion } from '../../session/SesionProvider';
 import { MarcoPublico } from './MarcoPublico';
 
 export interface RegistroScreenProps {
+  tecnico?: boolean;
   tipoCliente: TipoCliente;
   /** Vuelve al selector de tipo de cuenta. */
   onVolver: () => void;
@@ -40,9 +41,9 @@ const CAMPOS_PASO_1 = ['nombre', 'apellido', 'razonSocial', 'nit', 'email', 'tel
  * contraseña. La cuenta de empresa agrega razón social y NIT porque la factura
  * va a su nombre. El rol nunca se elige: el backend siempre crea clientes.
  */
-export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScreenProps) {
+export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntrar }: RegistroScreenProps) {
   const { esDesktop } = useResponsive();
-  const { registrar } = useSesion();
+  const { registrar, registrarTecnico } = useSesion();
   const esEmpresa = tipoCliente === 'empresa';
 
   const [paso, setPaso] = useState<Paso>(1);
@@ -57,6 +58,7 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
   const [errores, setErrores] = useState<Errores>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const envioEnCurso = useRef(false);
 
   // El botón atrás de Android retrocede un paso del asistente, no pierde todo.
   useEffect(() => {
@@ -145,15 +147,17 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
   }
 
   async function enviar() {
+    if (envioEnCurso.current) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     const nuevos = validarPaso2();
     setErrores(nuevos);
     if (Object.keys(nuevos).length > 0) return;
 
+    envioEnCurso.current = true;
     setEnviando(true);
     try {
-      await registrar({
+      const datos = {
         nombre: nombre.trim(),
         apellido: apellido.trim(),
         email: email.trim(),
@@ -162,13 +166,15 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
         tipoCliente,
         razonSocial: esEmpresa ? razonSocial.trim() : undefined,
         nit: esEmpresa ? nit.trim() : undefined,
-      });
+      };
+      if (tecnico) await registrarTecnico(datos);
+      else await registrar(datos);
       // La sesión queda iniciada y RootNavigator cambia solo de shell.
     } catch (e) {
       const error = e as ErrorApi;
       setEnviando(false);
 
-      if (error.campos.length > 0) {
+      if (error.campos?.length > 0) {
         const porCampo: Errores = {};
         error.campos.forEach((campo) => {
           porCampo[campo.campo] = campo.mensaje;
@@ -193,8 +199,11 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
         });
         setPaso(1);
       } else {
-        setErrorGeneral(error.message);
+        setErrorGeneral(error.message || 'No pudimos crear tu cuenta. Intentá de nuevo.');
       }
+    } finally {
+      envioEnCurso.current = false;
+      setEnviando(false);
     }
   }
 
@@ -202,7 +211,7 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
     paso === 1
       ? esEmpresa
         ? 'Datos de la empresa'
-        : 'Tus datos'
+        : tecnico ? 'Tu cuenta de técnico' : 'Tus datos'
       : 'Creá tu contraseña';
 
   const subtitulo =
@@ -220,7 +229,7 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
         esDesktop
           ? [
               'Precio estimado antes de confirmar',
-              'Técnicos validados con antecedentes',
+              'Revisión de identidad y certificados',
               'Seguimiento del servicio en la app',
             ]
           : undefined
@@ -416,7 +425,7 @@ export function RegistroScreen({ tipoCliente, onVolver, onEntrar }: RegistroScre
                   />
                 )}
                 <Texto variante="caption" color={colores.terciario} centrado>
-                  Al crear tu cuenta aceptás las condiciones de uso de Fixly Bolivia.
+                  {tecnico ? 'Crear la cuenta no te habilita para trabajar. Primero verificamos tu email y revisamos tus documentos.' : 'Tu cuenta te permite gestionar servicios en Fixly Bolivia.'}
                 </Texto>
               </View>
 

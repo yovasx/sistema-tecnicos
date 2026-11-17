@@ -37,6 +37,7 @@ export function CampoTexto({
       >
         <TextInput
           {...rest}
+          accessibilityLabel={rest.accessibilityLabel ?? etiqueta}
           style={estilos.entrada}
           placeholderTextColor={colores.deshabilitado}
           secureTextEntry={esPassword && !verClave}

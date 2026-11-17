@@ -39,6 +39,15 @@ services:
     networks:
       - tecnicos-net
 
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+    networks:
+      - tecnicos-net
+
   backend:
     build: ./backend
     container_name: tecnicos-backend
@@ -62,6 +71,16 @@ services:
       JWT_SECRET: ${JWT_SECRET:-}
       JWT_ISSUER: ${JWT_ISSUER:-https://api.fixly.bo}
       JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-30}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_FROM: ${SMTP_FROM:-no-responder@fixly.bo}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - documentos_data:/app/uploads
     ports:
       - "${BACKEND_PORT}:8080"
     networks:
@@ -74,3 +93,4 @@ networks:
 volumes:
   postgres_data:
   rabbitmq_data:
+  documentos_data:

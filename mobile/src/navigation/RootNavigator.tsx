@@ -28,6 +28,7 @@ import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
 import { AdminScreen } from '../screens/admin/AdminScreen';
 import { Texto } from '../ui/Texto';
 import { colores } from '../theme/tokens';
+import { AccesoTecnico } from '../screens/tecnico/AccesoTecnico';
 
 const Tab = createBottomTabNavigator();
 
@@ -55,7 +56,7 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
  * cuenta → registro o login); `autenticado` → shell por rol y perfil de cliente.
  */
 export function RootNavigator() {
-  const { estado } = useSesion();
+  const { estado, usuario } = useSesion();
   const { esDesktop } = useResponsive();
 
   if (estado === 'cargando') {
@@ -69,7 +70,7 @@ export function RootNavigator() {
   }
 
   if (estado === 'autenticado') {
-    return esDesktop ? (
+    const contenido = esDesktop ? (
       <ShellAutenticado />
     ) : (
       <NavigationContainer>
@@ -78,6 +79,7 @@ export function RootNavigator() {
         </View>
       </NavigationContainer>
     );
+    return usuario?.rol === 'tecnico' ? <AccesoTecnico>{contenido}</AccesoTecnico> : contenido;
   }
 
   return (

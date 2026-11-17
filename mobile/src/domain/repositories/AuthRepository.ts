@@ -1,4 +1,5 @@
 import { DatosRegistroCliente } from '../models/Registro';
+import { DatosRegistroTecnico } from '../models/Expediente';
 import { SesionIniciada, UsuarioSesion } from '../models/Sesion';
 
 /**
@@ -9,5 +10,6 @@ export interface AuthRepository {
   login(email: string, password: string): Promise<SesionIniciada>;
   /** Alta pública de cliente. Devuelve la sesión ya iniciada. */
   registrar(datos: DatosRegistroCliente): Promise<SesionIniciada>;
+  registrarTecnico(datos: DatosRegistroTecnico): Promise<SesionIniciada>;
   me(): Promise<UsuarioSesion>;
 }

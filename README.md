@@ -281,6 +281,17 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
 | POST | `/api/auth/registro` | ✅ implementado; alta pública de cliente (persona/empresa) → JWT; el `rol` siempre es `cliente` |
+| POST | `/api/tecnicos/registro` | ✅ alta técnica separada → sesión, sin habilitación operativa |
+| POST | `/api/tecnicos/verificacion/email/solicitar` | ✅ OTP por SMTP; requiere sesión técnica |
+| POST | `/api/tecnicos/verificacion/email/confirmar` | ✅ verifica código, persiste intentos fallidos |
+| GET | `/api/tecnicos/expediente` | ✅ expediente privado y progreso reanudable |
+| PUT | `/api/tecnicos/expediente/datos-personales`, `/especialidades`, `/zonas` | ✅ guarda pasos (rutas completas bajo `/api/tecnicos/expediente`) |
+| POST | `/api/tecnicos/expediente/documentos` | ✅ multipart: `ci_frente`, `ci_dorso`, `certificaciones`; admite reemplazos parciales |
+| POST | `/api/tecnicos/expediente/enviar` | ✅ envío y reenvío tras corregir observaciones |
+| GET | `/api/tecnicos/expediente/documentos/{nombre}` | ✅ dueño/admin, descarga privada sin cache |
+| GET | `/api/admin/tecnicos/expedientes` | ✅ cola por `estado` (en_revision/observado/aprobado/rechazado), excluye borradores |
+| GET | `/api/admin/tecnicos/expedientes/{id}` | ✅ detalle privado para revisión |
+| POST | `/api/admin/tecnicos/expedientes/{id}/observar`, `/aprobar`, `/rechazar` | ✅ decisiones documentales con auditoría en BD |
 | GET | `/api/auth/me` | ✅ implementado; perfil fresco desde la base (incluye `tipoCliente`, `razonSocial`, `nit`) |
 | GET | `/api/publico/categorias` | ✅ implementado; catálogo público: nombre, descripción y tarifa vigente por categoría (sin comisión) |
 | GET | `/api/admin/resumen` | ✅ implementado; conteos reales (usuarios por rol, técnicos pendientes/aprobados, categorías activas) |
@@ -289,10 +300,25 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/admin/tecnicos/pendientes` | ✅ implementado; perfiles con validación pendiente (vacío con los seeds) |
 | GET/POST/PUT | `/api/admin/categorias` | pendiente |
 | GET/PATCH | `/api/admin/usuarios` | pendiente (lectura implementada arriba) |
-| POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
-| POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
 
-El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Solo `/api/ping`, `/api/auth/login`, `/api/auth/registro` y `/api/publico/**` son públicas.
+El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Solo GET `/api/ping`, POST `/api/auth/login`, POST `/api/auth/registro`, POST `/api/tecnicos/registro` y GET `/api/publico/**` son públicas.
+
+### Probar el onboarding técnico
+
+1. `docker compose up -d --build backend mailpit` desde la raíz; Expo web en `http://localhost:9081`.
+2. “Soy técnico” → crear cuenta → enviar código por email. En desarrollo leé el email en **http://localhost:8025** (Mailpit captura los emails, no los entrega a casillas externas).
+3. Verificá el código y completá CI/fecha de nacimiento, frente/dorso, al menos un certificado técnico, especialidades y cobertura. JPG/PNG/PDF hasta 8 MB; máximo 5 certificados.
+4. Enviá a revisión. El expediente no se puede editar mientras está en revisión ni después de aprobar/rechazar.
+5. En otra sesión de navegador, entrá como admin (`admin@fixly.bo` / `Fixly2026!`, solo desarrollo) → “Validar técnicos”. Descargá documentos para revisarlos y observá campos concretos o confirmá aprobación/rechazo.
+6. El técnico toca “Actualizar estado”, corrige solo lo observado y reenvía. Al aprobar, accede al panel técnico. Cada decisión queda en `identity.revisiones_tecnico`.
+
+Modo mixto: OTP y completitud automáticos; revisión humana de identidad y certificados. **No hay OCR, biometría ni comprobación automática de autenticidad documental.** Sin REJAP, SMS ni datos de cobro. El nivel 2 indica expediente completo; solo el aprobado (nivel 3) puede aceptar ofertas. Las cuentas aprobadas antes de V5 conservan su habilitación.
+
+El código nunca aparece en logs ni en respuestas API: expira en 10 minutos, permite 5 intentos y exige 60 segundos entre envíos (máximo 5 por hora). Si SMTP falla se responde 503 sin consumir cooldown.
+
+Documentos en volumen privado `documentos_data`; no borrar ese volumen para actualizar el backend. En producción configurar `SMTP_HOST/PORT/USERNAME/PASSWORD/AUTH/STARTTLS/FROM`, un volumen persistente protegido y backups/cifrado según la política de datos; **Mailpit es solo desarrollo** y sus puertos se publican únicamente en loopback.
+
+Tests específicos: desde `backend/`, `.\gradlew.bat test --tests "*TecnicoControllerTest"`. Requieren Postgres vivo; usan email simulado y archivos temporales, y limpian únicamente sus propias cuentas de prueba. No equivalen a probar cámara/permisos en un dispositivo nativo.
 
 ### Probar el login
 

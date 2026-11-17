@@ -31,4 +31,10 @@ public record TecnicoRegistroRequest(
         @NotBlank(message = "La contraseña es obligatoria.")
         @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres.")
         String password) {
+    public TecnicoRegistroRequest {
+        nombre = nombre == null ? null : nombre.trim();
+        apellido = apellido == null ? null : apellido.trim();
+        email = email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
+        telefono = telefono == null ? null : telefono.trim();
+    }
 }

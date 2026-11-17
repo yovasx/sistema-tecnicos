@@ -8,10 +8,14 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Texto } from '../../ui/Texto';
 import { colores, espacio } from '../../theme/tokens';
 import { useResponsive } from '../../theme/responsive';
+import { useExpedienteTecnico } from './AccesoTecnico';
 
 export function PanelTecnico() {
   const { usuario } = useSesion();
   const { esDesktop } = useResponsive();
+  const expediente = useExpedienteTecnico();
+  const disponibilidad = expediente?.disponibilidad;
+  const etiqueta = disponibilidad === 'disponible' ? 'Disponible' : disponibilidad === 'ocupado' ? 'Ocupado' : 'Fuera de servicio';
 
   return (
     <ContenedorApp>
@@ -26,12 +30,12 @@ export function PanelTecnico() {
               Disponibilidad
             </Texto>
             <View style={estilos.chips}>
-              <Chip tono="exito" texto="Disponible" />
-              <Chip texto="Cobertura: Sopocachi" />
+              <Chip tono={disponibilidad === 'disponible' ? 'exito' : 'neutro'} texto={etiqueta} />
+              {expediente?.zonas.map((zona) => <Chip key={zona.id} texto={`Cobertura: ${zona.nombre}`} />)}
             </View>
           </View>
           <Aviso tono="advertencia" titulo="Pendiente de V2">
-            Órdenes entrantes, ruta y diagnóstico (F29/F31) dependen del
+            Activar disponibilidad, órdenes entrantes, ruta y diagnóstico (F29/F31) dependen del
             controlador de orders.
           </Aviso>
         </View>

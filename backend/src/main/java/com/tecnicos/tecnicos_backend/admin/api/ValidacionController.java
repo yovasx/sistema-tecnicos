@@ -45,6 +45,11 @@ public class ValidacionController {
         tecnicos.observar(admin.id(), tecnicoId, request);
     }
 
+    @GetMapping("/{tecnicoId}")
+    public com.tecnicos.tecnicos_backend.identity.api.ExpedienteResponse detalle(@PathVariable Long tecnicoId) {
+        return tecnicos.expediente(tecnicoId);
+    }
+
     @PostMapping("/{tecnicoId}/aprobar")
     public void aprobar(@PathVariable Long tecnicoId,
                         @AuthenticationPrincipal com.tecnicos.tecnicos_backend.shared.security.UsuarioAutenticado admin) {

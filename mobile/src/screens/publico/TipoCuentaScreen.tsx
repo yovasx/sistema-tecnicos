@@ -1,9 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Aviso } from '../../ui/Aviso';
-import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Texto } from '../../ui/Texto';
 import { useResponsive } from '../../theme/responsive';
 import { colores, espacio, radio, sombraTarjeta } from '../../theme/tokens';
@@ -14,6 +11,7 @@ export interface TipoCuentaScreenProps {
   onVolver: () => void;
   onElegir: (tipo: TipoCliente) => void;
   onEntrar: () => void;
+  onTecnico: () => void;
 }
 
 /**
@@ -23,9 +21,8 @@ export interface TipoCuentaScreenProps {
  * técnicos implica validación documental, así que no se mezcla con el registro
  * de clientes: se resuelve entrando con una cuenta existente.
  */
-export function TipoCuentaScreen({ onVolver, onElegir, onEntrar }: TipoCuentaScreenProps) {
+export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: TipoCuentaScreenProps) {
   const { esDesktop } = useResponsive();
-  const [verTecnicos, setVerTecnicos] = useState(false);
 
   return (
     <MarcoPublico
@@ -35,7 +32,7 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar }: TipoCuentaScr
         esDesktop
           ? [
               'Precio estimado antes de confirmar',
-              'Técnicos validados con antecedentes',
+              'Revisión de identidad y certificados',
               'Seguimiento del servicio en la app',
             ]
           : undefined
@@ -87,24 +84,10 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar }: TipoCuentaScr
                 titulo="Soy técnico"
                 detalle="Las cuentas de técnico se habilitan con validación."
                 insignia="Con validación"
-                onPress={() => setVerTecnicos(true)}
+                onPress={onTecnico}
               />
             </View>
 
-            {verTecnicos ? (
-              <View style={estilos.avisoTecnicos}>
-                <Aviso tono="info" titulo="Alta de técnicos">
-                  Revisamos antecedentes, documentos y certificados antes de habilitar
-                  una cuenta de técnico. Si ya trabajás con Fixly, iniciá sesión con tu
-                  cuenta.
-                </Aviso>
-                <BotonPrimario
-                  titulo="Iniciar sesión como técnico"
-                  variante="secundario"
-                  onPress={onEntrar}
-                />
-              </View>
-            ) : null}
 
             <View style={estilos.pie}>
               <Texto variante="caption" color={colores.secundario}>

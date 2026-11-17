@@ -75,6 +75,11 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> accesoDatos(DataAccessException ex) {
         String sqlState = sqlState(ex);
         Throwable causa = rootCause(ex);
+        if ("23505".equals(sqlState) && causa.getMessage()!=null
+                && causa.getMessage().contains("uq_tecnico_ci")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("CI_YA_REGISTRADO", "Ese CI ya tiene un expediente técnico."));
+        }
 
         if (sqlState == null) {
             log.error("Fallo de acceso a datos sin SQLSTATE", ex);
@@ -148,7 +153,14 @@ public class ApiExceptionHandler {
         if (mensaje == null || mensaje.isBlank()) {
             return "La operación fue rechazada por una regla de negocio.";
         }
-        return mensaje;
+        // JDBC añade contexto SQL y nombres de funciones después del salto de línea.
+        return mensaje.replaceFirst("^ERROR:\\s*", "").split("\\R", 2)[0];
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> archivoGrande(Exception ex) {
+        return ResponseEntity.status(413)
+                .body(ApiError.de("ARCHIVO_MUY_GRANDE", "Cada archivo puede pesar hasta 8 MB."));
     }
 
     private String sqlState(Throwable ex) {

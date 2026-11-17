@@ -20,4 +20,6 @@ public interface AlmacenArchivos {
 
     /** Contenido del archivo; lanza IOException si no existe. */
     java.io.InputStream abrir(String url) throws IOException;
+    /** Limpieza compensatoria si una transacción no confirma el documento. */
+    void eliminar(String url);
 }

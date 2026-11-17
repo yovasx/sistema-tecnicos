@@ -30,6 +30,7 @@ export function BotonPrimario({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={titulo}
       accessibilityState={{ disabled: inactivo, busy: cargando }}
       disabled={inactivo}
       onPress={onPress}
@@ -46,6 +47,7 @@ export function BotonPrimario({
       ) : (
         <View style={estilos.contenido}>
           <Texto
+            numberOfLines={1}
             style={[estilos.titulo, secundario ? estilos.tituloSecundario : null]}
           >
             {titulo}
@@ -83,11 +85,13 @@ const estilos = StyleSheet.create({
     opacity: 0.55,
   },
   contenido: {
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   titulo: {
+    flexShrink: 1,
     fontFamily: fuentes.etiqueta,
     fontSize: tamanos.cuerpo,
     color: colores.superficie,

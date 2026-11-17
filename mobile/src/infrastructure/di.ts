@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { AdminApiRepository } from './http/AdminApiRepository';
 import { AuthApiRepository } from './http/AuthApiRepository';
 import { PublicoApiRepository } from './http/PublicoApiRepository';
+import { TecnicoApiRepository } from './http/TecnicoApiRepository';
 import { SecureTokenStorage } from './storage/SecureTokenStorage';
 import { WebTokenStorage } from './storage/WebTokenStorage';
 
@@ -15,3 +16,4 @@ export const tokenStorage =
 export const authRepository = new AuthApiRepository();
 export const adminRepository = new AdminApiRepository();
 export const publicoRepository = new PublicoApiRepository();
+export const tecnicoRepository = new TecnicoApiRepository();

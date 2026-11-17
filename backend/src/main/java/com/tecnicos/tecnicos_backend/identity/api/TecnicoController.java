@@ -3,6 +3,8 @@ package com.tecnicos.tecnicos_backend.identity.api;
 import com.tecnicos.tecnicos_backend.identity.application.TecnicoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,9 +58,9 @@ public class TecnicoController {
 
     @PostMapping("/expediente/documentos")
     public void guardarDocumentos(
-            @RequestParam("ci_frente") MultipartFile ciFrente,
-            @RequestParam("ci_dorso") MultipartFile ciDorso,
-            @RequestParam("certificaciones") MultipartFile[] certificaciones) throws IOException {
+            @RequestParam(value="ci_frente", required=false) MultipartFile ciFrente,
+            @RequestParam(value="ci_dorso", required=false) MultipartFile ciDorso,
+            @RequestParam(value="certificaciones", required=false) MultipartFile[] certificaciones) throws IOException {
         tecnicos.guardarDocumentos(usuarioActual(), ciFrente, ciDorso, certificaciones);
     }
 
@@ -78,23 +80,28 @@ public class TecnicoController {
         tecnicos.enviarExpediente(usuarioActual());
     }
 
-    @PostMapping("/expediente/reenviar")
-    public void reenviar(@Valid @RequestBody ReenviarRequest request) {
-        tecnicos.reenviarExpediente(usuarioActual(), request);
-    }
-
     @GetMapping("/expediente")
     public ExpedienteResponse expediente() {
         return tecnicos.expediente(usuarioActual());
     }
 
     @GetMapping("/expediente/documentos/{nombre}")
-    public org.springframework.core.io.Resource documento(@PathVariable String nombre)
+    public ResponseEntity<org.springframework.core.io.Resource> documento(@PathVariable String nombre)
             throws IOException {
         var autenticado = usuarioAutenticado();
         java.io.InputStream contenido = tecnicos.descargarDocumento(
                 autenticado.id(), autenticado.rol(), nombre);
-        return new org.springframework.core.io.InputStreamResource(contenido);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(new org.springframework.core.io.InputStreamResource(contenido));
+    }
+
+    @GetMapping("/expediente/categorias")
+    public java.util.List<ExpedienteResponse.EspecialidadResumen> categorias() {
+        return tecnicos.categorias();
     }
 
     private Long usuarioActual() {

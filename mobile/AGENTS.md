@@ -31,6 +31,9 @@ No uses `npx expo lint`: no hay ESLint instalado ni configuración.
 - `src/theme/responsive.ts`: `useResponsive()` devuelve `esDesktop` (`Platform.OS === 'web' && ancho >= 1024`), `esMovil` y `ancho`. No uses `Platform.OS` suelto para decidir layout: usá el hook, así redimensionar la ventana cambia de shell en caliente.
 - `src/navigation/secciones.ts`: lista única de secciones por rol/perfil que alimenta el sidebar. Si agregás una pantalla, sumala ahí y en las tabs móviles.
 - Anónimos: flujo público compartido `PublicoFlujo` (bienvenida F01/W62 → selector de tipo de cuenta → registro en 2 pasos → sesión). En web ≥1024 px se ve la landing rica (W62); en el teléfono, la bienvenida compacta (F01). El login (W63/F03) siempre está disponible.
+- “Soy técnico” abre el alta técnica. Tras registro/login, `AccesoTecnico` consulta el expediente y bloquea el panel operativo hasta aprobación. `OnboardingTecnicoScreen` guarda pasos en backend: email OTP → CI/fecha → documentos → especialidades → cobertura → envío. Se reanuda tras F5, permite corregir documentos individuales observados y actualizar el estado.
+- Archivos: `expo-document-picker` compatible SDK 58, JPG/PNG/PDF hasta 8 MB; `TecnicoApiRepository` envía multipart con Blob en web y URI en nativo. No persistir documentos/CI en storage de sesión. `ValidacionAdminScreen` descarga autenticado y observa/aprueba/rechaza con confirmación; no abre URLs de documentos públicas.
+- Cobertura: `expo-location` solo consulta puntual y con permiso al tocar “Usar mi ubicación”; sin seguimiento/background. Coordenadas manuales y enlace externo a OpenStreetMap como alternativa. Mailpit `http://localhost:8025` permite leer el email OTP en desarrollo; jamás mostrar el código desde la API.
 - El cliente HTTP lee solo `EXPO_PUBLIC_API_URL`, sin fallback. Valores: `http://localhost:9080` (web/iOS), `http://10.0.2.2:9080` (emulador Android), IP LAN en dispositivo físico.
 
 ## Nativos

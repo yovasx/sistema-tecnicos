@@ -6,11 +6,12 @@ import java.util.Map;
 /**
  * Snapshot del expediente técnico para la UI del wizard y la cola de admin.
  *
- * <p>Las fechas viajan en ISO-8601; {@code observaciones} es el JSONB tal cual
+ * <p>Las fechas viajan como texto de Postgres; {@code observaciones} es el JSONB tal cual
  * (clave = campo observado, valor = motivo).</p>
  */
 public record ExpedienteResponse(
         int nivel,
+        String disponibilidad,
         String estadoExpediente,
         String email,
         String emailVerificadoEn,
@@ -27,6 +28,6 @@ public record ExpedienteResponse(
     public record EspecialidadResumen(int id, String nombre) {
     }
 
-    public record ZonaResumen(long id, String nombre) {
+    public record ZonaResumen(long id, String nombre, double lat, double lng, long radio) {
     }
 }

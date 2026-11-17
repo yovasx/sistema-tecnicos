@@ -3,8 +3,7 @@ package com.tecnicos.tecnicos_backend.shared.mail;
 /**
  * Puerto de envío de email.
  *
- * <p>En desarrollo el adaptador solo logra el código: no hay SMTP en el
- * compose. Cuando haya proveedor se implementa acá y la API no cambia.</p>
+ * <p>SMTP en producción y Mailpit en desarrollo; el código nunca se expone.</p>
  */
 public interface ServicioEmail {
     void enviarCodigo(String destinatario, String codigo);

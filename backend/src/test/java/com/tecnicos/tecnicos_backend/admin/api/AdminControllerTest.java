@@ -35,6 +35,8 @@ class AdminControllerTest {
 
     @Autowired
     private MockMvc mvc;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Test
     void resumen_cuenta_los_seeds_reales() throws Exception {
@@ -42,10 +44,14 @@ class AdminControllerTest {
 
         mvc.perform(get("/api/admin/resumen").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalUsuarios").value(7))
-                .andExpect(jsonPath("$.clientes").value(3))
-                .andExpect(jsonPath("$.tecnicos").value(3))
-                .andExpect(jsonPath("$.administradores").value(1))
+                .andExpect(jsonPath("$.totalUsuarios").value(jdbc.queryForObject(
+                        "SELECT count(*) FROM identity.usuarios WHERE eliminado_en IS NULL", Integer.class)))
+                .andExpect(jsonPath("$.clientes").value(jdbc.queryForObject(
+                        "SELECT count(*) FROM identity.usuarios WHERE rol='cliente' AND eliminado_en IS NULL", Integer.class)))
+                .andExpect(jsonPath("$.tecnicos").value(jdbc.queryForObject(
+                        "SELECT count(*) FROM identity.usuarios WHERE rol='tecnico' AND eliminado_en IS NULL", Integer.class)))
+                .andExpect(jsonPath("$.administradores").value(jdbc.queryForObject(
+                        "SELECT count(*) FROM identity.usuarios WHERE rol='administrador' AND eliminado_en IS NULL", Integer.class)))
                 .andExpect(jsonPath("$.tecnicosPendientes").value(0))
                 .andExpect(jsonPath("$.tecnicosAprobados").value(3))
                 .andExpect(jsonPath("$.categoriasActivas").value(3));

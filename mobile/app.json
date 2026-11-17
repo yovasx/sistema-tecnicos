@@ -23,7 +23,14 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-document-picker",
+      ["expo-location", {
+        "locationWhenInUsePermission": "Fixly usa tu ubicación, solo cuando lo pedís, para definir el centro de tu cobertura.",
+        "locationAlwaysAndWhenInUsePermission": "Fixly usa tu ubicación únicamente al definir tu cobertura.",
+        "isIosBackgroundLocationEnabled": false,
+        "isAndroidBackgroundLocationEnabled": false
+      }]
     ]
   }
 }

@@ -6,6 +6,7 @@ import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Aviso } from '../../ui/Aviso';
 import { useResponsive } from '../../theme/responsive';
+import { useSesion } from '../../session/SesionProvider';
 import { colores, espacio } from '../../theme/tokens';
 
 const CATEGORIAS = [
@@ -16,13 +17,14 @@ const CATEGORIAS = [
 
 export function InicioCliente() {
   const { esDesktop } = useResponsive();
+  const { usuario } = useSesion();
 
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
         <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
-            titulo="Hola, María"
+            titulo={`Hola, ${usuario?.nombre.split(' ')[0] ?? 'bienvenido'}`}
             subtitulo="¿Qué necesitás arreglar hoy?"
           />
           <View style={[estilos.acciones, esDesktop && estilos.accionesDesktop]}>

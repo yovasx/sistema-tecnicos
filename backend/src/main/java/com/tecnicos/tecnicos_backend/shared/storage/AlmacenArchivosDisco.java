@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.Locale;
 
 /**
  * Almacenamiento en disco local. El nombre del archivo es UUID, así que el
@@ -31,6 +32,9 @@ public class AlmacenArchivosDisco implements AlmacenArchivos {
         Files.createDirectories(destino.getParent());
         try (contenido) {
             Files.copy(contenido, destino);
+        } catch (IOException e) {
+            Files.deleteIfExists(destino);
+            throw e;
         }
         return "/perfiles/" + nombre;
     }
@@ -49,6 +53,7 @@ public class AlmacenArchivosDisco implements AlmacenArchivos {
 
     @Override
     public InputStream abrir(String url) throws IOException {
+        if (url == null || !url.startsWith("/perfiles/")) throw new IOException("Ruta inválida.");
         // La URL siempre empieza con /perfiles/: no hay forma de salir del directorio.
         Path destino = raiz.resolve(url.substring("/perfiles/".length())).normalize();
         if (!destino.startsWith(raiz)) {
@@ -57,12 +62,23 @@ public class AlmacenArchivosDisco implements AlmacenArchivos {
         return Files.newInputStream(destino);
     }
 
+    @Override
+    public void eliminar(String url) {
+        if (url == null || !url.matches("/perfiles/[a-f0-9-]{36}\\.(png|jpg|jpeg|pdf)")) return;
+        try {
+            Path destino = raiz.resolve(url.substring("/perfiles/".length())).normalize();
+            if (destino.startsWith(raiz)) Files.deleteIfExists(destino);
+        } catch (IOException e) {
+            org.slf4j.LoggerFactory.getLogger(getClass()).warn("No se pudo limpiar un documento temporal.");
+        }
+    }
+
     private static String extensionDe(String nombre) {
         int punto = nombre.lastIndexOf('.');
         if (punto < 0) {
             return "";
         }
-        String ext = nombre.substring(punto);
+        String ext = nombre.substring(punto).toLowerCase(Locale.ROOT);
         return ext.length() <= 5 ? ext : "";
     }
 }

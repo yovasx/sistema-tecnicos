@@ -9,7 +9,7 @@ import { LoginDesktopScreen } from './LoginDesktopScreen';
 import { RegistroScreen } from './RegistroScreen';
 import { TipoCuentaScreen } from './TipoCuentaScreen';
 
-type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'login';
+type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login';
 
 /**
  * Flujo público compartido por teléfono y escritorio:
@@ -39,12 +39,13 @@ export function PublicoFlujo() {
       <LandingPublicaScreen
         onEntrar={() => setVista('login')}
         onCrearCuenta={() => setVista('tipoCuenta')}
+        onSoyTecnico={() => setVista('tecnico')}
       />
     ) : (
       <BienvenidaMovilScreen
         onCrearCuenta={() => setVista('tipoCuenta')}
         onEntrar={() => setVista('login')}
-        onSoyTecnico={() => setVista('login')}
+        onSoyTecnico={() => setVista('tecnico')}
       />
     );
   }
@@ -58,14 +59,16 @@ export function PublicoFlujo() {
           setVista('registro');
         }}
         onEntrar={() => setVista('login')}
+        onTecnico={() => setVista('tecnico')}
       />
     );
   }
 
-  if (vista === 'registro') {
+  if (vista === 'registro' || vista === 'tecnico') {
     return (
       <RegistroScreen
-        tipoCliente={tipoCliente}
+        tipoCliente={vista === 'tecnico' ? 'persona' : tipoCliente}
+        tecnico={vista === 'tecnico'}
         onVolver={() => setVista('tipoCuenta')}
         onEntrar={() => setVista('login')}
       />
