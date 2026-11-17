@@ -1,31 +1,37 @@
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSesion } from '../../session/SesionProvider';
 import { Texto } from '../../ui/Texto';
 import { Tarjeta } from '../../ui/Tarjeta';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Aviso } from '../../ui/Aviso';
+import { useResponsive } from '../../theme/responsive';
 import { colores, espacio } from '../../theme/tokens';
 
 const CATEGORIAS = [
-  { nombre: 'Plomería', tarifa: 'Visita Bs 50 · Hora Bs 80' },
-  { nombre: 'Electricidad', tarifa: 'Visita Bs 45 · Hora Bs 75' },
-  { nombre: 'Climatización', tarifa: 'Visita Bs 60 · Hora Bs 90' },
+  { nombre: 'Plomería', tarifa: 'Visita Bs 50 · Hora Bs 60' },
+  { nombre: 'Electricidad', tarifa: 'Visita Bs 60 · Hora Bs 70' },
+  { nombre: 'Climatización', tarifa: 'Visita Bs 80 · Hora Bs 90' },
 ];
 
 export function InicioCliente() {
+  const { esDesktop } = useResponsive();
+
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={estilos.contenido}>
+        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
             titulo="Hola, María"
             subtitulo="¿Qué necesitás arreglar hoy?"
           />
-          <View style={estilos.acciones}>
+          <View style={[estilos.acciones, esDesktop && estilos.accionesDesktop]}>
             {CATEGORIAS.map((c) => (
-              <Tarjeta key={c.nombre} relleno={espacio.base}>
+              <Tarjeta
+                key={c.nombre}
+                relleno={espacio.base}
+                style={esDesktop ? estilos.tarjetaDesktop : undefined}
+              >
                 <Texto variante="cuerpoFuerte">{c.nombre}</Texto>
                 <Texto variante="caption" color={colores.secundario}>
                   {c.tarifa}
@@ -53,5 +59,18 @@ const estilos = StyleSheet.create({
   },
   acciones: {
     gap: espacio.md,
+  },
+  contenidoDesktop: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    maxWidth: 1080,
+  },
+  accionesDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  tarjetaDesktop: {
+    flex: 1,
+    minWidth: 240,
   },
 });

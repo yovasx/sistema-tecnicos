@@ -5,33 +5,35 @@ import { Chip } from '../../ui/Chip';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Texto } from '../../ui/Texto';
+import { useResponsive } from '../../theme/responsive';
 import { colores, espacio } from '../../theme/tokens';
 
 export function InicioEmpresa() {
   const { usuario } = useSesion();
+  const { esDesktop } = useResponsive();
 
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={estilos.contenido}>
+        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
             titulo={usuario?.nombre ?? 'Empresa'}
             subtitulo={usuario?.razonSocial ?? 'Cliente empresa'}
           />
-          <View style={estilos.datos}>
-            <View style={estilos.dato}>
+          <View style={[estilos.datos, esDesktop && estilos.datosDesktop]}>
+            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
               <Texto variante="etiqueta" color={colores.secundario}>
                 NIT
               </Texto>
               <Texto variante="cuerpo">{usuario?.nit ?? '—'}</Texto>
             </View>
-            <View style={estilos.dato}>
+            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
               <Texto variante="etiqueta" color={colores.secundario}>
                 Razón social
               </Texto>
               <Texto variante="cuerpo">{usuario?.razonSocial ?? '—'}</Texto>
             </View>
-            <View style={estilos.dato}>
+            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
               <Texto variante="etiqueta" color={colores.secundario}>
                 Email
               </Texto>
@@ -63,5 +65,18 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     borderColor: colores.linea,
     gap: 4,
+  },
+  contenidoDesktop: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    maxWidth: 1080,
+  },
+  datosDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  datoDesktop: {
+    flex: 1,
+    minWidth: 220,
   },
 });

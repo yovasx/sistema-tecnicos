@@ -7,14 +7,16 @@ import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Texto } from '../../ui/Texto';
 import { colores, espacio } from '../../theme/tokens';
+import { useResponsive } from '../../theme/responsive';
 
 export function PanelTecnico() {
   const { usuario } = useSesion();
+  const { esDesktop } = useResponsive();
 
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={estilos.contenido}>
+        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
             titulo="Panel técnico"
             subtitulo={usuario?.nombre ?? '—'}
@@ -59,5 +61,10 @@ const estilos = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginTop: 4,
+  },
+  contenidoDesktop: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    maxWidth: 1080,
   },
 });

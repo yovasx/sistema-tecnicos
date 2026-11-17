@@ -6,14 +6,16 @@ import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Texto } from '../../ui/Texto';
 import { colores, espacio } from '../../theme/tokens';
+import { useResponsive } from '../../theme/responsive';
 
 export function PerfilTecnico() {
   const { usuario, cerrarSesion } = useSesion();
+  const { esDesktop } = useResponsive();
 
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={estilos.contenido}>
+        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado titulo="Perfil técnico" />
           <View style={estilos.ficha}>
             <Texto variante="cuerpoFuerte">{usuario?.nombre ?? '—'}</Texto>
@@ -54,5 +56,10 @@ const estilos = StyleSheet.create({
   botonCerrar: {
     alignItems: 'center',
     paddingTop: espacio.base,
+  },
+  contenidoDesktop: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    maxWidth: 720,
   },
 });

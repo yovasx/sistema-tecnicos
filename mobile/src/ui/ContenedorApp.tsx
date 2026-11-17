@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colores, esWeb } from '../theme/tokens';
+import { useResponsive } from '../theme/responsive';
+import { colores } from '../theme/tokens';
 
 export interface ContenedorAppProps {
   children: ReactNode;
@@ -9,11 +10,17 @@ export interface ContenedorAppProps {
 /**
  * Marco de la app.
  *
- * En el teléfono ocupa toda la pantalla. En el navegador se ve como una columna
- * centrada de 420 px sobre fondo gris: la app es móvil y no se estira a 1440 px
- * como el backoffice. Así el mismo código se ve igual en PC y en el celular.
+ * En teléfono (o ventana angosta) es columna centrada de 420 px sobre fondo
+ * gris. En escritorio ocupa todo el espacio que le deja el sidebar: la misma
+ * pantalla sirve en los dos shells sin tocar su contenido.
  */
 export function ContenedorApp({ children }: ContenedorAppProps) {
+  const { esDesktop } = useResponsive();
+
+  if (esDesktop) {
+    return <View style={estilos.escritorio}>{children}</View>;
+  }
+
   return (
     <View style={estilos.exterior}>
       <View style={estilos.columna}>{children}</View>
@@ -24,16 +31,20 @@ export function ContenedorApp({ children }: ContenedorAppProps) {
 const estilos = StyleSheet.create({
   exterior: {
     flex: 1,
-    backgroundColor: esWeb ? colores.fondoExterior : colores.fondo,
+    backgroundColor: colores.fondoExterior,
     alignItems: 'center',
   },
   columna: {
     flex: 1,
     width: '100%',
-    maxWidth: esWeb ? 420 : undefined,
+    maxWidth: 420,
     backgroundColor: colores.fondo,
-    borderLeftWidth: esWeb ? 1 : 0,
-    borderRightWidth: esWeb ? 1 : 0,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
     borderColor: colores.linea,
+  },
+  escritorio: {
+    flex: 1,
+    backgroundColor: colores.fondo,
   },
 });

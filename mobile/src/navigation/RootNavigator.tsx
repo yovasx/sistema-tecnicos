@@ -1,12 +1,22 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSesion } from '../session/SesionProvider';
 import { esClienteEmpresa } from '../domain/models/Sesion';
+import { useResponsive } from '../theme/responsive';
+import { DesktopShell } from '../layouts/DesktopShell';
+import {
+  seccionesAdmin,
+  seccionesClientePersona,
+  seccionesEmpresa,
+  seccionesTecnico,
+} from './secciones';
 import { LoginScreen } from '../screens/auth/LoginScreen';
+import { LoginDesktopScreen } from '../screens/publico/LoginDesktopScreen';
+import { LandingPublicaScreen } from '../screens/publico/LandingPublicaScreen';
 import { InicioCliente } from '../screens/cliente/InicioCliente';
 import { MisServicios } from '../screens/cliente/MisServicios';
 import { NotificacionesCliente } from '../screens/cliente/NotificacionesCliente';
@@ -41,31 +51,81 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
 /**
  * Navegación raíz.
  *
- * `cargando` → splash; `anonimo` → stack con el login; `autenticado` → tabs
- * según el rol y el perfil de cliente (persona o empresa).
+ * El shell depende del ancho de la ventana, no del aparato: en el navegador a
+ * 1024 px o más se usa el layout de escritorio (sidebar + topbar) y en el
+ * teléfono, o ventana angosta, las tabs de siempre. Las pantallas de contenido
+ * son las mismas en los dos casos.
+ *
+ * `cargando` → splash; `anonimo` → landing/login (escritorio) o login (móvil);
+ * `autenticado` → shell por rol y perfil de cliente.
  */
 export function RootNavigator() {
   const { estado } = useSesion();
+  const { esDesktop } = useResponsive();
+
+  if (estado === 'cargando') {
+    return (
+      <View style={estilos.splash}>
+        <Texto variante="display" color={colores.marca}>
+          Fixly
+        </Texto>
+      </View>
+    );
+  }
+
+  if (estado === 'autenticado') {
+    return esDesktop ? (
+      <ShellAutenticado />
+    ) : (
+      <NavigationContainer>
+        <View style={estilos.raiz}>
+          <RootTabs />
+        </View>
+      </NavigationContainer>
+    );
+  }
+
+  if (esDesktop) {
+    return <PublicoDesktop />;
+  }
 
   return (
     <NavigationContainer>
       <View style={estilos.raiz}>
-        {estado === 'cargando' ? (
-          <View style={estilos.splash}>
-            <Texto variante="display" color={colores.marca}>
-              Fixly
-            </Texto>
-          </View>
-        ) : estado === 'autenticado' ? (
-          <RootTabs />
-        ) : (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
-          </Stack.Navigator>
-        )}
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </Stack.Navigator>
       </View>
     </NavigationContainer>
   );
+}
+
+/** Flujo público de escritorio: landing (W62) → login (W63). */
+function PublicoDesktop() {
+  const [vista, setVista] = useState<'landing' | 'login'>('landing');
+
+  if (vista === 'landing') {
+    return <LandingPublicaScreen onEntrar={() => setVista('login')} />;
+  }
+  return <LoginDesktopScreen onVolver={() => setVista('landing')} />;
+}
+
+/** Sidebar de escritorio según rol y perfil de cliente. */
+function ShellAutenticado() {
+  const { usuario } = useSesion();
+  const rol = usuario?.rol ?? 'cliente';
+
+  if (rol === 'cliente') {
+    return esClienteEmpresa(usuario) ? (
+      <DesktopShell secciones={seccionesEmpresa()} etiqueta="Cliente empresa" />
+    ) : (
+      <DesktopShell secciones={seccionesClientePersona()} etiqueta="Mi cuenta" />
+    );
+  }
+  if (rol === 'tecnico') {
+    return <DesktopShell secciones={seccionesTecnico()} etiqueta="Panel técnico" />;
+  }
+  return <DesktopShell secciones={seccionesAdmin()} etiqueta="Backoffice" />;
 }
 
 function RootTabs() {
