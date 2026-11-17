@@ -49,6 +49,8 @@ public class SecurityConfig {
                         // volver a tocar este archivo.
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
+                        // Alta pública del técnico (nivel 0 del expediente).
+                        .requestMatchers(HttpMethod.POST, "/api/tecnicos/registro").permitAll()
                         // Catálogo público: solo nombre, descripción y tarifas.
                         .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
