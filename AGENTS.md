@@ -53,7 +53,7 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 - `src/ui/` tiene los componentes del design system (BotonPrimario, CampoTexto, Tarjeta, Chip, Texto, Aviso, ContenedorApp, PantallaPendiente). En web con ventana de 1024 px o más se usa el shell de escritorio (sidebar de 240 + topbar de 64 + tablas); por debajo de 1024 y en nativo se ve como columna centrada de 420 px sobre fondo gris, igual que en el teléfono.
 - `src/theme/responsive.ts` expone `useResponsive()` (`esDesktop`, `esMovil`, `ancho`). La regla es `Platform.OS === 'web' && ancho >= 1024`: en nativo nunca se activa el escritorio. `RootNavigator` elige `DesktopShell` o las tabs con esa regla; las pantallas de contenido son las mismas en los dos casos.
 - `src/navigation/secciones.ts` es la única lista de secciones por rol/perfil (`seccionesClientePersona`, `seccionesEmpresa`, `seccionesTecnico`, `seccionesAdmin`): alimenta el sidebar de escritorio. En el teléfono el admin solo ve el aviso de que el backoffice es web.
-- Los anónimos en web abren la landing pública (W62) y de ahí pasan al login de escritorio (W63); en el teléfono abren directo el login (F03).
+- Los anónimos entran al flujo público compartido `src/screens/publico/PublicoFlujo.tsx` (`bienvenida → tipoCuenta → registro → sesión`, con `login` en paralelo): en web ≥1024 px abre la landing rica (W62) y en el teléfono la bienvenida compacta (F01); el registro es solo para clientes (persona/empresa) en dos pasos y termina con sesión iniciada. El alta de técnicos queda diferida: entran por login.
 - Las pantallas sin backend muestran el banner ámbar "Pendiente de V2" de `PantallaPendiente`, con la pantalla de Stitch que las va a implementar. No se inventan datos ni columnas.
 
 ## Git

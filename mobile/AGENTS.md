@@ -25,12 +25,12 @@ No uses `npx expo lint`: no hay ESLint instalado ni configuración.
 
 - Entrypoint `index.ts` → `App.tsx` con `registerRootComponent`. **No es Expo Router**: no hay `app/` ni dependencia `expo-router`.
 - Navegación real: `@react-navigation/native` + `native-stack` + `bottom-tabs`; `src/navigation/RootNavigator.tsx` elige tabs por rol y por perfil de cliente (`persona` | `empresa`).
-- Estado global de sesión: `src/session/SesionProvider.tsx` + `useSesion()`; restaura con el token del storage y `GET /api/auth/me`. `apiClient` manda `Authorization: Bearer` y ante 401 cierra sesión (excepto en `/login`, donde el 401 es del formulario).
+- Estado global de sesión: `src/session/SesionProvider.tsx` + `useSesion()`; restaura con el token del storage y `GET /api/auth/me`. `apiClient` manda `Authorization: Bearer` y ante 401 cierra sesión (excepto en `/login` y `/registro`, donde el 401/409 es del formulario).
 - `src/domain/`: puertos/interfaces. `src/infrastructure/`: adaptadores (axios, storage). `src/infrastructure/di.ts`: composition root manual; `Platform.OS` elige SecureStore o localStorage.
 - Design system en `src/theme/tokens.ts` + `src/ui/`; fuentes Hanken Grotesk + Inter cargadas con `expo-font`. En web con ventana de 1024 px o más la app usa el shell de escritorio (`src/layouts/DesktopShell.tsx`: sidebar 240 + topbar 64) y por debajo de 1024 queda la columna centrada de 420 px. En nativo siempre es móvil.
 - `src/theme/responsive.ts`: `useResponsive()` devuelve `esDesktop` (`Platform.OS === 'web' && ancho >= 1024`), `esMovil` y `ancho`. No uses `Platform.OS` suelto para decidir layout: usá el hook, así redimensionar la ventana cambia de shell en caliente.
 - `src/navigation/secciones.ts`: lista única de secciones por rol/perfil que alimenta el sidebar. Si agregás una pantalla, sumala ahí y en las tabs móviles.
-- Anónimos: landing pública (W62) + login de escritorio (W63) en web; login F03 en el teléfono.
+- Anónimos: flujo público compartido `PublicoFlujo` (bienvenida F01/W62 → selector de tipo de cuenta → registro en 2 pasos → sesión). En web ≥1024 px se ve la landing rica (W62); en el teléfono, la bienvenida compacta (F01). El login (W63/F03) siempre está disponible.
 - El cliente HTTP lee solo `EXPO_PUBLIC_API_URL`, sin fallback. Valores: `http://localhost:9080` (web/iOS), `http://10.0.2.2:9080` (emulador Android), IP LAN en dispositivo físico.
 
 ## Nativos

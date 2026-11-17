@@ -280,7 +280,9 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 |---|---|---|
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
+| POST | `/api/auth/registro` | ✅ implementado; alta pública de cliente (persona/empresa) → JWT; el `rol` siempre es `cliente` |
 | GET | `/api/auth/me` | ✅ implementado; perfil fresco desde la base (incluye `tipoCliente`, `razonSocial`, `nit`) |
+| GET | `/api/publico/categorias` | ✅ implementado; catálogo público: nombre, descripción y tarifa vigente por categoría (sin comisión) |
 | GET | `/api/admin/resumen` | ✅ implementado; conteos reales (usuarios por rol, técnicos pendientes/aprobados, categorías activas) |
 | GET | `/api/admin/usuarios` | ✅ implementado; listado con perfil visible, sin hash |
 | GET | `/api/admin/categorias` | ✅ implementado; categoría + tarifa + comisión |
@@ -290,7 +292,7 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | POST | `/api/admin/tecnicos/{id}/aprobar` | pendiente |
 | POST | `/api/admin/tecnicos/{id}/rechazar` | pendiente |
 
-El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**.
+El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Solo `/api/ping`, `/api/auth/login`, `/api/auth/registro` y `/api/publico/**` son públicas.
 
 ### Probar el login
 
@@ -304,6 +306,21 @@ curl.exe -s -H "Authorization: Bearer <token>" http://localhost:8080/api/ordenes
 ```
 
 Una cuenta inactiva o eliminada solo recibe `CUENTA_INACTIVA` si la contraseña es correcta; con contraseña incorrecta se responde igual que un email inexistente.
+
+### Probar el registro
+
+```powershell
+curl.exe -s -X POST http://localhost:8080/api/auth/registro `
+  -H "Content-Type: application/json" `
+  -d '{"nombre":"Ana","apellido":"Quispe","email":"ana@prueba.bo","password":"ClaveSegura2026!","tipoCliente":"persona"}'
+
+# Empresa (requiere razón social y NIT; el campo rol se ignora siempre):
+curl.exe -s -X POST http://localhost:8080/api/auth/registro `
+  -H "Content-Type: application/json" `
+  -d '{"nombre":"Carlos","apellido":"Mendoza","email":"compras@prueba.bo","password":"ClaveSegura2026!","tipoCliente":"empresa","razonSocial":"Servicios Norte S.R.L.","nit":"7654321"}'
+```
+
+Errores propios del registro: `409 EMAIL_YA_REGISTRADO`, `409 NIT_YA_REGISTRADO`, `400 DATOS_EMPRESA_INCOMPLETOS`, `400 DATOS_INVALIDOS` (validación de campos, p. ej. contraseña menor a 8 caracteres).
 
 ### Formato de errores
 
