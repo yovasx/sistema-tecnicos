@@ -8,6 +8,8 @@ export interface BotonPrimarioProps {
   cargando?: boolean;
   deshabilitado?: boolean;
   variante?: 'primario' | 'secundario';
+  /** El design system pide 52 px en móvil y 40 px en escritorio. */
+  tamano?: 'movil' | 'escritorio';
 }
 
 /**
@@ -20,6 +22,7 @@ export function BotonPrimario({
   cargando = false,
   deshabilitado = false,
   variante = 'primario',
+  tamano = 'movil',
 }: BotonPrimarioProps) {
   const inactivo = deshabilitado || cargando;
   const secundario = variante === 'secundario';
@@ -32,6 +35,7 @@ export function BotonPrimario({
       onPress={onPress}
       style={({ pressed }) => [
         estilos.base,
+        tamano === 'escritorio' ? estilos.escritorio : null,
         secundario ? estilos.secundario : estilos.primario,
         pressed && !inactivo ? estilos.presionado : null,
         inactivo ? estilos.inactivo : null,
@@ -59,6 +63,10 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  escritorio: {
+    height: 40,
+    paddingHorizontal: 16,
   },
   primario: {
     backgroundColor: colores.marca,

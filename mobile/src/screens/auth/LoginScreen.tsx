@@ -1,37 +1,15 @@
-import { useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSesion } from '../../session/SesionProvider';
+import { useLoginForm } from './useLoginForm';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Texto } from '../../ui/Texto';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
-import { ErrorApi } from '../../infrastructure/http/errores';
 
-/** Pantalla de login (F03). */
+/** Pantalla de login del teléfono (F03). */
 export function LoginScreen() {
-  const { iniciarSesion } = useSesion();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorLogin, setErrorLogin] = useState<string | null>(null);
-
-  const manejarSubmit = async () => {
-    Keyboard.dismiss();
-    setErrorLogin(null);
-    try {
-      await iniciarSesion(email.trim(), password);
-    } catch (e) {
-      const error = e as ErrorApi;
-      if (error.codigo === 'CREDENCIALES_INVALIDAS' || error.codigo === 'CUENTA_INACTIVA') {
-        setErrorLogin(error.message);
-      } else if (error.sinConexion) {
-        setErrorLogin('Sin conexión: revisá IP, puerto y firewall');
-      } else {
-        setErrorLogin(error.message);
-      }
-    }
-  };
+  const { email, setEmail, password, setPassword, errorLogin, manejarSubmit } = useLoginForm();
 
   return (
     <ContenedorApp>
@@ -98,12 +76,8 @@ export function LoginScreen() {
 }
 
 const estilos = StyleSheet.create({
-  seguro: {
-    flex: 1,
-  },
-  teclado: {
-    flex: 1,
-  },
+  seguro: { flex: 1 },
+  teclado: { flex: 1 },
   contenido: {
     flex: 1,
     paddingHorizontal: 24,
