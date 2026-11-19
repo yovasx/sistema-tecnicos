@@ -95,6 +95,8 @@ Después de actualizar código: `docker compose up -d --build`.
 `docker compose up -d` reutiliza imágenes existentes; no recompila cambios.
 Base, documentos y RabbitMQ usan volúmenes persistentes; `docker compose down`
 no los borra. **No usar `down -v` con datos que quieras conservar.**
+Al arrancar, el backend adapta los permisos del volumen de documentos de las
+imágenes antiguas y luego ejecuta Java como usuario sin privilegios.
 
 Si antes ejecutabas Metro en 9081, detenelo o configurá `WEB_PORT` diferente.
 Si tenés una base creada con otra contraseña, conservá su `.env`: cambiar una
