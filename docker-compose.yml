@@ -48,6 +48,7 @@ services:
 
   backend:
     build: ./backend
+    pull_policy: build
     restart: unless-stopped
     depends_on:
       postgres:
@@ -91,6 +92,7 @@ services:
       context: ./mobile
       args:
         EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:-}
+    pull_policy: build
     restart: unless-stopped
     depends_on:
       backend:

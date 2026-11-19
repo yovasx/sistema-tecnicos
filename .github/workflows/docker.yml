@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: Validar Compose sin .env
         run: docker compose config --quiet
       - name: Construir desde cero
@@ -33,7 +33,7 @@ jobs:
       - name: Guardar informes
         if: always()
         run: docker cp fixly-pruebas:/app/build/reports/tests/test ./informes-tests || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: informes-tests

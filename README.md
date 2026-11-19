@@ -91,8 +91,9 @@ Podés copiar `.env.example` a `.env` para cambiar puertos, SMTP o Google.
 No se copia ningún `.env` al construir imágenes. El ID público de Google web se
 inyecta como argumento de compilación; los secretos permanecen en el backend.
 
-Después de actualizar código: `docker compose up -d --build`.
-`docker compose up -d` reutiliza imágenes existentes; no recompila cambios.
+Después de actualizar código, también alcanza con `docker compose up -d`.
+Backend y web usan `pull_policy: build`: verifican la construcción en cada
+arranque y reutilizan capas sin cambios, evitando ejecutar una imagen antigua.
 Base, documentos y RabbitMQ usan volúmenes persistentes; `docker compose down`
 no los borra. **No usar `down -v` con datos que quieras conservar.**
 Al arrancar, el backend adapta los permisos del volumen de documentos de las
