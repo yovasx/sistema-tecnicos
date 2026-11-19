@@ -402,7 +402,8 @@ para consumidores existentes. Las cuentas eliminadas no se muestran.
    confirmación explícita en la interfaz.
 2. El servidor envía un permiso aleatorio por SMTP. En desarrollo se lee en
    Mailpit (`http://localhost:8025`), no en la respuesta de la API.
-3. El destinatario entra a **Ingresar → Tengo una invitación**, pega el correo
+3. El destinatario abre **Activar cuenta invitada** desde la bienvenida (o la ruta
+   web `/#activar-cuenta`), pega el correo
    y el código recibido y elige una contraseña de al menos 10 caracteres
    (máximo 72 bytes). Luego inicia sesión normalmente.
 4. La cuenta solo se crea al aceptar. Los técnicos comienzan pendientes y
@@ -576,7 +577,14 @@ Tests: `.\gradlew.bat test --tests "*RecuperacionControllerTest"` desde `backend
 La integración está preparada, pero **no se habilita ni se afirma probada con Google real sin los IDs de Google Cloud**. Login con Google y SMTP a Gmail son integraciones independientes.
 
 1. Creá/configurá la pantalla de consentimiento de Google Cloud y un cliente OAuth de tipo **Web**. Registrá `http://localhost:9081` como origen JavaScript para desarrollo y tu dominio HTTPS en producción. No hace falta un client secret en la app.
-2. En `mobile/.env.local` definí `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`. En `.env` de la raíz agregá el mismo ID a `GOOGLE_CLIENT_IDS` (separados por coma si hay varios). Reiniciá Metro y recreá el backend con `docker compose up -d --build backend`.
+2. En desarrollo con Metro, definí `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` en
+   `mobile/.env.local`. Para la **web Docker**, definilo también en el `.env`
+   de la raíz: ese build no lee `mobile/.env.local`. Agregá el mismo ID a
+   `GOOGLE_CLIENT_IDS` de la raíz (separados por coma si hay varios) y autorizá
+   el origen web en Google Cloud. Para Docker ejecutá
+   `docker compose up -d --build web backend`; para Metro, reinicialo.
+   Sin ID público, el botón se oculta; si falla Google con ID configurado, se
+   muestra un error con reintento, no una autenticación ficticia.
 3. Web usa el botón oficial de Google Identity Services, callback en memoria y nonce emitido por el backend.
 4. Nativo usa `react-native-nitro-google-signin` y requiere **development build, no Expo Go**. Configurá los clientes Android/iOS reales en Google Cloud, SHA-1 de los certificados de Android, package/bundle IDs y URL scheme invertido de iOS. Completá `ANDROID_PACKAGE`, `IOS_BUNDLE_IDENTIFIER`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME` y luego `EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED=true`. `app.config.ts` agrega el plugin con Web ID + scheme; reconstruí el binario según la [guía de Expo](https://docs.expo.dev/guides/google-authentication/). No se generan ni editan carpetas nativas a mano.
 

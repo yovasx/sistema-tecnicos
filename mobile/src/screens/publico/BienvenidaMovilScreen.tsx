@@ -13,6 +13,7 @@ export interface BienvenidaMovilScreenProps {
   onEntrar: () => void;
   /** Los técnicos existentes entran por login; el alta completa es posterior. */
   onSoyTecnico: () => void;
+  onActivarCuenta: () => void;
 }
 
 /**
@@ -26,6 +27,7 @@ export function BienvenidaMovilScreen({
   onCrearCuenta,
   onEntrar,
   onSoyTecnico,
+  onActivarCuenta,
 }: BienvenidaMovilScreenProps) {
   const { categorias, cargando, error, recargar } = useCategoriasPublicas();
 
@@ -128,6 +130,10 @@ export function BienvenidaMovilScreen({
             style={estilos.soyTecnico}
           >
             Soy técnico
+          </Texto>
+          <Texto variante="caption" color={colores.secundario} centrado
+            accessibilityRole="button" onPress={onActivarCuenta} style={estilos.soyTecnico}>
+            Activar cuenta invitada
           </Texto>
         </View>
       </ScrollView>

@@ -9,6 +9,7 @@ import { RegistroScreen } from './RegistroScreen';
 import { TipoCuentaScreen } from './TipoCuentaScreen';
 import { RecuperacionScreen } from '../auth/RecuperacionScreen';
 import { AceptarInvitacionScreen } from '../auth/AceptarInvitacionScreen';
+import { esActivacionInvitada, salirDeActivacionInvitada } from '../../infrastructure/navigation/activacionInvitada';
 
 type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login' | 'recuperacion' | 'invitacion';
 
@@ -21,7 +22,7 @@ type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login' | 'r
  */
 export function PublicoFlujo() {
   const { esDesktop } = useResponsive();
-  const [vista, setVista] = useState<Vista>('bienvenida');
+  const [vista, setVista] = useState<Vista>(() => esActivacionInvitada() ? 'invitacion' : 'bienvenida');
   const [tipoCliente, setTipoCliente] = useState<TipoCliente>('persona');
 
   useEffect(() => {
@@ -41,12 +42,14 @@ export function PublicoFlujo() {
         onEntrar={() => setVista('login')}
         onCrearCuenta={() => setVista('tipoCuenta')}
         onSoyTecnico={() => setVista('tecnico')}
+        onActivarCuenta={() => setVista('invitacion')}
       />
     ) : (
       <BienvenidaMovilScreen
         onCrearCuenta={() => setVista('tipoCuenta')}
         onEntrar={() => setVista('login')}
         onSoyTecnico={() => setVista('tecnico')}
+        onActivarCuenta={() => setVista('invitacion')}
       />
     );
   }
@@ -77,14 +80,16 @@ export function PublicoFlujo() {
   }
 
   if (vista === 'recuperacion') return <RecuperacionScreen onEntrar={() => setVista('login')} />;
-  if (vista === 'invitacion') return <AceptarInvitacionScreen onEntrar={() => setVista('login')} />;
+  if (vista === 'invitacion') return <AceptarInvitacionScreen onEntrar={() => {
+    salirDeActivacionInvitada();
+    setVista('login');
+  }} />;
 
   return (
     <LoginScreen
       onVolver={() => setVista('bienvenida')}
       onCrearCuenta={() => setVista('tipoCuenta')}
       onRecuperar={() => setVista('recuperacion')}
-      onInvitacion={() => setVista('invitacion')}
     />
   );
 }

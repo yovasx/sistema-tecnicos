@@ -36,7 +36,7 @@ public class SmtpEmailAdapter implements ServicioEmail {
         mensaje.setTo(destinatario);
         mensaje.setSubject("Tu invitación a Fixly");
         mensaje.setText("La administración te invitó a Fixly. Si reconocés esta invitación, "
-            + "abrí la aplicación, elegí Ingresar y luego Tengo una invitación. "
+            + "abrí la página de bienvenida de Fixly y elegí Activar cuenta invitada. "
             + "Ingresá este correo y el siguiente código de activación:\n\n" + permiso
             + "\n\nVence en 24 horas y se puede usar una sola vez. Elegirás tu propia contraseña. "
             + "No compartas este código. Si no esperabas esta invitación, ignorá este mensaje.");

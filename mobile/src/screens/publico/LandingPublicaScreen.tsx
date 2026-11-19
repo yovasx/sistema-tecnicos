@@ -17,6 +17,7 @@ export interface LandingPublicaScreenProps {
   /** Abre el selector de cuenta para registrarse. */
   onCrearCuenta: () => void;
   onSoyTecnico: () => void;
+  onActivarCuenta: () => void;
 }
 
 const PASOS = [
@@ -43,7 +44,7 @@ const SOPORTE = 'soporte@fixly.bo';
  * al login (W63). En el teléfono se usa una bienvenida compacta, no esta
  * landing.
  */
-export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: LandingPublicaScreenProps) {
+export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, onActivarCuenta }: LandingPublicaScreenProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [yCategorias, setYCategorias] = useState(0);
   const [yComoFunciona, setYComoFunciona] = useState(0);
@@ -292,6 +293,9 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
         </View>
 
         <View style={estilos.footer}>
+          <Texto variante="caption" color={colores.marca} accessibilityRole="button" onPress={onActivarCuenta}>
+            Activar cuenta invitada
+          </Texto>
           <Texto
             variante="caption"
             color={colores.terciario}
