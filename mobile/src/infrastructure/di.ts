@@ -7,6 +7,7 @@ import { RecuperacionApiRepository } from './http/RecuperacionApiRepository';
 import { InvitacionApiRepository } from './http/InvitacionApiRepository';
 import { TecnicosAdminApiRepository } from './http/TecnicosAdminApiRepository';
 import { OrdenesAdminApiRepository } from './http/OrdenesAdminApiRepository';
+import { SolicitudesApiRepository } from './http/SolicitudesApiRepository';
 import { SecureTokenStorage } from './storage/SecureTokenStorage';
 import { WebTokenStorage } from './storage/WebTokenStorage';
 
@@ -25,3 +26,4 @@ export const recuperacionRepository = new RecuperacionApiRepository();
 export const invitacionRepository = new InvitacionApiRepository();
 export const tecnicosAdminRepository = new TecnicosAdminApiRepository();
 export const ordenesAdminRepository = new OrdenesAdminApiRepository();
+export const solicitudesRepository = new SolicitudesApiRepository();

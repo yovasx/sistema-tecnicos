@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Texto } from '../../ui/Texto';
@@ -6,18 +6,20 @@ import { Tarjeta } from '../../ui/Tarjeta';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
 import { Aviso } from '../../ui/Aviso';
+import { BotonPrimario } from '../../ui/BotonPrimario';
 import { useResponsive } from '../../theme/responsive';
 import { useSesion } from '../../session/SesionProvider';
+import { useSolicitudServicio } from '../../session/SolicitudServicioProvider';
 import { colores, espacio } from '../../theme/tokens';
-import { useCategoriasPublicas } from '../publico/useCategoriasPublicas';
 import { desdeCategoria, iconoCategoria } from '../publico/categorias';
 import { bolivianos } from '../../ui/formato';
-import { BotonPrimario } from '../../ui/BotonPrimario';
+import { useCategoriasSolicitud } from './useCategoriasSolicitud';
 
 export function InicioCliente() {
   const { esDesktop } = useResponsive();
   const { usuario } = useSesion();
-  const { categorias, cargando, error, recargar } = useCategoriasPublicas();
+  const { abrir } = useSolicitudServicio();
+  const { categorias, cargando, error, recargar } = useCategoriasSolicitud();
 
   return (
     <ContenedorApp>
@@ -27,30 +29,58 @@ export function InicioCliente() {
             titulo={`Hola, ${usuario?.nombre.split(' ')[0] ?? 'bienvenido'}`}
             subtitulo="¿Qué necesitás arreglar hoy?"
           />
+          <BotonPrimario titulo="Solicitar un servicio" onPress={() => abrir()} />
+
           <Texto variante="subtitulo">Servicios para tu hogar</Texto>
+          <Texto variante="caption" color={colores.secundario}>
+            Tocá una categoría para empezar tu solicitud.
+          </Texto>
+
           {cargando ? <ActivityIndicator color={colores.marca} /> : null}
-          {error ? <><Aviso tono="advertencia">{error}</Aviso><BotonPrimario titulo="Reintentar catálogo" variante="secundario" onPress={recargar} /></> : null}
+          {error ? (
+            <>
+              <Aviso tono="advertencia">{error}</Aviso>
+              <BotonPrimario titulo="Reintentar catálogo" variante="secundario" onPress={recargar} />
+            </>
+          ) : null}
+
           <View style={[estilos.acciones, esDesktop && estilos.accionesDesktop]}>
             {categorias.map((c) => (
-              <Tarjeta
-                key={c.nombre}
-                relleno={espacio.base}
-                style={esDesktop ? estilos.tarjetaDesktop : undefined}
+              <Pressable
+                key={c.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Solicitar ${c.nombre}`}
+                onPress={() => abrir(c.id)}
+                style={({ pressed }) => [
+                  esDesktop && estilos.accionDesktop,
+                  pressed ? estilos.presionado : undefined,
+                ]}
               >
-                <View style={{ backgroundColor: colores.marcaSuave, borderRadius: 12, padding: 12, alignSelf: 'flex-start', marginBottom: 16 }}>
-                  <Ionicons name={iconoCategoria(c.nombre)} size={24} color={colores.marca} />
-                </View>
-                <Texto variante="cuerpoFuerte">{c.nombre}</Texto>
-                <Texto variante="caption" color={colores.secundario}>
-                  {desdeCategoria(c) ?? 'Tarifa a confirmar'}{c.tarifaHora !== null ? ` · Hora ${bolivianos(c.tarifaHora)}` : ''}
-                </Texto>
-              </Tarjeta>
+                <Tarjeta relleno={espacio.base} style={esDesktop ? estilos.tarjetaDesktop : undefined}>
+                  <View style={estilos.iconoCaja}>
+                    <Ionicons name={iconoCategoria(c.nombre)} size={24} color={colores.marca} />
+                  </View>
+                  <Texto variante="cuerpoFuerte">{c.nombre}</Texto>
+                  <Texto variante="caption" color={colores.secundario}>
+                    {desdeCategoria(c) ?? 'Tarifa a confirmar'}
+                    {c.tarifaHora !== null ? ` · Hora ${bolivianos(c.tarifaHora)}` : ''}
+                  </Texto>
+                  <View style={estilos.pedir}>
+                    <Texto variante="etiqueta" color={colores.marca}>
+                      Pedir servicio
+                    </Texto>
+                    <Ionicons name="arrow-forward" size={16} color={colores.marca} />
+                  </View>
+                </Tarjeta>
+              </Pressable>
             ))}
           </View>
-          <Aviso tono="advertencia" titulo="Pendiente de V2">
-            La solicitud real de servicio (F10–F12) se habilita con el controlador
-            de orders.
-          </Aviso>
+
+          {!cargando && !error && categorias.length === 0 ? (
+            <Aviso tono="advertencia">
+              No hay categorías disponibles en este momento. Probá de nuevo más tarde.
+            </Aviso>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ContenedorApp>
@@ -78,8 +108,27 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  tarjetaDesktop: {
+  accionDesktop: {
     flex: 1,
     minWidth: 240,
+  },
+  tarjetaDesktop: {
+    flex: 1,
+  },
+  presionado: {
+    opacity: 0.75,
+  },
+  iconoCaja: {
+    backgroundColor: colores.marcaSuave,
+    borderRadius: 12,
+    padding: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  pedir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: espacio.sm,
   },
 });

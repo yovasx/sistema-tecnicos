@@ -117,13 +117,13 @@ class SeguridadJwtTest {
     }
 
     @Test
-    void un_token_valido_pasa_seguridad_y_llega_al_ruteo() throws Exception {
+    void un_token_valido_pasa_seguridad_y_solo_la_autorizacion_lo_rechaza() throws Exception {
         String token = firmar(claimsValidos());
 
-        // No existe controlador para /api/ordenes todavía: 404 significa que la
-        // seguridad dejó pasar la petición.
+        // El token de técnico es válido: la seguridad lo autentica y solo la
+        // autorización por rol lo rechaza en una ruta exclusiva de clientes.
         mvc.perform(get("/api/ordenes").header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test

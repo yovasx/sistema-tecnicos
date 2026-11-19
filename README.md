@@ -2,7 +2,7 @@
 
 Plataforma para solicitar servicios técnicos a domicilio: los clientes publican una orden, los técnicos reciben ofertas, y el administrador valida cuentas y gestiona el catálogo. Incluye base geoespacial, chat, cotizaciones versionadas, pagos, liquidaciones y reputación.
 
-> **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos y consulta administrativa de órdenes. El flujo operativo de solicitudes/asignación, pagos y liquidaciones sigue pendiente. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
+> **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos, consulta administrativa de órdenes y solicitud de servicio del cliente con seguimiento en «Mis servicios». La asignación de técnicos, el diagnóstico/cotización, la reparación, pagos y liquidaciones siguen pendientes. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
 
 ## Stack
 
@@ -361,6 +361,11 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/admin/ordenes` | ✅ consulta paginada; búsqueda por ID/nombres, estado, categoría, asignación y fechas |
 | GET | `/api/admin/ordenes/{id}` | ✅ ficha privada del servicio, personas, ubicación y fechas |
 | GET | `/api/admin/ordenes/{id}/historial` | ✅ transiciones registradas paginadas; sin reconstrucción de eventos |
+| GET | `/api/ordenes/categorias` | ✅ catálogo activo con id y tarifa vigente, solo para clientes autenticados |
+| POST | `/api/ordenes` | ✅ multipart idempotente; crea la orden en `solicitado` con actor y evidencia opcional |
+| GET | `/api/ordenes` | ✅ solicitudes del cliente del JWT, paginadas y sin datos de ubicación/contacto |
+| GET | `/api/ordenes/{id}` | ✅ detalle propio con estado, técnico (si existe) y fechas reales |
+| GET | `/api/ordenes/{id}/evidencia` | ✅ archivo privado del dueño o administrador; `no-store` y `attachment` |
 
 El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Son públicas GET `/api/ping` y `/api/publico/**`, POST `/api/auth/login`, `/api/auth/registro`, `/api/tecnicos/registro`, `/api/auth/recuperacion/*`, `/api/auth/google`, `/api/auth/google/desafio` y `/api/auth/invitaciones/aceptar`. **Vincular Google exige sesión**.
 
@@ -444,6 +449,47 @@ Web menor de 1024 px y nativo conservan el aviso de backoffice web.
 La fase reutiliza el esquema actual, sin migración nueva ni cambios a la
 máquina de estados. La reparación continúa requiriendo cotización aceptada y
 la asignación debe pasar por el flujo de ofertas cuando se implemente.
+
+### Solicitud de servicio del cliente (V14)
+
+En **Inicio** (persona y empresa) y en las tarjetas del catálogo, el cliente
+abre un asistente de cuatro pasos: categoría, detalle, ubicación y confirmación.
+Al enviar, la orden queda en `solicitado`; no se asigna técnico, no se genera
+oferta ni cotización y no se promete precio final ni tiempo de llegada.
+
+- **Datos:** categoría activa, descripción de 10 a 2000 caracteres, urgencia,
+  latitud/longitud dentro de rango y dirección o referencia de 5 a 300. La
+  ubicación se obtiene con GPS solo al pulsar **Usar mi ubicación** (permiso
+  explícito, sin seguimiento) o se escribe a mano. OpenStreetMap se abre solo
+  por acción del usuario, sin mapa incrustado.
+- **Evidencia opcional:** JPG, PNG o PDF de hasta 8 MB, con validación de
+  extensión y firma real. Se guarda como archivo privado
+  `/perfiles/<uuid>.<ext>`; nunca se expone una URL pública. La descarga exige
+  sesión del dueño o de un administrador y responde `no-store` y `attachment`.
+- **Idempotencia:** cada intento usa una clave UUID por cliente y una huella
+  SHA-256 del contenido. Reintentar devuelve la misma orden, incluso si el
+  estado ya avanzó o la categoría se desactivó; dos envíos simultáneos crean
+  una sola orden. Reutilizar la clave con otro contenido responde 409
+  `CLAVE_SOLICITUD_REUTILIZADA`; una categoría desactivada responde 409
+  `CATEGORIA_NO_DISPONIBLE`.
+- **Mis servicios / Órdenes:** el cliente ve solo sus órdenes, paginadas de 20
+  en 20, con estado real, categoría y fecha. El detalle muestra descripción,
+  referencia, coordenadas, técnico y fechas únicamente cuando existen. El
+  listado no transporta dirección, contactos, coordenadas ni URLs.
+- **Privacidad:** el backend filtra siempre por el cliente del JWT y no acepta
+  un id de cliente en el cuerpo. Las respuestas usan `no-store`. En esta fase,
+  el detalle propio y la evidencia están disponibles para el cliente; el
+  administrador consulta la dirección en la ficha privada y puede descargar
+  la evidencia por la API autenticada. El acceso del técnico asignado queda
+  pendiente del flujo de atención. OpenStreetMap no recibe referrer.
+- **Límites de esta fase:** el cliente no cancela, reasigna ni fuerza estados;
+  la atención de la solicitud (ofertas, diagnóstico y reparación) queda para
+  los siguientes módulos.
+
+V14 agrega `orders.solicitudes_cliente` (clave idempotente por cliente y orden)
+y la función `orders.crear_solicitud_cliente`, que valida en Postgres, publica
+`app.usuario_id` para la auditoría y usa la máquina de estados existente. No
+edita migraciones aplicadas ni crea ofertas o cotizaciones al dar de alta.
 
 ### Gestión de técnicos (W61) y revisión documental (W49)
 

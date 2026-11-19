@@ -1,6 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSesion } from '../../session/SesionProvider';
+import { useSolicitudServicio } from '../../session/SolicitudServicioProvider';
+import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Chip } from '../../ui/Chip';
 import { ContenedorApp } from '../../ui/ContenedorApp';
 import { Encabezado } from '../../ui/Encabezado';
@@ -10,12 +12,15 @@ import { colores, espacio } from '../../theme/tokens';
 
 export function InicioEmpresa() {
   const { usuario } = useSesion();
+  const { abrir } = useSolicitudServicio();
   const { esDesktop } = useResponsive();
 
   return (
     <ContenedorApp>
       <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <View style={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
+        <ScrollView
+          contentContainerStyle={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}
+        >
           <Encabezado
             titulo={usuario?.nombre ?? 'Empresa'}
             subtitulo={
@@ -42,8 +47,15 @@ export function InicioEmpresa() {
               <Texto variante="cuerpo">{usuario?.email ?? '—'}</Texto>
             </View>
           </View>
-          <Chip tono="marca" texto="Órdenes y facturación pendientes (V2)" />
-        </View>
+          <View style={estilos.servicios}>
+            <Texto variante="subtitulo">Solicitar un servicio</Texto>
+            <Texto variante="caption" color={colores.secundario}>
+              Creá una solicitud para tu empresa y seguí su estado desde Órdenes.
+            </Texto>
+            <BotonPrimario titulo="Nueva solicitud" onPress={() => abrir()} />
+          </View>
+          <Chip tono="marca" texto="Facturación pendiente de V2" />
+        </ScrollView>
       </SafeAreaView>
     </ContenedorApp>
   );
@@ -52,7 +64,7 @@ export function InicioEmpresa() {
 const estilos = StyleSheet.create({
   seguro: { flex: 1 },
   contenido: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: espacio.lg,
     paddingTop: espacio.lg,
     gap: espacio.lg,
@@ -80,5 +92,13 @@ const estilos = StyleSheet.create({
   datoDesktop: {
     flex: 1,
     minWidth: 220,
+  },
+  servicios: {
+    gap: espacio.md,
+    padding: espacio.lg,
+    backgroundColor: colores.superficie,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colores.linea,
   },
 });

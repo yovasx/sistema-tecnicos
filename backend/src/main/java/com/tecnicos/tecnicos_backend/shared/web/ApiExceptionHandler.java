@@ -46,6 +46,11 @@ public class ApiExceptionHandler {
                 .body(ApiError.de("DATOS_INVALIDOS", "Revisá los identificadores y los parámetros de la consulta."));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> parametroFaltante(Exception ex) {
+        return ResponseEntity.badRequest().body(ApiError.de("DATOS_INVALIDOS","Completá los campos obligatorios de la solicitud."));
+    }
+
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ApiError> tipoContenidoNoSoportado(
             HttpMediaTypeNotSupportedException ex) {
@@ -101,6 +106,10 @@ public class ApiExceptionHandler {
         }
 
         return switch (sqlState) {
+            case "P0412" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("CLAVE_SOLICITUD_REUTILIZADA", mensajeDeFuncion(causa)));
+            case "P0413" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("CATEGORIA_NO_DISPONIBLE", mensajeDeFuncion(causa)));
             case "P0409" -> ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiError.de("CAMBIO_CONCURRENTE", mensajeDeFuncion(causa)));
             case "P0404" -> ResponseEntity.status(HttpStatus.NOT_FOUND)

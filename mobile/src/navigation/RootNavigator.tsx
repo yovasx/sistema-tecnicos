@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSesion } from '../session/SesionProvider';
+import { SolicitudServicioProvider } from '../session/SolicitudServicioProvider';
 import { esClienteEmpresa } from '../domain/models/Sesion';
 import { useResponsive } from '../theme/responsive';
 import { DesktopShell } from '../layouts/DesktopShell';
@@ -15,6 +16,7 @@ import {
 import { PublicoFlujo } from '../screens/publico/PublicoFlujo';
 import { InicioCliente } from '../screens/cliente/InicioCliente';
 import { MisServicios } from '../screens/cliente/MisServicios';
+import { SolicitudServicioWizard } from '../screens/cliente/SolicitudServicioWizard';
 import { NotificacionesCliente } from '../screens/cliente/NotificacionesCliente';
 import { PerfilCliente } from '../screens/cliente/PerfilCliente';
 import { InicioEmpresa } from '../screens/empresa/InicioEmpresa';
@@ -79,6 +81,14 @@ export function RootNavigator() {
         </View>
       </NavigationContainer>
     );
+    if (usuario?.rol === 'cliente') {
+      return (
+        <SolicitudServicioProvider key={usuario.id}>
+          {contenido}
+          <SolicitudServicioWizard />
+        </SolicitudServicioProvider>
+      );
+    }
     return usuario?.rol === 'tecnico' ? <AccesoTecnico>{contenido}</AccesoTecnico> : contenido;
   }
 
