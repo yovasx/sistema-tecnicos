@@ -17,8 +17,8 @@ import { UsuariosAdminScreen } from '../screens/admin/UsuariosAdminScreen';
 import { CatalogoAdminScreen } from '../screens/admin/CatalogoAdminScreen';
 import { ValidacionAdminScreen } from '../screens/admin/ValidacionAdminScreen';
 import { TecnicosAdminScreen } from '../screens/admin/TecnicosAdminScreen';
+import { OrdenesAdminScreen } from '../screens/admin/OrdenesAdminScreen';
 import {
-  OrdenesAdminScreen,
   MapaAdminScreen,
   DisputasAdminScreen,
   AuditoriaAdminScreen,

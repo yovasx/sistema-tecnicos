@@ -5,17 +5,6 @@ import { PantallaPendiente } from '../../ui/PantallaPendiente';
  * Cada una lleva el banner ámbar y la pantalla de Stitch que la va a implementar.
  */
 
-export function OrdenesAdminScreen() {
-  return (
-    <PantallaPendiente
-      titulo="Órdenes"
-      descripcion="Tablero de órdenes con estado, técnico asignado y filtros. Depende del controlador de orders, que aún no existe."
-      pantallaStitch="Fixly Admin - Órdenes (W46)"
-      motivo="sprint"
-    />
-  );
-}
-
 export function MapaAdminScreen() {
   return (
     <PantallaPendiente
