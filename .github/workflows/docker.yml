@@ -27,6 +27,7 @@ jobs:
           grep -q '<html' /tmp/index.html
           curl --fail http://localhost:9081/api/ping
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9081/api/admin/tecnicos)" = "401"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9081/api/admin/ordenes)" = "401"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9081/perfiles/privado.pdf)" = "404"
       - name: Ejecutar suite backend dentro de Docker
         run: docker compose --profile pruebas run --build --name fixly-pruebas pruebas
