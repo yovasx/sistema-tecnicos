@@ -16,6 +16,7 @@ import { DashboardAdminScreen } from '../screens/admin/DashboardAdminScreen';
 import { UsuariosAdminScreen } from '../screens/admin/UsuariosAdminScreen';
 import { CatalogoAdminScreen } from '../screens/admin/CatalogoAdminScreen';
 import { ValidacionAdminScreen } from '../screens/admin/ValidacionAdminScreen';
+import { TecnicosAdminScreen } from '../screens/admin/TecnicosAdminScreen';
 import {
   OrdenesAdminScreen,
   MapaAdminScreen,
@@ -36,6 +37,7 @@ export interface Seccion {
   titulo: string;
   icono: keyof typeof Ionicons.glyphMap;
   pantalla: ComponentType;
+  grupo?: string;
 }
 
 /**
@@ -74,13 +76,14 @@ export function seccionesTecnico(): Seccion[] {
   ];
 }
 
-/** W42–W61: las 16 secciones del backoffice administrativo. */
+/** W42–W61: secciones del backoffice, incluido el directorio técnico W61. */
 export function seccionesAdmin(): Seccion[] {
-  return [
+  const secciones: Seccion[] = [
     { clave: 'dashboard', titulo: 'Dashboard', icono: 'grid', pantalla: DashboardAdminScreen },
     { clave: 'ordenes', titulo: 'Órdenes', icono: 'receipt', pantalla: OrdenesAdminScreen },
     { clave: 'mapa', titulo: 'Mapa en vivo', icono: 'map', pantalla: MapaAdminScreen },
     { clave: 'usuarios', titulo: 'Usuarios', icono: 'people', pantalla: UsuariosAdminScreen },
+    { clave: 'tecnicos', titulo: 'Técnicos', icono: 'construct', pantalla: TecnicosAdminScreen },
     {
       clave: 'validacion',
       titulo: 'Validar técnicos',
@@ -124,4 +127,12 @@ export function seccionesAdmin(): Seccion[] {
       pantalla: PenalizacionesAdminScreen,
     },
   ];
+  const grupos: [string, string[]][] = [
+    ['Inicio', ['dashboard']],
+    ['Personas', ['usuarios', 'tecnicos', 'validacion']],
+    ['Operación', ['ordenes', 'mapa', 'disputas']],
+    ['Finanzas', ['pagos', 'liquidaciones', 'reportes']],
+    ['Administración', ['catalogo', 'soporte', 'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']],
+  ];
+  return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({ ...secciones.find(s => s.clave === clave)!, grupo })));
 }

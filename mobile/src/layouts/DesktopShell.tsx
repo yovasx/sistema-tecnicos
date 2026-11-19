@@ -1,11 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Seccion } from '../navigation/secciones';
 import { useSesion } from '../session/SesionProvider';
 import { Chip } from '../ui/Chip';
 import { Texto } from '../ui/Texto';
 import { colores, espacio, fuentes, tamanos } from '../theme/tokens';
+import { CambiosAdminProvider, useCambiosAdmin } from '../ui/admin/CambiosAdmin';
+import { Aviso } from '../ui/Aviso';
+import { BotonPrimario } from '../ui/BotonPrimario';
+import { leerRutaAdmin, guardarRutaAdmin } from '../infrastructure/navigation/rutaAdmin';
 
 export interface DesktopShellProps {
   secciones: Seccion[];
@@ -20,8 +24,25 @@ export interface DesktopShellProps {
  * en el teléfono, sin la columna de 420 px. Así el contenido se escribe una vez.
  */
 export function DesktopShell({ secciones, etiqueta }: DesktopShellProps) {
+  return <CambiosAdminProvider><ContenidoDesktop secciones={secciones} etiqueta={etiqueta} /></CambiosAdminProvider>;
+}
+function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
   const { usuario, cerrarSesion } = useSesion();
-  const [activa, setActiva] = useState(secciones[0].clave);
+  const [activa, setActiva] = useState(() => {
+    const ruta = etiqueta === 'Backoffice' ? leerRutaAdmin().seccion : '';
+    return secciones.some(s => s.clave === ruta) ? ruta : secciones[0].clave;
+  });
+  const { sucio, ocupado } = useCambiosAdmin();
+  const [destino, setDestino] = useState<string | null>(null);
+  function ir(clave: string) {
+    if (etiqueta === 'Backoffice') guardarRutaAdmin(clave === 'cerrarSesion' ? '' : clave);
+    if (clave === 'cerrarSesion') void cerrarSesion(); else setActiva(clave);
+  }
+  function navegar(clave: string) {
+    if (ocupado) return;
+    if (sucio) { setDestino(clave); return; }
+    ir(clave);
+  }
 
   const actual = secciones.find((s) => s.clave === activa) ?? secciones[0];
   const Pantalla = actual.pantalla;
@@ -37,13 +58,17 @@ export function DesktopShell({ secciones, etiqueta }: DesktopShellProps) {
         </View>
 
         <ScrollView style={estilos.lista} contentContainerStyle={estilos.listaContenido}>
-          {secciones.map((s) => {
+          {secciones.map((s, indice) => {
             const esActiva = s.clave === activa;
             return (
+              <Fragment key={s.clave}>
+              {s.grupo && secciones[indice - 1]?.grupo !== s.grupo ?
+                <Texto variante="caption" style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 }}>{s.grupo.toUpperCase()}</Texto> : null}
               <Pressable
                 key={s.clave}
                 accessibilityRole="button"
-                onPress={() => setActiva(s.clave)}
+                onPress={() => navegar(s.clave)}
+                accessibilityState={{ selected: esActiva }}
                 style={[estilos.item, esActiva && estilos.itemActivo]}
               >
                 <Ionicons
@@ -59,6 +84,7 @@ export function DesktopShell({ secciones, etiqueta }: DesktopShellProps) {
                   {s.titulo}
                 </Texto>
               </Pressable>
+              </Fragment>
             );
           })}
         </ScrollView>
@@ -68,7 +94,7 @@ export function DesktopShell({ secciones, etiqueta }: DesktopShellProps) {
             {usuario?.email ?? '—'}
           </Texto>
           <Chip texto={usuario?.rol ?? '—'} tono="marca" />
-          <Texto onPress={cerrarSesion} style={estilos.cerrar}>
+          <Texto accessibilityRole="button" onPress={() => navegar('cerrarSesion')} style={estilos.cerrar}>
             Cerrar sesión
           </Texto>
         </View>
@@ -77,8 +103,16 @@ export function DesktopShell({ secciones, etiqueta }: DesktopShellProps) {
       <View style={estilos.principal}>
         <View style={estilos.topbar}>
           <Texto variante="subtitulo">{actual.titulo}</Texto>
-          <Chip texto={usuario?.nombre ?? '—'} tono="neutro" />
+          <View><Chip texto={usuario?.nombre ?? '—'} tono="neutro" /></View>
         </View>
+        {destino ? <View style={{ padding: 20, gap: 12 }}>
+          <Aviso tono="advertencia" titulo="Tenés cambios sin guardar">Si continuás, se perderán los datos que todavía no guardaste.</Aviso>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <BotonPrimario titulo="Seguir editando" tamano="escritorio" onPress={() => setDestino(null)} />
+            <BotonPrimario titulo="Descartar y continuar" variante="secundario" tamano="escritorio"
+              onPress={() => { ir(destino); setDestino(null); }} />
+          </View>
+        </View> : null}
         <ScrollView
           style={estilos.contenido}
           contentContainerStyle={estilos.contenidoContenido}

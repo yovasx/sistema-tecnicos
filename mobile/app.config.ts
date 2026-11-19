@@ -10,7 +10,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     slug: config.slug ?? 'mobile',
     plugins: [
       ...(config.plugins ?? []),
-      ...(webId && iosScheme ? [['react-native-nitro-google-signin', { iosUrlScheme: iosScheme }] as [string, { iosUrlScheme: string }]] : []),
+      ...(webId && iosScheme && process.env.EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED === 'true'
+        ? [['react-native-nitro-google-signin', { iosUrlScheme: iosScheme }] as [string, { iosUrlScheme: string }]] : []),
     ],
     ios: { ...config.ios, ...(process.env.IOS_BUNDLE_IDENTIFIER ? { bundleIdentifier: process.env.IOS_BUNDLE_IDENTIFIER } : {}) },
     android: { ...config.android, ...(process.env.ANDROID_PACKAGE ? { package: process.env.ANDROID_PACKAGE } : {}) },

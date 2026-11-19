@@ -9,6 +9,7 @@ import { bolivianos } from '../../ui/formato';
 import { colores, espacio, radio } from '../../theme/tokens';
 import { desdeCategoria, iconoCategoria } from './categorias';
 import { useCategoriasPublicas } from './useCategoriasPublicas';
+import { useResponsive } from '../../theme/responsive';
 
 export interface LandingPublicaScreenProps {
   /** Lleva al login de escritorio (W63). */
@@ -28,11 +29,9 @@ const PASOS = [
   {
     numero: '3',
     titulo: 'Pagás con QR Simple al finalizar',
-    detalle: 'El trabajo termina con garantía escrita.',
+    detalle: 'Este flujo estará disponible al habilitar las órdenes.',
   },
 ];
-
-const ZONAS = ['Sopocachi', 'San Miguel', 'Calacoto'];
 
 const SOPORTE = 'soporte@fixly.bo';
 
@@ -49,6 +48,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
   const [yCategorias, setYCategorias] = useState(0);
   const [yComoFunciona, setYComoFunciona] = useState(0);
   const { categorias, cargando, error, recargar } = useCategoriasPublicas();
+  const { ancho } = useResponsive();
 
   const irA = (y: number) => scroll.current?.scrollTo({ y, animated: true });
 
@@ -68,7 +68,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
           </Texto>
         </View>
 
-        <View style={estilos.nav}>
+        <View style={[estilos.nav, ancho < 1200 && { display: 'none' }]}>
           <Texto
             variante="etiqueta"
             color={colores.secundario}
@@ -127,7 +127,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
           <View style={estilos.heroTexto}>
             <Chip
               tono="marca"
-              texto="Servicios verificados en La Paz · Valle Central y Zona Sur"
+              texto="Tu hogar, en buenas manos · La Paz"
             />
             <Texto style={estilos.titular}>
               Servicios técnicos,{'\n'}con confianza y claridad.
@@ -152,7 +152,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
             </View>
 
             <View style={estilos.beneficios}>
-              {['Técnicos validados', 'Precio antes de reparar', 'Seguimiento en vivo'].map(
+              {['Revisión documental', 'Tarifas transparentes', 'Atención en La Paz'].map(
                 (b) => (
                   <View key={b} style={estilos.beneficio}>
                     <Ionicons name="checkmark-circle" size={16} color={colores.exito} />
@@ -177,11 +177,11 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
             </Texto>
             <View style={estilos.lineaHero} />
             <Texto variante="caption" color={colores.secundario}>
-              Cobertura activa en:
+              Empezá por conocer los servicios:
             </Texto>
             <View style={estilos.puntos}>
-              {ZONAS.map((zona) => (
-                <Chip key={zona} texto={zona} />
+              {categorias.map((c) => (
+                <Chip key={c.nombre} texto={c.nombre} />
               ))}
             </View>
           </View>
@@ -279,15 +279,15 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
         <View style={estilos.garantia}>
           <Ionicons name="shield-checkmark" size={24} color={colores.exito} />
           <View style={estilos.garantiaTexto}>
-            <Texto variante="cuerpoFuerte">Garantía de satisfacción</Texto>
+            <Texto variante="cuerpoFuerte">¿Sos un profesional técnico?</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Cada servicio incluye garantía escrita y respaldo de Fixly Bolivia.
+              Creá tu perfil, subí tus certificados y enviá tu expediente a revisión.
             </Texto>
           </View>
           <BotonPrimario
-            titulo="Entrar a mi cuenta"
+            titulo="Crear perfil técnico"
             tamano="escritorio"
-            onPress={onEntrar}
+            onPress={onSoyTecnico}
           />
         </View>
 
@@ -298,7 +298,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
             onPress={() => void Linking.openURL(`mailto:${SOPORTE}`)}
             accessibilityRole="link"
           >
-            Fixly Bolivia S.R.L. · La Paz, Bolivia · Soporte: {SOPORTE}
+            Fixly · La Paz, Bolivia · Soporte: {SOPORTE}
           </Texto>
         </View>
       </ScrollView>
@@ -406,6 +406,7 @@ const estilos = StyleSheet.create({
     borderColor: colores.linea,
     padding: espacio.lg,
     gap: espacio.sm,
+    transform: [{ rotate: '1deg' }],
   },
   heroTarjetaArriba: {
     flexDirection: 'row',

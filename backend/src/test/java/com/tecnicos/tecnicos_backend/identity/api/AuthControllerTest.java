@@ -240,7 +240,8 @@ class AuthControllerTest {
 
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"));
+                // El conversor corta ahora cualquier ruta protegida antes del controlador.
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
     }
 
     @Test

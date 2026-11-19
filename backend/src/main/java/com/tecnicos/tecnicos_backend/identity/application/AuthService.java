@@ -49,12 +49,12 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse login(String email, String password) {
         String emailLimpio = email == null ? "" : email.trim();
         String clave = password == null ? "" : password;
 
-        Optional<Usuario> encontrado = usuarios.findByEmailIgnoreCase(emailLimpio);
+        Optional<Usuario> encontrado = usuarios.buscarParaLogin(emailLimpio);
         if (encontrado.isEmpty()) {
             passwordEncoder.matches(clave, HASH_FANTASMA);
             throw credencialesInvalidas();

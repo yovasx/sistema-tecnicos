@@ -38,9 +38,9 @@ export function DashboardAdminScreen() {
         <TarjetaMetrica etiqueta="Clientes" valor={String(r.clientes)} detalle="personas + empresas" tono="advertencia" />
       </View>
 
-      <Aviso tono="info" titulo="Lectura solamente">
-        Este tablero muestra datos reales de lectura. Las acciones (aprobar
-        técnicos, editar tarifas, cerrar disputas) entran con sus endpoints en V2.
+      <Aviso tono="info" titulo="Tu centro de administración">
+        Gestioná cuentas en Usuarios, revisá expedientes en Validar técnicos y
+        actualizá tarifas en Catálogo. Las operaciones de órdenes y finanzas todavía están pendientes.
       </Aviso>
 
       <Texto variante="subtitulo">Últimos usuarios</Texto>

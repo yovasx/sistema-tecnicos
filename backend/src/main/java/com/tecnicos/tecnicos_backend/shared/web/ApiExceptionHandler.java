@@ -40,6 +40,12 @@ public class ApiExceptionHandler {
                 .body(ApiError.de("DATOS_INVALIDOS", "El cuerpo de la petición no es válido."));
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> parametroInvalido(Exception ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.de("DATOS_INVALIDOS", "Revisá los identificadores y los parámetros de la consulta."));
+    }
+
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ApiError> tipoContenidoNoSoportado(
             HttpMediaTypeNotSupportedException ex) {
@@ -81,6 +87,13 @@ public class ApiExceptionHandler {
                     .body(ApiError.de("CI_YA_REGISTRADO", "Ese CI ya tiene un expediente técnico."));
         }
 
+        if ("23505".equals(sqlState) && causa.getMessage()!=null
+                && causa.getMessage().contains("uq_categorias_nombre_lower")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("CATEGORIA_DUPLICADA",
+                            "Ya existe una categoría con ese nombre."));
+        }
+
         if (sqlState == null) {
             log.error("Fallo de acceso a datos sin SQLSTATE", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -88,6 +101,10 @@ public class ApiExceptionHandler {
         }
 
         return switch (sqlState) {
+            case "P0409" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("CAMBIO_CONCURRENTE", mensajeDeFuncion(causa)));
+            case "P0404" -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiError.de("USUARIO_NO_ENCONTRADO", mensajeDeFuncion(causa)));
             // Violación de unicidad: el usuario intentó crear algo que ya existe.
             case "23505" -> ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiError.de("REGISTRO_DUPLICADO", "Ya existe un registro con esos datos."));

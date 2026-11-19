@@ -15,8 +15,8 @@ import java.time.temporal.ChronoUnit;
 /**
  * Firma los tokens de sesión.
  *
- * <p>Los claims son deliberadamente mínimos: el backend no debe necesitar la
- * base para saber quién llama. {@code sub} lleva el ID, y {@code rol},
+ * <p>Los claims son deliberadamente mínimos. Cada petición consulta la versión
+ * persistente para rechazar sesiones revocadas. {@code sub} lleva el ID, y {@code rol},
  * {@code tipoCliente}, {@code nombre} y {@code email} alcanzan para la UI y
  * para las reglas de autorización.</p>
  */

@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { colores, fuentes, radio, tamanos } from '../theme/tokens';
 import { Texto } from './Texto';
 
 export interface BotonPrimarioProps {
   titulo: string;
+  etiquetaAccesible?: string;
   onPress: () => void;
   cargando?: boolean;
   deshabilitado?: boolean;
   variante?: 'primario' | 'secundario';
-  /** El design system pide 52 px en móvil y 40 px en escritorio. */
+  /** 52 px en móvil; 44 px en escritorio para mantener un área de interacción cómoda. */
   tamano?: 'movil' | 'escritorio';
 }
 
@@ -19,6 +20,7 @@ export interface BotonPrimarioProps {
  */
 export function BotonPrimario({
   titulo,
+  etiquetaAccesible,
   onPress,
   cargando = false,
   deshabilitado = false,
@@ -33,7 +35,7 @@ export function BotonPrimario({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={titulo}
+      accessibilityLabel={etiquetaAccesible ?? titulo}
       accessibilityState={{ disabled: inactivo, busy: cargando }}
       disabled={inactivo}
       onPress={onPress}
@@ -48,7 +50,7 @@ export function BotonPrimario({
         pressed && !inactivo ? estilos.presionado : null,
         inactivo ? estilos.inactivo : null,
         hover && !inactivo && !secundario ? { backgroundColor: colores.marcaFuerte } : null,
-        enfocado && Platform.OS === 'web' ? { outlineColor: colores.marca, outlineStyle: 'solid', outlineWidth: 2, outlineOffset: 3 } as never : null,
+        enfocado && Platform.OS === 'web' ? { outlineColor: colores.marca, outlineStyle: 'solid', outlineWidth: 2, outlineOffset: 3 } as unknown as ViewStyle : null,
       ]}
     >
       {cargando ? (

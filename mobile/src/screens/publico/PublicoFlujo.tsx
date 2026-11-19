@@ -5,12 +5,12 @@ import { useResponsive } from '../../theme/responsive';
 import { LoginScreen } from '../auth/LoginScreen';
 import { BienvenidaMovilScreen } from './BienvenidaMovilScreen';
 import { LandingPublicaScreen } from './LandingPublicaScreen';
-import { LoginDesktopScreen } from './LoginDesktopScreen';
 import { RegistroScreen } from './RegistroScreen';
 import { TipoCuentaScreen } from './TipoCuentaScreen';
 import { RecuperacionScreen } from '../auth/RecuperacionScreen';
+import { AceptarInvitacionScreen } from '../auth/AceptarInvitacionScreen';
 
-type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login' | 'recuperacion';
+type Vista = 'bienvenida' | 'tipoCuenta' | 'registro' | 'tecnico' | 'login' | 'recuperacion' | 'invitacion';
 
 /**
  * Flujo público compartido por teléfono y escritorio:
@@ -77,12 +77,14 @@ export function PublicoFlujo() {
   }
 
   if (vista === 'recuperacion') return <RecuperacionScreen onEntrar={() => setVista('login')} />;
+  if (vista === 'invitacion') return <AceptarInvitacionScreen onEntrar={() => setVista('login')} />;
 
   return (
     <LoginScreen
       onVolver={() => setVista('bienvenida')}
       onCrearCuenta={() => setVista('tipoCuenta')}
       onRecuperar={() => setVista('recuperacion')}
+      onInvitacion={() => setVista('invitacion')}
     />
   );
 }

@@ -189,6 +189,23 @@ public class TecnicoService {
     @Transactional(readOnly = true)
     public ExpedienteResponse expediente(Long id) {
         auditoria.aplicarEnTransaccion(); perfilActivo(id);
+        return leerExpediente(id);
+    }
+
+    /** Solo desde controladores /api/admin: permite revisar cuentas inactivas. */
+    @Transactional(readOnly = true)
+    public ExpedienteResponse expedienteAdministrativo(Long id) {
+        auditoria.aplicarEnTransaccion();
+        boolean existe=Boolean.TRUE.equals(jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM identity.perfiles_tecnico p
+            JOIN identity.usuarios u ON u.id=p.usuario_id
+            WHERE p.usuario_id=? AND u.rol='tecnico' AND u.eliminado_en IS NULL)
+            """,Boolean.class,id));
+        if (!existe) throw error(HttpStatus.NOT_FOUND,"TECNICO_NO_ENCONTRADO","El técnico no existe.");
+        return leerExpediente(id);
+    }
+
+    private ExpedienteResponse leerExpediente(Long id) {
         return jdbc.queryForObject("""
             SELECT p.*,u.email FROM identity.perfiles_tecnico p
             JOIN identity.usuarios u ON u.id=p.usuario_id WHERE p.usuario_id=?

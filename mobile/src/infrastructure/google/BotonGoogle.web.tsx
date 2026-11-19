@@ -38,7 +38,23 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
     if (!googleDisponible()) return;
     let vigente = true;
     let enCurso = false;
+    let ultimoAncho = 0;
+    let observador: ResizeObserver | undefined;
     setFallo(false);
+    // GIS fija el ancho al dibujar: hay que medir después del layout y volver
+    // a dibujar al cambiar entre móvil y escritorio.
+    const pintar = (google: GoogleId) => {
+      const nodo = contenedor.current;
+      if (!vigente || !nodo) return;
+      const ancho = Math.floor(nodo.getBoundingClientRect().width);
+      if (ancho < 1 || Math.abs(ancho - ultimoAncho) < 1) return;
+      ultimoAncho = ancho;
+      nodo.replaceChildren();
+      google.renderButton(nodo, {
+        theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular', locale: 'es',
+        width: Math.min(400, ancho),
+      });
+    };
     void Promise.all([cargar(), authRepository.desafioGoogle()]).then(([google, { nonce }]) => {
       if (!vigente || !contenedor.current) return;
       google.initialize({
@@ -52,14 +68,19 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
           });
         },
       });
-      google.renderButton(contenedor.current, {
-        theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular', locale: 'es',
-        width: Math.min(400, contenedor.current.clientWidth),
-      });
+      pintar(google);
+      if (typeof ResizeObserver !== 'undefined') {
+        observador = new ResizeObserver(() => pintar(google));
+        observador.observe(contenedor.current);
+      }
     }).catch(() => {
       if (vigente) { setFallo(true); error.current('Google no está disponible. Podés ingresar con correo y contraseña.'); }
     });
-    return () => { vigente = false; contenedor.current?.replaceChildren(); };
+    return () => {
+      vigente = false;
+      observador?.disconnect();
+      contenedor.current?.replaceChildren();
+    };
   }, [intento]);
   if (!googleDisponible()) return null;
   return <View style={{ minHeight: 44 }}>

@@ -9,7 +9,7 @@ public class VersionSesion {
     private final JdbcTemplate jdbc;
     public VersionSesion(JdbcTemplate jdbc) { this.jdbc=jdbc; }
     public Long actual(Long id) {
-        var valores=jdbc.queryForList("SELECT version_sesion FROM identity.usuarios WHERE id=?",Long.class,id);
+        var valores=jdbc.queryForList("SELECT version_sesion FROM identity.usuarios WHERE id=? AND activo AND eliminado_en IS NULL",Long.class,id);
         return valores.isEmpty()?null:valores.getFirst();
     }
 }

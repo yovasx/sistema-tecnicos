@@ -47,7 +47,7 @@ public class ValidacionController {
 
     @GetMapping("/{tecnicoId}")
     public com.tecnicos.tecnicos_backend.identity.api.ExpedienteResponse detalle(@PathVariable Long tecnicoId) {
-        return tecnicos.expediente(tecnicoId);
+        return tecnicos.expedienteAdministrativo(tecnicoId);
     }
 
     @PostMapping("/{tecnicoId}/aprobar")

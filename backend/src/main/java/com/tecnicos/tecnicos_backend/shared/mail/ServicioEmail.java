@@ -8,4 +8,5 @@ package com.tecnicos.tecnicos_backend.shared.mail;
 public interface ServicioEmail {
     void enviarRecuperacion(String destinatario, String codigo);
     void enviarCodigo(String destinatario, String codigo);
+    void enviarInvitacion(String destinatario, String permiso);
 }

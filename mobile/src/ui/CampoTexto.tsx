@@ -42,6 +42,7 @@ export function CampoTexto({
         <TextInput
           {...rest}
           accessibilityLabel={rest.accessibilityLabel ?? etiqueta}
+          accessibilityHint={error ?? rest.accessibilityHint}
           style={[estilos.entrada, esDesktop && estilos.entradaDesktop,
             Platform.OS === 'web' && ({ outlineStyle: 'none' } as unknown as TextStyle)]}
           underlineColorAndroid="transparent"
@@ -71,7 +72,7 @@ export function CampoTexto({
         ) : null}
       </View>
       {error ? (
-        <Texto variante="caption" color={colores.peligro}>
+        <Texto variante="caption" color={colores.peligro} accessibilityLiveRegion="polite">
           {error}
         </Texto>
       ) : null}

@@ -1,9 +1,11 @@
 package com.tecnicos.tecnicos_backend.admin.application;
 
 import com.tecnicos.tecnicos_backend.admin.api.CategoriaAdmin;
+import com.tecnicos.tecnicos_backend.admin.api.GuardarCategoriaRequest;
 import com.tecnicos.tecnicos_backend.admin.api.ResumenAdmin;
 import com.tecnicos.tecnicos_backend.admin.api.TecnicoPendiente;
 import com.tecnicos.tecnicos_backend.admin.api.UsuarioAdmin;
+import com.tecnicos.tecnicos_backend.shared.persistence.AuditoriaContexto;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,19 +15,22 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Listados de lectura del backoffice.
+ * Listados de lectura y escrituras del catálogo del backoffice.
  *
- * <p>Solo SELECT sobre tablas existentes: aquí no hay máquina de estados ni
- * reglas de negocio, así que no hace falta llamar a funciones de la base. Las
- * columnas son exactamente las de V1/V3; no se inventa ninguna.</p>
+ * <p>Las lecturas son SELECT sobre tablas existentes. Las escrituras del
+ * catálogo llaman a {@code admin_svc.guardar_categoria}, que concentra las
+ * reglas de negocio, la versión de tarifas y la auditoría en una sola
+ * transacción.</p>
  */
 @Service
 public class AdminService {
 
     private final JdbcTemplate jdbc;
+    private final AuditoriaContexto auditoria;
 
-    public AdminService(JdbcTemplate jdbc) {
+    public AdminService(JdbcTemplate jdbc, AuditoriaContexto auditoria) {
         this.jdbc = jdbc;
+        this.auditoria = auditoria;
     }
 
     @Transactional(readOnly = true)
@@ -82,10 +87,24 @@ public class AdminService {
         return jdbc.query("""
                 SELECT c.id, c.nombre, c.descripcion, c.activa,
                        t.tarifa_visita, t.tarifa_hora, t.recargo_urgencia_pct, t.moneda,
-                       co.porcentaje AS comision_pct
+                       t.vigente_desde AS tarifa_vigente_desde,
+                       co.porcentaje AS comision_pct,
+                       co.vigente_desde AS comision_vigente_desde
                 FROM orders.categorias_servicio c
-                LEFT JOIN billing.tarifas t ON t.categoria_id = c.id
-                LEFT JOIN billing.comisiones co ON co.categoria_id = c.id
+                LEFT JOIN LATERAL (
+                    SELECT * FROM billing.tarifas
+                    WHERE categoria_id = c.id AND vigente_desde <= CURRENT_DATE
+                      AND (vigente_hasta IS NULL OR vigente_hasta >= CURRENT_DATE)
+                    ORDER BY vigente_desde DESC, id DESC
+                    LIMIT 1
+                ) t ON TRUE
+                LEFT JOIN LATERAL (
+                    SELECT * FROM billing.comisiones
+                    WHERE categoria_id = c.id AND vigente_desde <= CURRENT_DATE
+                      AND (vigente_hasta IS NULL OR vigente_hasta >= CURRENT_DATE)
+                    ORDER BY vigente_desde DESC, id DESC
+                    LIMIT 1
+                ) co ON TRUE
                 ORDER BY c.id
                 """,
                 (rs, n) -> new CategoriaAdmin(
@@ -97,7 +116,80 @@ public class AdminService {
                         rs.getBigDecimal("tarifa_hora"),
                         rs.getBigDecimal("recargo_urgencia_pct"),
                         rs.getString("moneda"),
-                        rs.getBigDecimal("comision_pct")));
+                        rs.getObject("tarifa_vigente_desde", java.time.LocalDate.class),
+                        rs.getBigDecimal("comision_pct"),
+                        rs.getObject("comision_vigente_desde", java.time.LocalDate.class)));
+    }
+
+    /**
+     * Crea o actualiza una categoría, su tarifa vigente y su comisión vigente.
+     *
+     * <p>La primera línea publica el administrador autenticado para que la
+     * función de Postgres pueda validarlo y auditar el cambio. El servicio no
+     * duplica las reglas: si algo no cumple, la base lanza el mensaje en
+     * español y {@code ApiExceptionHandler} lo traduce.</p>
+     */
+    @Transactional
+    public CategoriaAdmin guardarCategoria(Long adminId, Integer categoriaId,
+                                           GuardarCategoriaRequest request) {
+        auditoria.aplicarEnTransaccion();
+
+        String moneda = request.moneda() == null ? "BOB" : request.moneda();
+        Integer id = jdbc.queryForObject("""
+                SELECT admin_svc.guardar_categoria(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                Integer.class,
+                adminId,
+                categoriaId,
+                request.nombre(),
+                request.descripcion(),
+                request.activa(),
+                request.tarifaVisita(),
+                request.tarifaHora(),
+                request.recargoUrgenciaPct(),
+                moneda,
+                request.comisionPct());
+
+        return categoria(id);
+    }
+
+    private CategoriaAdmin categoria(Integer id) {
+        return jdbc.queryForObject("""
+                SELECT c.id, c.nombre, c.descripcion, c.activa,
+                       t.tarifa_visita, t.tarifa_hora, t.recargo_urgencia_pct, t.moneda,
+                       t.vigente_desde AS tarifa_vigente_desde,
+                       co.porcentaje AS comision_pct,
+                       co.vigente_desde AS comision_vigente_desde
+                FROM orders.categorias_servicio c
+                LEFT JOIN LATERAL (
+                    SELECT * FROM billing.tarifas
+                    WHERE categoria_id = c.id AND vigente_desde <= CURRENT_DATE
+                      AND (vigente_hasta IS NULL OR vigente_hasta >= CURRENT_DATE)
+                    ORDER BY vigente_desde DESC, id DESC
+                    LIMIT 1
+                ) t ON TRUE
+                LEFT JOIN LATERAL (
+                    SELECT * FROM billing.comisiones
+                    WHERE categoria_id = c.id AND vigente_desde <= CURRENT_DATE
+                      AND (vigente_hasta IS NULL OR vigente_hasta >= CURRENT_DATE)
+                    ORDER BY vigente_desde DESC, id DESC
+                    LIMIT 1
+                ) co ON TRUE
+                WHERE c.id = ?
+                """,
+                (rs, n) -> new CategoriaAdmin(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("descripcion"),
+                        rs.getBoolean("activa"),
+                        rs.getBigDecimal("tarifa_visita"),
+                        rs.getBigDecimal("tarifa_hora"),
+                        rs.getBigDecimal("recargo_urgencia_pct"),
+                        rs.getString("moneda"),
+                        rs.getObject("tarifa_vigente_desde", java.time.LocalDate.class),
+                        rs.getBigDecimal("comision_pct"),
+                        rs.getObject("comision_vigente_desde", java.time.LocalDate.class)),
+                id);
     }
 
     @Transactional(readOnly = true)

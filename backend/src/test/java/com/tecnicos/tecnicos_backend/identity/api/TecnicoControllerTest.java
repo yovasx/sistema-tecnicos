@@ -54,6 +54,7 @@ class TecnicoControllerTest {
 
     @AfterEach void limpiar() {
         for (long cuenta:cuentas) {
+            jdbc.update("DELETE FROM admin_svc.auditoria_usuarios WHERE usuario_id=?",cuenta);
             jdbc.update("DELETE FROM identity.revisiones_tecnico WHERE tecnico_id=?",cuenta);
             jdbc.update("DELETE FROM identity.codigos_verificacion WHERE usuario_id=?",cuenta);
             jdbc.update("DELETE FROM identity.tecnico_especialidades WHERE tecnico_id=?",cuenta);
@@ -217,6 +218,22 @@ class TecnicoControllerTest {
     @Test void solo_admin_puede_aprobar() throws Exception {
         llamada(post("/api/admin/tecnicos/expedientes/"+id+"/aprobar")).andExpect(status().isForbidden());
         mvc.perform(get("/api/tecnicos/expediente")).andExpect(status().isUnauthorized());
+    }
+    @Test void admin_descarga_documentos_de_tecnico_inactivo_sin_habilitarlo() throws Exception {
+        completar();
+        String url=JsonPath.read(cuerpo(llamada(get("/api/tecnicos/expediente")).andReturn()),"$.ciFrenteUrl");
+        String ruta="/api/tecnicos/expediente/documentos/"+url.substring(url.lastIndexOf('/')+1);
+        String administrador=admin();
+        long revision=jdbc.queryForObject("SELECT revision_admin FROM identity.usuarios WHERE id=?",Long.class,id);
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/admin/usuarios/"+id+"/estado")
+            .header("Authorization","Bearer "+administrador).contentType("application/json")
+            .content("{\"revision\":"+revision+",\"activo\":false,\"motivo\":\"Revisión de cuenta inactiva\"}"))
+            .andExpect(status().isOk());
+        mvc.perform(get("/api/admin/tecnicos/"+id).header("Authorization","Bearer "+administrador))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.cuenta.activo").value(false));
+        mvc.perform(get(ruta).header("Authorization","Bearer "+administrador))
+            .andExpect(status().isOk()).andExpect(header().string("Cache-Control","no-store"));
+        llamada(get("/api/tecnicos/expediente")).andExpect(status().isUnauthorized());
     }
     @Test void tecnico_sin_validar_no_acepta_ofertas_en_la_base() {
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->

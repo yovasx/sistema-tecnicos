@@ -14,8 +14,9 @@ export interface LoginScreenProps {
   onVolver?: () => void;
   onCrearCuenta?: () => void;
   onRecuperar?: () => void;
+  onInvitacion?: () => void;
 }
-export function LoginScreen({ onVolver, onCrearCuenta, onRecuperar }: LoginScreenProps) {
+export function LoginScreen({ onVolver, onCrearCuenta, onRecuperar, onInvitacion }: LoginScreenProps) {
   const { email, setEmail, password, setPassword, errorLogin, manejarSubmit, ocupado } = useLoginForm();
   const { esDesktop } = useResponsive();
   return <MarcoAuth onVolver={onVolver}>
@@ -40,5 +41,7 @@ export function LoginScreen({ onVolver, onCrearCuenta, onRecuperar }: LoginScree
       <Texto variante="caption">¿No tenés cuenta?</Texto>
       <Texto variante="etiqueta" color={colores.marca} accessibilityRole="button" onPress={onCrearCuenta}>Crear cuenta</Texto>
     </View> : null}
+    {onInvitacion ? <BotonPrimario titulo="Tengo una invitación" variante="secundario"
+      tamano={esDesktop ? 'escritorio' : 'movil'} deshabilitado={ocupado} onPress={onInvitacion} /> : null}
   </MarcoAuth>;
 }
