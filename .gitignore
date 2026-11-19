@@ -7,3 +7,7 @@ backend/.gradle/
 mobile/node_modules/
 mobile/.expo/
 mobile/dist/
+backend/uploads/
+# Screenshots del smoke de puppeteer (se regeneran en cada corrida)
+resp-*.png
+

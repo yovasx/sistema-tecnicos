@@ -19,6 +19,35 @@ services:
     networks:
       - tecnicos-net
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: tecnicos-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-tecnicos}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-tecnicos}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - tecnicos-net
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+    networks:
+      - tecnicos-net
+
   backend:
     build: ./backend
     container_name: tecnicos-backend
@@ -26,10 +55,33 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
     environment:
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:9081}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Mensajería: todavía no hay publishers ni consumers, pero la conexión
+      # queda configurada para el sprint de notificaciones.
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-tecnicos}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-tecnicos}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_ISSUER: ${JWT_ISSUER:-https://api.fixly.bo}
+      JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-30}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_FROM: ${SMTP_FROM:-no-responder@fixly.bo}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - documentos_data:/app/uploads
     ports:
       - "${BACKEND_PORT}:8080"
     networks:
@@ -41,3 +93,5 @@ networks:
 
 volumes:
   postgres_data:
+  rabbitmq_data:
+  documentos_data:
