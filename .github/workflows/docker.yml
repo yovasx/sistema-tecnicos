@@ -1,0 +1,47 @@
+name: Docker estable
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, chore/docker-estable]
+
+permissions:
+  contents: read
+
+jobs:
+  arranque-y-pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Validar Compose sin .env
+        run: docker compose config --quiet
+      - name: Construir desde cero
+        run: docker compose build --no-cache backend web
+      - name: Arrancar todos los servicios y esperar salud
+        run: docker compose up -d --wait --wait-timeout 240
+      - name: Comprobar web, proxy y documentos privados
+        run: |
+          curl --fail --retry 3 http://localhost:9081/ -o /tmp/index.html
+          grep -q '<html' /tmp/index.html
+          curl --fail http://localhost:9081/api/ping
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9081/api/admin/tecnicos)" = "401"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9081/perfiles/privado.pdf)" = "404"
+      - name: Ejecutar suite backend dentro de Docker
+        run: docker compose --profile pruebas run --build --name fixly-pruebas pruebas
+      - name: Guardar informes
+        if: always()
+        run: docker cp fixly-pruebas:/app/build/reports/tests/test ./informes-tests || true
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: informes-tests
+          path: informes-tests
+          if-no-files-found: ignore
+      - name: Diagnóstico y parada (solo volúmenes efímeros de CI)
+        if: always()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 120
+          docker compose --profile pruebas down -v
