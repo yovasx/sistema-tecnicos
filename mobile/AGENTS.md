@@ -39,6 +39,7 @@ No uses `npx expo lint`: no hay ESLint instalado ni configuración.
 - Archivos: `expo-document-picker` compatible SDK 58, JPG/PNG/PDF hasta 8 MB; `TecnicoApiRepository` envía multipart con Blob en web y URI en nativo. No persistir documentos/CI en storage de sesión. `ValidacionAdminScreen` descarga autenticado y observa/aprueba/rechaza con confirmación; no abre URLs de documentos públicas.
 - Cobertura: `expo-location` solo consulta puntual y con permiso al tocar “Usar mi ubicación”; sin seguimiento/background. Coordenadas manuales y enlace externo a OpenStreetMap como alternativa. Mailpit `http://localhost:8025` permite leer el email OTP en desarrollo; jamás mostrar el código desde la API.
 - El cliente HTTP lee solo `EXPO_PUBLIC_API_URL`, sin fallback. Valores: `http://localhost:9080` (web/iOS), `http://10.0.2.2:9080` (emulador Android), IP LAN en dispositivo físico.
+- Web Docker: `mobile/Dockerfile` ejecuta `npm ci`, TypeScript y export con Node 22. `EXPO_PUBLIC_API_URL=/` conecta por proxy `/api` de Nginx (mismo origen); `.env*` nunca entra al contexto. No usar Metro en el contenedor estable. Puerto predeterminado 9081, alternativo a Metro local. ID Google web por build arg público; cambiarlo requiere reconstruir.
 
 ## Nativos
 

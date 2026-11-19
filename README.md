@@ -2,7 +2,7 @@
 
 Plataforma para solicitar servicios técnicos a domicilio: los clientes publican una orden, los técnicos reciben ofertas, y el administrador valida cuentas y gestiona el catálogo. Incluye base geoespacial, chat, cotizaciones versionadas, pagos, liquidaciones y reputación.
 
-> **Estado:** en desarrollo. La base de datos v2 y la infraestructura están listas; autenticación, CRUD de administración y pantallas mobile están en construcción.
+> **Versión estable local:** autenticación, recuperación, catálogo, usuarios y gestión/revisión de técnicos. Órdenes, pagos y liquidaciones siguen pendientes en la aplicación. El arranque completo está dockerizado; es un entorno de desarrollo/demo, no un despliegue público de producción.
 
 ## Stack
 
@@ -35,7 +35,7 @@ Plataforma para solicitar servicios técnicos a domicilio: los clientes publican
 ├─ mobile/                          app Expo / React Native
 │  ├─ App.tsx                       entrypoint actual
 │  └─ src/domain, src/infrastructure
-├─ docker-compose.yml               Postgres/PostGIS + backend
+├─ docker-compose.yml               web Nginx + API + PostGIS + RabbitMQ + Mailpit
 ├─ .env.example                     variables de Docker y auth
 ├─ AGENTS.md                        guía para agentes/IA
 └─ README.md
@@ -44,39 +44,77 @@ Plataforma para solicitar servicios técnicos a domicilio: los clientes publican
 ## Requisitos
 
 - **Docker Desktop** con Compose v2 (en Windows, backend WSL2).
-- **Node.js 22 LTS** y npm (vienen juntos).
-- **JDK 21** solo si vas a correr el backend fuera de Docker.
-- **Expo Go** en el teléfono (SDK 58) o **Android Studio** para emulador.
-- **Git**.
+- Internet durante la primera construcción (imágenes y dependencias).
+- **Git**, para clonar.
 
-No hace falta instalar React Native CLI ni Expo CLI global: se usan con `npx`.
+**No necesitás Java, Gradle, Node.js, npm ni Expo instalados para usar la web.**
+Node.js 22.13+ y JDK 21 solo son necesarios para desarrollo fuera de Docker.
 
 ## Puesta en marcha
 
-### 1. Clonar y configurar
+### Arranque completo con un comando
 
 ```powershell
 git clone https://github.com/yovasx/sistema-tecnicos.git
 cd sistema-tecnicos
-Copy-Item .env.example .env
+docker compose up -d
 ```
 
-Generá un secreto para JWT y pegalo en `JWT_SECRET` dentro de `.env`:
+La primera ejecución compila la API con el wrapper de Gradle dentro de Java 21
+y la web con `npm ci` dentro de Node 22. Nginx sirve la exportación web; no se usa
+Metro. No hay que copiar `.env`, compilar JARs ni instalar herramientas locales.
+Puede tardar varios minutos; se requiere acceso a los registros y repositorios.
 
 ```powershell
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-```
-
-### 2. Levantar base de datos y backend
-
-```powershell
-docker compose up -d --build
+docker compose ps
 docker compose logs -f backend
 ```
 
-Flyway aplica las migraciones al iniciar. El backend queda publicado en `http://localhost:9080` (el contenedor escucha en `8080`).
+Abrí **http://localhost:9081** cuando `web` y `backend` estén saludables.
+Para esperar desde la consola: `docker compose up -d --wait --wait-timeout 240`.
+Flyway aplica las migraciones automáticamente. Nginx envía `/api` al backend
+por la red privada: el bundle no apunta al `localhost` del navegador.
 
-### 3. Levantar la app mobile
+- Web y panel administrativo: **http://localhost:9081**
+- API/estado con consulta real a la base: **http://localhost:9080/api/ping**
+- Correos de prueba Mailpit: **http://localhost:8025**
+- Administrador demo: `admin@fixly.bo` / `Fixly2026!`
+
+Todos los puertos publicados se limitan a `127.0.0.1`. Las contraseñas demo,
+el secreto JWT de desarrollo y los usuarios sembrados **no son aptos para
+producción**. Los correos van a Mailpit, no a Gmail. Google permanece deshabilitado
+sin IDs OAuth válidos.
+
+### Configuración opcional y actualización
+
+Podés copiar `.env.example` a `.env` para cambiar puertos, SMTP o Google.
+No se copia ningún `.env` al construir imágenes. El ID público de Google web se
+inyecta como argumento de compilación; los secretos permanecen en el backend.
+
+Después de actualizar código: `docker compose up -d --build`.
+`docker compose up -d` reutiliza imágenes existentes; no recompila cambios.
+Base, documentos y RabbitMQ usan volúmenes persistentes; `docker compose down`
+no los borra. **No usar `down -v` con datos que quieras conservar.**
+
+Si antes ejecutabas Metro en 9081, detenelo o configurá `WEB_PORT` diferente.
+Si tenés una base creada con otra contraseña, conservá su `.env`: cambiar una
+variable no cambia la contraseña guardada dentro del volumen existente.
+
+### Verificación reproducible (sin Gradle local)
+
+```powershell
+docker compose build --no-cache backend web
+docker compose up -d --wait --wait-timeout 240
+docker compose --profile pruebas run --build --rm pruebas
+```
+
+La última instrucción corre la suite Java en un contenedor contra Postgres real.
+Usala en un entorno de pruebas, no con datos de producción. La construcción web
+incluye TypeScript. GitHub Actions repite construcción, arranque limpio y tests.
+El wrapper verifica el SHA-256 oficial de Gradle, reintenta descargas y tolera
+conexiones lentas. Los errores de compilación ya no se ocultan.
+
+### Desarrollo nativo o con Metro (opcional, fuera de Docker)
 
 ```powershell
 cd mobile
@@ -102,7 +140,8 @@ Editá `mobile/.env.local` según dónde corras la app:
 | RabbitMQ (consola) | `15672` — http://localhost:15672 |
 | Backend en Docker | `9080` (host) → `8080` (contenedor) |
 | Backend con `bootRun` | `8080` |
-| Expo / Metro | `9081` |
+| Web Docker / Expo Metro (alternativos) | `9081` |
+| Mailpit (bandeja / SMTP) | `8025` / `1025` |
 
 ## Variables de entorno
 
@@ -115,6 +154,7 @@ Editá `mobile/.env.local` según dónde corras la app:
 | `POSTGRES_PASSWORD` | `password` | contraseña de Postgres |
 | `POSTGRES_PORT` | `5432` | puerto publicado de Postgres |
 | `BACKEND_PORT` | `9080` | puerto publicado del backend |
+| `WEB_PORT` | `9081` | web compilada servida por Nginx |
 | `JWT_SECRET` | — | secreto HMAC en Base64 (mínimo 32 bytes); vacío usa el de desarrollo |
 | `JWT_ISSUER` | `https://api.fixly.bo` | emisor del token; debe ser URL http(s) |
 | `JWT_TTL_MINUTES` | `30` | vigencia del access token |
@@ -122,11 +162,11 @@ Editá `mobile/.env.local` según dónde corras la app:
 | `RABBITMQ_PASSWORD` | `tecnicos` | contraseña de RabbitMQ |
 | `RABBITMQ_PORT` | `5672` | puerto AMQP publicado |
 | `RABBITMQ_MANAGEMENT_PORT` | `15672` | consola web de RabbitMQ |
-| `ADMIN_EMAIL` | `admin@tecnicos.local` | admin inicial (bootstrap) |
-| `ADMIN_PASSWORD` | — | contraseña del admin inicial |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:9081` | orígenes permitidos para Expo web |
 
-`JWT_*` ya lo consume el backend. `ADMIN_*` sigue reservado para el bootstrap del administrador. RabbitMQ está levantado pero todavía no hay publishers ni consumers: el backend arranca aunque el contenedor no esté.
+`JWT_*` lo consume el backend. El admin demo procede de la migración V2, no de
+variables `ADMIN_*`. RabbitMQ todavía no tiene publishers ni consumers;
+Compose espera a que esté saludable antes de iniciar el backend.
 
 ### Mobile (`mobile/.env.local`)
 
@@ -561,12 +601,12 @@ Se usa **GitHub Flow / trunk-based**, sin rama `develop`:
 
 ## Troubleshooting
 
-- **`docker compose` falla por variables vacías:** falta `.env`; copiá `.env.example`.
+- **Configuración local:** `.env` es opcional; Compose tiene defaults. Si ya existe, revisá que corresponda a las credenciales del volumen de Postgres.
 - **Error de autenticación de Postgres en `bootRun`:** `POSTGRES_PASSWORD` no coincide con `application.yml`; exportá `SPRING_DATASOURCE_PASSWORD` o alineá los valores.
 - **Flyway checksum mismatch:** editaste una migración aplicada. En desarrollo, recreá la base con `docker compose down -v`; en producción, nunca edites una migración.
 - **Android no conecta a la API:** usá `http://10.0.2.2:9080`, no `localhost`.
 - **Teléfono físico no conecta:** usá la IP LAN de la PC y permití `9080`/`9081` en el firewall.
-- **Puerto ocupado:** cambiá `BACKEND_PORT` en `.env` o el puerto del script de Expo.
+- **Puerto ocupado:** cambiá `WEB_PORT`, `BACKEND_PORT` o el puerto correspondiente en `.env`. Metro y la web Docker no pueden ocupar 9081 a la vez.
 - **Expo Go no abre el proyecto:** la versión de Expo Go debe soportar SDK 58; si no, generá un development build.
 - **TypeScript:** no hay lint ni tests en mobile; el chequeo mínimo es `npx tsc --noEmit`.
 

@@ -1,10 +1,13 @@
 # AGENTS.md
 
-Dos proyectos independientes, sin workspace raíz, CI ni scripts en la raíz. Ejecutá los comandos desde `backend/` o `mobile/`.
+Dos proyectos independientes, sin workspace raíz. Los comandos Java/npm se ejecutan desde `backend/` o `mobile/`; Docker Compose desde la raíz. CI en `.github/workflows/docker.yml`.
 
 - `backend/` — Spring Boot 4.1.1, Java 21, Gradle wrapper 9.8.1, Flyway + PostgreSQL/PostGIS.
 - `mobile/` — Expo SDK 58, React Native 0.88, TypeScript estricto, npm.
-- `docker-compose.yml` — Postgres/PostGIS y el backend en contenedor.
+- `docker-compose.yml` — web compilada (Nginx), backend, Postgres/PostGIS, RabbitMQ y Mailpit. `docker compose up -d` levanta todo sin `.env` ni herramientas locales; defaults solo para desarrollo/demo, puertos ligados a loopback.
+- `mobile/Dockerfile` usa Node 22, `npm ci`, TypeScript y export web; excluye `.env*`. API web `/` por proxy `/api` de Nginx, sin URLs localhost incrustadas. Google web se configura por build arg público; ningún secreto en la imagen web.
+- `backend/Dockerfile` compila con el wrapper versionado dentro de Java 21; normaliza CRLF, verifica distribución Gradle por SHA-256, no oculta errores. Runtime no root y healthcheck `/api/ping` que consulta la BD. Perfil `pruebas` corre suite Java en Docker con Postgres real.
+- No fijar `container_name`: permitir proyectos aislados con `docker compose -p ...`. Nunca borrar volúmenes del usuario para verificar arranque desde cero.
 
 ## Backend
 
@@ -75,4 +78,4 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 ## Convenciones
 
 - Código, textos de UI, comentarios y base de datos en español; no traduzcas identificadores existentes.
-- `.env` está en `.gitignore` pero es obligatorio para docker-compose; `.env.example` es la plantilla.
+- `.env` está en `.gitignore` y es opcional para Compose local; `.env.example` permite personalizar puertos/SMTP/OAuth. La V2 siembra usuarios demo conocidos: el stack no es una configuración de producción pública.
