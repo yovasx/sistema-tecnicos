@@ -482,8 +482,10 @@ const estilos = StyleSheet.create({
     paddingBottom: espacio.xl,
   },
   scrollEscritorio: {
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: espacio.xl,
+    paddingTop: espacio.xl,
+    paddingBottom: espacio.xl,
   },
   caja: {
     width: '100%',
@@ -491,7 +493,8 @@ const estilos = StyleSheet.create({
     gap: espacio.base,
   },
   cajaEscritorio: {
-    flex: 0,
+    // La tarjeta debe medir su contenido, no flex-basis: 0% en React Native Web.
+    flexShrink: 0,
     width: '100%',
     maxWidth: 560,
     backgroundColor: colores.superficie,

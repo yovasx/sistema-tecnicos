@@ -165,7 +165,9 @@ const estilos = StyleSheet.create({
   scrollEscritorio: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: espacio.xl,
+    paddingHorizontal: espacio.xl,
+    paddingTop: espacio.xl,
+    paddingBottom: espacio.xl,
   },
   caja: {
     width: '100%',
@@ -173,7 +175,8 @@ const estilos = StyleSheet.create({
     gap: espacio.lg,
   },
   cajaEscritorio: {
-    flex: 0,
+    // Conservar la altura natural para centrar toda la tarjeta, no solo su borde.
+    flexShrink: 0,
     width: '100%',
     maxWidth: 560,
     backgroundColor: colores.superficie,
