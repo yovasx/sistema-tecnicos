@@ -7,6 +7,22 @@ export interface ResumenAdmin {
   tecnicosAprobados: number;
   categoriasActivas: number;
 }
+export interface DashboardAdmin {
+  generadoEn: string;
+  desde: string;
+  hasta: string;
+  metricas: {
+    ordenesAbiertas: number;
+    solicitudesSinAsignar: number;
+    expedientesEnRevision: number;
+    tecnicosActivosAprobados: number;
+    usuariosActivos: number;
+    categoriasActivas: number;
+  };
+  solicitudesPorDia: { fecha: string; solicitudes: number }[];
+  solicitudesPendientes: { id: number; categoria: string; urgencia: boolean; creadoEn: string }[];
+  expedientesPendientes: { id: number; nombre: string; enviadoEn: string | null }[];
+}
 
 export interface UsuarioAdmin {
   id: number;
@@ -52,6 +68,7 @@ export interface EditarUsuarioAdmin {
   motivo: string;
 }
 export interface EstadoUsuarioAdmin { revision: number; activo: boolean; motivo: string }
+export type EditarPerfilAdmin = Pick<EditarUsuarioAdmin, 'revision' | 'nombre' | 'apellido' | 'telefono' | 'motivo'>;
 export interface InvitacionUsuarioAdmin {
   email: string; nombre: string; apellido: string; telefono: string; rol: string;
   tipoCliente: string; razonSocial: string; nit: string; passwordAdmin: string;

@@ -9,7 +9,8 @@ import { colores, espacio, fuentes, tamanos } from '../theme/tokens';
 import { CambiosAdminProvider, useCambiosAdmin } from '../ui/admin/CambiosAdmin';
 import { Aviso } from '../ui/Aviso';
 import { BotonPrimario } from '../ui/BotonPrimario';
-import { leerRutaAdmin, guardarRutaAdmin } from '../infrastructure/navigation/rutaAdmin';
+import { leerRutaAdmin, guardarRutaAdmin, guardarRutaOrdenAdmin } from '../infrastructure/navigation/rutaAdmin';
+import { DestinoAdmin, NavegacionAdmin } from '../navigation/NavegacionAdmin';
 
 export interface DesktopShellProps {
   secciones: Seccion[];
@@ -33,21 +34,30 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
     return secciones.some(s => s.clave === ruta) ? ruta : secciones[0].clave;
   });
   const { sucio, ocupado } = useCambiosAdmin();
-  const [destino, setDestino] = useState<string | null>(null);
-  function ir(clave: string) {
-    if (etiqueta === 'Backoffice') guardarRutaAdmin(clave === 'cerrarSesion' ? '' : clave);
-    if (clave === 'cerrarSesion') void cerrarSesion(); else setActiva(clave);
+  const [destino, setDestino] = useState<DestinoAdmin | null>(null);
+  const [visita, setVisita] = useState(0);
+  function ir(destino: DestinoAdmin) {
+    const clave = destino.seccion;
+    if (etiqueta === 'Backoffice') {
+      if (clave === 'ordenes' && destino.orden) guardarRutaOrdenAdmin(destino.orden);
+      else guardarRutaAdmin(clave === 'cerrarSesion' ? '' : clave, destino.usuario ?? null);
+    }
+    if (clave === 'cerrarSesion') void cerrarSesion();
+    else { setActiva(clave); setVisita(n => n + 1); }
   }
-  function navegar(clave: string) {
+  function navegarA(destino: DestinoAdmin) {
     if (ocupado) return;
-    if (sucio) { setDestino(clave); return; }
-    ir(clave);
+    if (destino.seccion !== 'cerrarSesion' && !secciones.some(s => s.clave === destino.seccion)) return;
+    if (sucio) { setDestino(destino); return; }
+    ir(destino);
   }
+  function navegar(clave: string) { navegarA({ seccion: clave }); }
 
   const actual = secciones.find((s) => s.clave === activa) ?? secciones[0];
   const Pantalla = actual.pantalla;
 
   return (
+    <NavegacionAdmin.Provider value={navegarA}>
     <View style={estilos.raiz}>
       <View style={estilos.sidebar}>
         <View style={estilos.marca}>
@@ -69,6 +79,7 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
                 accessibilityRole="button"
                 onPress={() => navegar(s.clave)}
                 accessibilityState={{ selected: esActiva }}
+                aria-current={esActiva ? 'page' : undefined}
                 style={[estilos.item, esActiva && estilos.itemActivo]}
               >
                 <Ionicons
@@ -76,6 +87,7 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
                   size={20}
                   color={esActiva ? colores.marca : colores.terciario}
                 />
+                <View style={{ flex: 1, gap: 2 }}>
                 <Texto
                   variante={esActiva ? 'etiqueta' : 'cuerpo'}
                   color={esActiva ? colores.marcaFuerte : colores.secundario}
@@ -83,6 +95,8 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
                 >
                   {s.titulo}
                 </Texto>
+                {s.pendiente ? <Texto variante="caption" color={colores.terciario}>Próximamente</Texto> : null}
+                </View>
               </Pressable>
               </Fragment>
             );
@@ -103,7 +117,19 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
       <View style={estilos.principal}>
         <View style={estilos.topbar}>
           <Texto variante="subtitulo">{actual.titulo}</Texto>
-          <View><Chip texto={usuario?.nombre ?? '—'} tono="neutro" /></View>
+          <Pressable accessibilityRole="button"
+            accessibilityLabel={`Cuenta de sesión: ${usuario?.nombre ?? '—'}. Abrir mi perfil`}
+            onPress={() => navegar('perfil')} style={estilos.identidadSesion}>
+            <View style={estilos.avatarSesion}>
+              <Ionicons name="person-outline" size={18} color={colores.marca} />
+            </View>
+            <View style={{ maxWidth: 230 }}>
+              <Texto variante="etiqueta" numberOfLines={1}>{usuario?.nombre ?? '—'}</Texto>
+              <Texto variante="caption">{usuario?.rol === 'administrador' ? 'Administrador · Mi perfil' :
+                usuario?.rol === 'tecnico' ? 'Técnico · Mi perfil' : 'Cliente · Mi perfil'}</Texto>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color={colores.terciario} />
+          </Pressable>
         </View>
         {destino ? <View style={{ padding: 20, gap: 12 }}>
           <Aviso tono="advertencia" titulo="Tenés cambios sin guardar">Si continuás, se perderán los datos que todavía no guardaste.</Aviso>
@@ -117,10 +143,11 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
           style={estilos.contenido}
           contentContainerStyle={estilos.contenidoContenido}
         >
-          <Pantalla />
+          <Pantalla key={`${usuario?.id}:${activa}:${visita}`} />
         </ScrollView>
       </View>
     </View>
+    </NavegacionAdmin.Provider>
   );
 }
 
@@ -188,6 +215,9 @@ const estilos = StyleSheet.create({
     paddingHorizontal: espacio.xl,
     gap: espacio.base,
   },
+  identidadSesion: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 6, borderRadius: 10 },
+  avatarSesion: { width: 34, height: 34, borderRadius: 17, backgroundColor: colores.marcaSuave,
+    alignItems: 'center', justifyContent: 'center' },
   contenido: {
     flex: 1,
   },

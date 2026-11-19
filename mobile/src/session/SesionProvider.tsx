@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { DatosRegistroCliente } from '../domain/models/Registro';
@@ -12,6 +13,7 @@ import { DatosRegistroTecnico } from '../domain/models/Expediente';
 import { EstadoSesion, UsuarioSesion } from '../domain/models/Sesion';
 import { AuthRepository } from '../domain/repositories/AuthRepository';
 import { TokenStorage } from '../domain/repositories/TokenStorage';
+import { observarRegresoASesion } from '../infrastructure/navigation/actualizacionSesion';
 import {
   definirToken,
   registrarSesionVencida,
@@ -26,6 +28,8 @@ interface ContextoSesion {
   registrarTecnico: (datos: DatosRegistroTecnico) => Promise<void>;
   iniciarGoogle: (idToken: string, nonce: string, nombre?: string, apellido?: string) => Promise<void>;
   cerrarSesion: () => Promise<void>;
+  /** Refresca solo la identidad autenticada; nunca recibe la ficha de otro usuario. */
+  refrescarUsuario: () => Promise<boolean>;
 }
 
 const Contexto = createContext<ContextoSesion | null>(null);
@@ -50,8 +54,12 @@ export function SesionProvider({
 }: SesionProviderProps) {
   const [estado, setEstado] = useState<EstadoSesion>('cargando');
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
+  const generacion = useRef(0);
+  const identidad = useRef<number | null>(null);
 
   const cerrarSesion = useCallback(async () => {
+    ++generacion.current;
+    identidad.current = null;
     await tokenStorage.clear();
     definirToken(null);
     setUsuario(null);
@@ -67,10 +75,11 @@ export function SesionProvider({
 
   useEffect(() => {
     let vigente = true;
+    const turno = generacion.current;
 
     (async () => {
       const token = await tokenStorage.get();
-      if (!vigente) return;
+      if (!vigente || turno !== generacion.current) return;
 
       if (!token) {
         setEstado('anonimo');
@@ -80,13 +89,14 @@ export function SesionProvider({
       definirToken(token);
       try {
         const usuarioActual = await authRepository.me();
-        if (!vigente) return;
+        if (!vigente || turno !== generacion.current) return;
         setUsuario(usuarioActual);
+        identidad.current = usuarioActual.id;
         setEstado('autenticado');
       } catch {
         await tokenStorage.clear();
         definirToken(null);
-        if (!vigente) return;
+        if (!vigente || turno !== generacion.current) return;
         setUsuario(null);
         setEstado('anonimo');
       }
@@ -99,10 +109,13 @@ export function SesionProvider({
 
   const iniciarSesion = useCallback(
     async (email: string, password: string) => {
+      const turno = ++generacion.current;
       const sesion = await authRepository.login(email, password);
+      if (turno !== generacion.current) return;
       await tokenStorage.save(sesion.token);
       definirToken(sesion.token);
       setUsuario(sesion.usuario);
+      identidad.current = sesion.usuario.id;
       setEstado('autenticado');
     },
     [authRepository, tokenStorage],
@@ -114,6 +127,8 @@ export function SesionProvider({
       await tokenStorage.save(sesion.token);
       definirToken(sesion.token);
       setUsuario(sesion.usuario);
+      ++generacion.current;
+      identidad.current = sesion.usuario.id;
       setEstado('autenticado');
     },
     [authRepository, tokenStorage],
@@ -124,17 +139,38 @@ export function SesionProvider({
     await tokenStorage.save(sesion.token);
     definirToken(sesion.token);
     setUsuario(sesion.usuario);
+    ++generacion.current;
+    identidad.current = sesion.usuario.id;
     setEstado('autenticado');
   }, [authRepository, tokenStorage]);
 
   const iniciarGoogle = useCallback(async (idToken: string, nonce: string, nombre?: string, apellido?: string) => {
     const sesion = await authRepository.google(idToken, nonce, nombre, apellido);
     await tokenStorage.save(sesion.token);
+    ++generacion.current;
+    identidad.current = sesion.usuario.id;
     definirToken(sesion.token); setUsuario(sesion.usuario); setEstado('autenticado');
   }, [authRepository, tokenStorage]);
+  const refrescarUsuario = useCallback(async () => {
+    const turno = generacion.current;
+    const id = identidad.current;
+    if (id === null) return false;
+    try {
+      const actual = await authRepository.me();
+      if (turno !== generacion.current || identidad.current !== id || actual.id !== id) return false;
+      setUsuario(actual);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [authRepository]);
+  useEffect(() => {
+    if (estado !== 'autenticado') return;
+    return observarRegresoASesion(() => { void refrescarUsuario(); });
+  }, [estado, refrescarUsuario]);
   const valor = useMemo(
-    () => ({ estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion }),
-    [estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion],
+    () => ({ estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion, refrescarUsuario }),
+    [estado, usuario, iniciarSesion, registrar, registrarTecnico, iniciarGoogle, cerrarSesion, refrescarUsuario],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

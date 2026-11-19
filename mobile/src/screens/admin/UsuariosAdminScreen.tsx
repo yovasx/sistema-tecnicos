@@ -106,12 +106,14 @@ export function UsuariosAdminScreen() {
       columnas={[
         { clave: 'usuario', titulo: 'USUARIO', render: u => <View style={s.identidad}>
           <View style={s.avatar}><Texto variante="etiqueta" color={colores.marca}>{u.nombre.split(/\s+/).slice(0, 2).map(n => n[0]).join('').toUpperCase()}</Texto></View>
-          <View style={{ flex: 1, gap: 4 }}><Texto variante="etiqueta" numberOfLines={1}>{u.nombre}</Texto>
-            <Texto variante="caption" numberOfLines={1}>{u.email}</Texto></View>
+           <View style={{ flex: 1, gap: 4 }}><Texto variante="etiqueta" numberOfLines={1}>{u.nombre}</Texto>
+            <Texto variante="caption" numberOfLines={1}>{u.email}</Texto>
+            <Texto variante="caption">Cuenta #{u.id}</Texto></View>
         </View> },
         { clave: 'rol', titulo: 'ROL / PERFIL', ancho: 150, render: u => <View style={{ gap: 4 }}>
           <Texto variante="etiqueta">{rolVisible[u.rol]}</Texto>
-          <Texto variante="caption">{u.tipoCliente === 'empresa' ? 'Empresa' : 'Persona'}</Texto></View> },
+          <Texto variante="caption">{u.rol === 'cliente' ? (u.tipoCliente === 'empresa' ? 'Empresa' : 'Persona') :
+            u.rol === 'tecnico' ? 'Cuenta técnica' : 'Cuenta administrativa'}</Texto></View> },
         { clave: 'estado', titulo: 'ESTADO', ancho: 110, render: u => <Chip texto={u.activo ? 'Activo' : 'Inactivo'} tono={u.activo ? 'exito' : 'neutro'} /> },
         ...(ancho >= 1200 ? [{ clave: 'registro', titulo: 'REGISTRO', ancho: 140, render: (u: FilaUsuarioAdmin) => <Texto variante="caption">{new Date(u.creadoEn).toLocaleDateString('es-BO')}</Texto> }] : []),
         { clave: 'accion', titulo: 'ACCIÓN', ancho: 160, render: u => <BotonPrimario titulo="Ver ficha"
@@ -122,7 +124,7 @@ export function UsuariosAdminScreen() {
 }
 
 function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () => void; onGuardado: () => void }) {
-  const { usuario } = useSesion();
+  const { usuario, refrescarUsuario } = useSesion();
   const { ancho } = useResponsive();
   const [detalle, setDetalle] = useState<DetalleUsuarioAdmin | null>(null);
   const [form, setForm] = useState<EditarUsuarioAdmin | null>(null);
@@ -188,6 +190,7 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
       setDetalle(d); setForm(formulario(d)); setEditando(false); setAccionEstado(false); setMotivo('');
       setMensaje(estado ? `Cuenta ${d.activo ? 'reactivada' : 'desactivada'}. La acción quedó registrada.` : 'Datos guardados. El cambio quedó registrado en el historial.');
       onGuardado();
+      if (d.id === usuario?.id) await refrescarUsuario();
     } catch (e) { setError(errorTexto(e)); }
     finally { setOcupado(false); bloqueo.current = false; }
   }

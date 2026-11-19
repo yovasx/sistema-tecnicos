@@ -73,7 +73,7 @@ export function RootNavigator() {
 
   if (estado === 'autenticado') {
     const contenido = esDesktop ? (
-      <ShellAutenticado />
+      <ShellAutenticado key={usuario?.id} />
     ) : (
       <NavigationContainer>
         <View style={estilos.raiz}>

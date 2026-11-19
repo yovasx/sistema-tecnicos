@@ -1,6 +1,7 @@
 package com.tecnicos.tecnicos_backend.admin.application;
 
 import com.tecnicos.tecnicos_backend.admin.api.UsuariosAdminDtos.*;
+import com.tecnicos.tecnicos_backend.admin.api.PerfilAdminEditar;
 import com.tecnicos.tecnicos_backend.shared.persistence.AuditoriaContexto;
 import com.tecnicos.tecnicos_backend.shared.web.ApiException;
 import org.springframework.http.HttpStatus;
@@ -72,6 +73,13 @@ public class UsuariosAdminService {
                     r.getString("acceso"),r.getString("estado_validacion")),id);
         if (filas.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND,"USUARIO_NO_ENCONTRADO","La cuenta no existe.");
         return filas.getFirst();
+    }
+
+    @Transactional
+    public Detalle editarPerfil(long admin, PerfilAdminEditar r) {
+        var actual = detalle(admin);
+        return editar(admin, admin, new Editar(r.revision(), r.nombre(), r.apellido(), r.telefono(),
+                actual.razonSocial(), actual.nit(), r.motivo()));
     }
 
     @Transactional
