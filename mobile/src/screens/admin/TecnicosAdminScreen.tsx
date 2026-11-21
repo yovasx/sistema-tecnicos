@@ -88,7 +88,7 @@ export function TecnicosAdminScreen() {
           opciones={[['todos', 'Todas'], ...categorias.map(c => [String(c.id), `${c.nombre}${c.activa ? '' : ' (inactiva)'}`] as const)]}
           onChange={v => setFiltros(f => ({ ...f, categoria: v === 'todos' ? undefined : Number(v), pagina: 0 }))} /> : null}
       </View>
-      {errorCategorias ? <Aviso tono="peligro" titulo="Especialidades no disponibles">{errorCategorias} Podés reintentar con Actualizar técnicos.</Aviso> : null}
+      {errorCategorias ? <Aviso tono="peligro" titulo="Especialidades no disponibles">{errorCategorias} Puedes reintentar con Actualizar técnicos.</Aviso> : null}
       <View style={s.entre}><Texto variante="caption">Más recientes primero. Los borradores también aparecen en este directorio.</Texto>
         <BotonPrimario titulo="Limpiar filtros" tamano="escritorio" variante="secundario"
           onPress={() => { setBusqueda(''); setFiltros(inicial); }} /></View>
@@ -141,7 +141,7 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
     <View style={s.entre}><BotonPrimario titulo="Volver a Técnicos" variante="secundario" tamano="escritorio" deshabilitado={ocupado}
       onPress={() => interaccion.sucio ? setDescartar(true) : onVolver()} />
       <Texto variante="caption">Personas / Técnicos / Ficha #{id}</Texto></View>
-    {descartar ? <><Aviso tono="advertencia" titulo="Hay cambios sin guardar">Descartá el borrador para volver o continuá con la revisión.</Aviso>
+    {descartar ? <><Aviso tono="advertencia" titulo="Hay cambios sin guardar">Descarta el borrador para volver o continúa con la revisión.</Aviso>
       <View style={s.fila}><BotonPrimario titulo="Seguir en la ficha" tamano="escritorio" onPress={() => setDescartar(false)} />
         <BotonPrimario titulo="Descartar y volver" variante="secundario" tamano="escritorio" onPress={onVolver} /></View></> : null}
     {error ? <Aviso tono="peligro" titulo="No pudimos actualizar la ficha">{error} No se muestran cambios que no hayan sido confirmados por el servidor.</Aviso> : null}
@@ -178,7 +178,7 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
             <Dato etiqueta="Registro de la cuenta" valor={fecha(d.cuenta.creadoEn)} />
             <Dato etiqueta="Enviado a revisión" valor={d.expediente.enviadoEn ? fecha(d.expediente.enviadoEn) : 'Sin envío registrado'} />
             <Dato etiqueta="Aprobación técnica" valor={d.cuenta.estadoValidacion === 'aprobado' ? 'Aprobado' : 'No aprobado'} />
-            <Texto variante="caption">Editá los datos permitidos sin salir de esta ficha. La identidad aprobada conserva su protección documental.</Texto>
+            <Texto variante="caption">Edita los datos permitidos sin salir de esta ficha. La identidad aprobada conserva su protección documental.</Texto>
             <BotonPrimario titulo="Editar datos del técnico" tamano="escritorio" variante="secundario"
               deshabilitado={ocupado || interaccion.sucio}
               onPress={() => { setEditandoDatos(true); setMensaje(''); }} />
@@ -238,7 +238,7 @@ function EstadoCuentaTecnico({ detalle: d, onGuardado, onInteraccion }: {
   }, [motivo, ocupado, onInteraccion]);
   async function guardar() {
     if (bloqueo.current) return;
-    if (motivo.trim().length < 5) { setError('Escribí un motivo de al menos 5 caracteres.'); return; }
+    if (motivo.trim().length < 5) { setError('Escribe un motivo de al menos 5 caracteres.'); return; }
     bloqueo.current = true; setOcupado(true); setError('');
     try {
       const cuenta = await adminRepository.estadoUsuario(d.cuenta.id,
@@ -254,7 +254,7 @@ function EstadoCuentaTecnico({ detalle: d, onGuardado, onInteraccion }: {
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}
     {!confirmar ? <BotonPrimario titulo={d.cuenta.activo ? 'Desactivar cuenta técnica' : 'Reactivar cuenta técnica'} variante="secundario"
       tamano="escritorio" onPress={() => setConfirmar(true)} /> : <>
-      <Aviso tono="advertencia" titulo="Confirmá el cambio">{d.cuenta.activo ?
+      <Aviso tono="advertencia" titulo="Confirma el cambio">{d.cuenta.activo ?
         'El técnico dejará de acceder a Fixly. Si tiene órdenes en curso, primero deberás resolverlas.' :
         'El técnico podrá volver a iniciar sesión; su aprobación y disponibilidad no cambian.'}</Aviso>
       <CampoTexto etiqueta="Motivo del estado técnico" value={motivo} onChangeText={setMotivo} maxLength={500} editable={!ocupado} multiline autoFocus />

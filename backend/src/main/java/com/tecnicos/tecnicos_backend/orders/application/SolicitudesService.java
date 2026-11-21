@@ -46,7 +46,7 @@ public class SolicitudesService {
         if(categoria<1 || descripcion.trim().length()<10 || descripcion.trim().length()>2000
             || referencia.trim().length()<5 || referencia.trim().length()>300
             || !Double.isFinite(latitud) || Math.abs(latitud)>90 || !Double.isFinite(longitud) || Math.abs(longitud)>180) {
-            throw error(HttpStatus.BAD_REQUEST,"DATOS_INVALIDOS","Revisá la descripción (10–2000 caracteres), dirección (5–300) y coordenadas.");
+            throw error(HttpStatus.BAD_REQUEST,"DATOS_INVALIDOS","Revisa la descripción (10–2000 caracteres), dirección (5–300) y coordenadas.");
         }
         String hashArchivo=null;
         if(evidencia!=null) {
@@ -148,7 +148,7 @@ public class SolicitudesService {
         boolean jpg=Set.of(".jpg",".jpeg").contains(ext) && cabecera.length>=3
             && cabecera[0]==(byte)255 && cabecera[1]==(byte)216 && cabecera[2]==(byte)255;
         boolean pdf=ext.equals(".pdf") && cabecera.length>=5 && new String(cabecera,0,5,StandardCharsets.US_ASCII).equals("%PDF-");
-        if(!png && !jpg && !pdf) throw error(HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","Elegí una evidencia JPG, PNG o PDF válida.");
+        if(!png && !jpg && !pdf) throw error(HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","Selecciona una evidencia JPG, PNG o PDF válida.");
     }
     private static String hash(InputStream entrada) throws IOException {
         try {

@@ -33,7 +33,7 @@ export function AccesoGoogle() {
   }
   return <View style={{ gap: 12 }}>
     {credencial ? <>
-      <Texto variante="etiqueta">Completá tu perfil de cliente</Texto>
+      <Texto variante="etiqueta">Completa tu perfil de cliente</Texto>
       <CampoTexto etiqueta="Nombre" value={nombre} onChangeText={setNombre} maxLength={100} />
       <CampoTexto etiqueta="Apellido" value={apellido} onChangeText={setApellido} maxLength={100} />
       <BotonPrimario titulo="Crear mi cuenta con Google" cargando={ocupado} deshabilitado={!nombre.trim() || !apellido.trim()}
@@ -44,7 +44,7 @@ export function AccesoGoogle() {
     {error && referencia ? <Texto variante="caption">Referencia de acceso: {referencia}</Texto> : null}
     <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
       <View style={{ height: 1, flex: 1, backgroundColor: colores.linea }} />
-      <Texto variante="caption">o continuá con tu email</Texto>
+      <Texto variante="caption">o continúa con tu correo electrónico</Texto>
       <View style={{ height: 1, flex: 1, backgroundColor: colores.linea }} />
     </View>
   </View>;

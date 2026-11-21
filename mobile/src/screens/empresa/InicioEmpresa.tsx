@@ -50,7 +50,7 @@ export function InicioEmpresa() {
           <View style={estilos.servicios}>
             <Texto variante="subtitulo">Solicitar un servicio</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Creá una solicitud para tu empresa y seguí su estado desde Órdenes.
+              Crea una solicitud para tu empresa y consulta su estado desde Órdenes.
             </Texto>
             <BotonPrimario titulo="Nueva solicitud" onPress={() => abrir()} />
           </View>

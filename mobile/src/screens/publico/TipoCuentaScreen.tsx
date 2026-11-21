@@ -62,7 +62,7 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: Ti
             <View style={estilos.encabezado}>
               <Texto variante="titulo">¿Para quién es la cuenta?</Texto>
               <Texto variante="cuerpo" color={colores.secundario}>
-                Elegí el perfil y te pedimos solo los datos que hacen falta.
+                Selecciona el perfil y te pediremos solo los datos necesarios.
               </Texto>
             </View>
 
@@ -70,13 +70,13 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: Ti
               <OpcionCuenta
                 icono="home"
                 titulo="Para mi hogar"
-                detalle="Pedí servicios para tu casa y seguí cada trabajo."
+                detalle="Solicita servicios para tu hogar y consulta el seguimiento de cada trabajo."
                 onPress={() => onElegir('persona')}
               />
               <OpcionCuenta
                 icono="business"
                 titulo="Para mi empresa"
-                detalle="Gestioná servicios y facturación con NIT."
+                detalle="Gestiona servicios y facturación con NIT."
                 onPress={() => onElegir('empresa')}
               />
               <OpcionCuenta
@@ -91,7 +91,7 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: Ti
 
             <View style={estilos.pie}>
               <Texto variante="caption" color={colores.secundario}>
-                ¿Ya tenés cuenta?
+                ¿Ya tienes cuenta?
               </Texto>
               <Texto
                 variante="etiqueta"

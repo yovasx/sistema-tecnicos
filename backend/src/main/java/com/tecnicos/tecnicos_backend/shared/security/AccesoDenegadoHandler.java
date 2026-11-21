@@ -27,7 +27,7 @@ public class AccesoDenegadoHandler implements AccessDeniedHandler {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write(
                 "{\"codigo\":\"PERMISO_INSUFICIENTE\","
-                        + "\"mensaje\":\"No tenés permiso para realizar esta acción.\","
+                        + "\"mensaje\":\"No tienes permiso para realizar esta acción.\","
                         + "\"campos\":[]}");
     }
 }

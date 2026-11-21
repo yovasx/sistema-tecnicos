@@ -53,7 +53,7 @@ export function MiPerfilAdminScreen() {
           <Texto variante="subtitulo">Acceso y seguridad</Texto>
           <Texto>Método de acceso: {cuenta.acceso === 'google' ? 'Google' :
             cuenta.acceso === 'google_y_password' ? 'Google y contraseña Fixly' : 'Contraseña Fixly'}</Texto>
-          <Texto variante="caption">El correo y el rol se conservan. No podés desactivar tu propia cuenta.</Texto>
+          <Texto variante="caption">El correo y el rol se conservan. No puedes desactivar tu propia cuenta.</Texto>
           {cuenta.acceso !== 'google' ? <BotonPrimario titulo="Cambiar contraseña" variante="secundario"
             tamano="escritorio" onPress={() => { setSeguridad(true); setMensaje(''); }} /> : null}
         </Tarjeta> : null}

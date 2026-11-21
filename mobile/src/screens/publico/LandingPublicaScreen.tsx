@@ -21,7 +21,7 @@ export interface LandingPublicaScreenProps {
 }
 
 const PASOS = [
-  { numero: '1', titulo: 'Elegís tu problema', detalle: 'Contás qué pasa y en qué zona estás.' },
+  { numero: '1', titulo: 'Describe el problema', detalle: 'Indica qué ocurre y en qué zona necesitas el servicio.' },
   {
     numero: '2',
     titulo: 'Cotización y técnico asignado',
@@ -178,7 +178,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, on
             </Texto>
             <View style={estilos.lineaHero} />
             <Texto variante="caption" color={colores.secundario}>
-              Empezá por conocer los servicios:
+              Empieza por conocer los servicios:
             </Texto>
             <View style={estilos.puntos}>
               {categorias.map((c) => (
@@ -280,9 +280,9 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, on
         <View style={estilos.garantia}>
           <Ionicons name="shield-checkmark" size={24} color={colores.exito} />
           <View style={estilos.garantiaTexto}>
-            <Texto variante="cuerpoFuerte">¿Sos un profesional técnico?</Texto>
+            <Texto variante="cuerpoFuerte">¿Eres un profesional técnico?</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Creá tu perfil, subí tus certificados y enviá tu expediente a revisión.
+              Crea tu perfil, sube tus certificados y envía tu expediente a revisión.
             </Texto>
           </View>
           <BotonPrimario

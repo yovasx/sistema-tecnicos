@@ -19,7 +19,7 @@ public class DashboardAdminService {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public DashboardAdmin consultar(int dias) {
         if (dias != 7 && dias != 30) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "FILTROS_INVALIDOS", "Elegí un período de 7 o 30 días.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "FILTROS_INVALIDOS", "Selecciona un período de 7 o 30 días.");
         }
         var generado = jdbc.queryForObject("SELECT CURRENT_TIMESTAMP", OffsetDateTime.class);
         var hasta = generado.atZoneSameInstant(BOLIVIA).toLocalDate();

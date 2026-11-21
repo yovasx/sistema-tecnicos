@@ -34,6 +34,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "verificar:lenguaje": "node --test ../scripts/verificar-lenguaje.test.cjs && node ../scripts/verificar-lenguaje.cjs",
     "start": "expo start --port 9081",
     "android": "expo start --android",
     "ios": "expo start --ios",

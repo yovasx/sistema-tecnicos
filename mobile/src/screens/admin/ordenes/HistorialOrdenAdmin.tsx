@@ -28,9 +28,9 @@ export function HistorialOrdenAdmin({ id, recarga }: { id: number; recarga: numb
       <BotonPrimario titulo="Actualizar historial de orden" variante="secundario" tamano="escritorio" deshabilitado={cargando}
         onPress={() => setReintento(n => n + 1)} /></View>
     <Texto variante="caption">Más recientes primero · horario de Bolivia · solo transiciones registradas, sin reconstruir eventos.</Texto>
-    {error ? <Aviso tono="peligro" titulo="No pudimos cargar el historial">{error} Usá Actualizar historial de orden para reintentar.</Aviso> : null}
+    {error ? <Aviso tono="peligro" titulo="No pudimos cargar el historial">{error} Usa Actualizar historial de orden para reintentar.</Aviso> : null}
     {cargando ? <ActivityIndicator color={colores.marca} /> : !error && datos ? <>
-      {!datos.elementos.length ? <Aviso>{datos.total ? 'No hay registros en esta página. Volvé a la anterior.' : 'No hay transiciones registradas para esta orden.'}</Aviso> : null}
+      {!datos.elementos.length ? <Aviso>{datos.total ? 'No hay registros en esta página. Vuelve a la anterior.' : 'No hay transiciones registradas para esta orden.'}</Aviso> : null}
       {datos.elementos.map(h => <View key={h.id} style={s.evento}>
         <View style={s.marca} />
         <View style={{ flex: 1, minWidth: 0, gap: 14 }}>

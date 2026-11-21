@@ -39,7 +39,7 @@ export function useCategoriasPublicas() {
           categorias: [],
           cargando: false,
           error: error.sinConexion
-            ? 'No pudimos cargar las tarifas. Revisá tu conexión.'
+            ? 'No pudimos cargar las tarifas. Revisa tu conexión.'
             : 'No pudimos cargar las tarifas.',
         });
       });

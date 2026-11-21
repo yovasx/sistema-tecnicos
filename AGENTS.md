@@ -81,5 +81,6 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 
 ## Convenciones
 
+- Textos del sistema en español neutral para Bolivia, con tuteo uniforme y sin formas regionales. Incluye UI, errores HTTP/SQL, correos y accesibilidad. Conservar BOB, CI/NIT y fechas de Bolivia. Ejecutar `npm run verificar:lenguaje` desde `mobile/`; las funciones SQL vigentes se verifican en `MensajesNeutralesTest`. V16 actualiza solo literales de mensajes de una lista cerrada de funciones, sin editar migraciones aplicadas ni datos.
 - Código, textos de UI, comentarios y base de datos en español; no traduzcas identificadores existentes.
 - `.env` está en `.gitignore` y es opcional para Compose local; `.env.example` permite personalizar puertos/SMTP/OAuth. La V2 siembra usuarios demo conocidos: el stack no es una configuración de producción pública.

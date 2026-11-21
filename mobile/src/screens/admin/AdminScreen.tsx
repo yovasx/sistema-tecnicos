@@ -23,7 +23,7 @@ export function AdminScreen() {
               El panel administrativo se usa desde el backoffice web.
             </Texto>
             <Texto variante="caption" color={colores.secundario} centrado style={estilos.nota}>
-              Acá solo se muestra el usuario logueado y la opción de cerrar sesión.
+              Aquí se muestran los datos de la sesión y la opción de cerrar sesión.
             </Texto>
           </View>
           <BotonPrimario

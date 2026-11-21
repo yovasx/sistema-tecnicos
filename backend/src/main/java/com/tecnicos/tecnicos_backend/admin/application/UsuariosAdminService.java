@@ -28,7 +28,7 @@ public class UsuariosAdminService {
             || !Set.of("todos","cliente","tecnico","administrador").contains(rol)
             || !Set.of("todos","persona","empresa").contains(perfil)
             || !Set.of("todos","activo","inactivo").contains(estado)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisá los filtros y la paginación.");
+            throw new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisa los filtros y la paginación.");
         }
         String where=" WHERE u.eliminado_en IS NULL ";
         List<Object> args=new ArrayList<>();

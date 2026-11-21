@@ -46,7 +46,7 @@ class SeguridadJwtTest {
         mvc.perform(get("/api/ordenes"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"))
-                .andExpect(jsonPath("$.mensaje").value("Necesitás iniciar sesión."))
+                .andExpect(jsonPath("$.mensaje").value("Necesitas iniciar sesión."))
                 .andExpect(jsonPath("$.campos").isEmpty());
     }
 

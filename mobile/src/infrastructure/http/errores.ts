@@ -40,7 +40,7 @@ export function traducirError(error: unknown): ErrorApi {
     if (!error.response) {
       return new ErrorApi(
         'SIN_CONEXION',
-        'Sin conexión con el servidor. Revisá la IP, el puerto y el firewall.',
+        'Sin conexión con el servidor. Revisa la IP, el puerto y el firewall.',
       );
     }
 
@@ -55,7 +55,7 @@ export function traducirError(error: unknown): ErrorApi {
     const mensaje =
       typeof cuerpo.mensaje === 'string' && cuerpo.mensaje.length > 0
         ? cuerpo.mensaje
-        : 'Ocurrió un error inesperado. Intentá de nuevo.';
+        : 'Ocurrió un error inesperado. Intenta de nuevo.';
     const campos = Array.isArray(cuerpo.campos) ? (cuerpo.campos as CampoError[]) : [];
 
     return new ErrorApi(codigo, mensaje, status, campos);
@@ -63,6 +63,6 @@ export function traducirError(error: unknown): ErrorApi {
 
   return new ErrorApi(
     'ERROR_DESCONOCIDO',
-    'Ocurrió un error inesperado. Intentá de nuevo.',
+    'Ocurrió un error inesperado. Intenta de nuevo.',
   );
 }

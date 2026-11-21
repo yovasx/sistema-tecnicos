@@ -89,25 +89,25 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
     const nuevos: Errores = {};
     if (!nombre.trim()) {
       nuevos.nombre = esEmpresa
-        ? 'Escribí el nombre del responsable.'
-        : 'Escribí tu nombre.';
+        ? 'Escribe el nombre del responsable.'
+        : 'Escribe tu nombre.';
     }
     if (!apellido.trim()) {
       nuevos.apellido = esEmpresa
-        ? 'Escribí el apellido del responsable.'
-        : 'Escribí tu apellido.';
+        ? 'Escribe el apellido del responsable.'
+        : 'Escribe tu apellido.';
     }
     if (esEmpresa) {
-      if (!razonSocial.trim()) nuevos.razonSocial = 'Escribí la razón social.';
-      if (!nit.trim()) nuevos.nit = 'Escribí el NIT de la empresa.';
+      if (!razonSocial.trim()) nuevos.razonSocial = 'Escribe la razón social.';
+      if (!nit.trim()) nuevos.nit = 'Escribe el NIT de la empresa.';
     }
     if (!email.trim()) {
-      nuevos.email = 'Escribí tu email.';
+      nuevos.email = 'Escribe tu correo electrónico.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      nuevos.email = 'Ingresá un email válido.';
+      nuevos.email = 'Ingresa un correo electrónico válido.';
     }
     if (telefono.trim() && !/^[0-9+\-\s()]{7,20}$/.test(telefono.trim())) {
-      nuevos.telefono = 'Ingresá un teléfono válido (7 a 20 caracteres).';
+      nuevos.telefono = 'Ingresa un teléfono válido (7 a 20 caracteres).';
     }
     return nuevos;
   }
@@ -120,7 +120,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       nuevos.password = 'La contraseña no puede superar 72 caracteres.';
     }
     if (!confirmacion) {
-      nuevos.confirmacion = 'Repetí la contraseña.';
+      nuevos.confirmacion = 'Repite la contraseña.';
     } else if (confirmacion !== password) {
       nuevos.confirmacion = 'Las contraseñas no coinciden.';
     }
@@ -195,12 +195,12 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
         setPaso(1);
       } else if (error.codigo === 'DATOS_EMPRESA_INCOMPLETOS') {
         setErrores({
-          razonSocial: 'Completá la razón social.',
-          nit: 'Completá el NIT.',
+          razonSocial: 'Completa la razón social.',
+          nit: 'Completa el NIT.',
         });
         setPaso(1);
       } else {
-        setErrorGeneral(error.message || 'No pudimos crear tu cuenta. Intentá de nuevo.');
+        setErrorGeneral(error.message || 'No pudimos crear tu cuenta. Intenta de nuevo.');
       }
     } finally {
       envioEnCurso.current = false;
@@ -213,7 +213,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       ? esEmpresa
         ? 'Datos de la empresa'
         : tecnico ? 'Tu cuenta de técnico' : 'Tus datos'
-      : 'Creá tu contraseña';
+      : 'Crea tu contraseña';
 
   const subtitulo =
     paso === 1
@@ -386,7 +386,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
                     textContentType="newPassword"
                   />
                   <CampoTexto
-                    etiqueta="Repetí la contraseña"
+                    etiqueta="Repite la contraseña"
                     value={confirmacion}
                     onChangeText={(v) => {
                       setConfirmacion(v);
@@ -433,7 +433,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               <View style={estilos.pie}>
                 <Texto variante="caption" color={colores.secundario}>
-                  ¿Ya tenés cuenta?
+                  ¿Ya tienes cuenta?
                 </Texto>
                 <Texto
                   variante="etiqueta"

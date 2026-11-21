@@ -22,12 +22,12 @@ export function LoginScreen({ onVolver, onCrearCuenta, onRecuperar }: LoginScree
     <View style={{ gap: 10 }}>
       <Ionicons name="log-in-outline" size={28} color={colores.marca} />
       <Texto variante="titulo">Bienvenido de nuevo</Texto>
-      <Texto color={colores.secundario}>Ingresá a tu cuenta y continuá donde lo dejaste.</Texto>
+      <Texto color={colores.secundario}>Ingresa a tu cuenta y continúa donde lo dejaste.</Texto>
     </View>
     {errorLogin ? <Aviso tono="peligro">{errorLogin}</Aviso> : null}
     <AccesoGoogle />
     <CampoTexto etiqueta="Correo electrónico" value={email} onChangeText={setEmail} editable={!ocupado}
-      keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="vos@ejemplo.com" />
+      keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="nombre@ejemplo.com" />
     <View style={{ gap: 8 }}>
       <CampoTexto etiqueta="Contraseña" value={password} onChangeText={setPassword} editable={!ocupado} esPassword
         autoComplete="current-password" onSubmitEditing={() => { Keyboard.dismiss(); void manejarSubmit(); }} />
@@ -37,7 +37,7 @@ export function LoginScreen({ onVolver, onCrearCuenta, onRecuperar }: LoginScree
     <BotonPrimario titulo="Ingresar" tamano={esDesktop ? 'escritorio' : 'movil'} cargando={ocupado}
       onPress={() => { Keyboard.dismiss(); void manejarSubmit(); }} />
     {onCrearCuenta ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
-      <Texto variante="caption">¿No tenés cuenta?</Texto>
+      <Texto variante="caption">¿No tienes cuenta?</Texto>
       <Texto variante="etiqueta" color={colores.marca} accessibilityRole="button" onPress={onCrearCuenta}>Crear cuenta</Texto>
     </View> : null}
   </MarcoAuth>;

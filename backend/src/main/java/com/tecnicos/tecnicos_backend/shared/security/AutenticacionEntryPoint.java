@@ -28,7 +28,7 @@ public class AutenticacionEntryPoint implements AuthenticationEntryPoint {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write(
                 "{\"codigo\":\"NO_AUTENTICADO\","
-                        + "\"mensaje\":\"Necesitás iniciar sesión.\","
+                        + "\"mensaje\":\"Necesitas iniciar sesión.\","
                         + "\"campos\":[]}");
     }
 }

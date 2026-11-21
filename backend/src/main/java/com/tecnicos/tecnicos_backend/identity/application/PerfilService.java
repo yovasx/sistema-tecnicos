@@ -63,7 +63,7 @@ public class PerfilService {
             "PASSWORD_ACTUAL_INVALIDA","La contraseña actual no es correcta.");
         if (r.nueva().getBytes(StandardCharsets.UTF_8).length>72 || r.nueva().equals(r.actual()))
             throw new ApiException(HttpStatus.BAD_REQUEST,"PASSWORD_NUEVA_INVALIDA",
-                "Elegí una contraseña diferente, de entre 8 y 72 bytes.");
+                "Selecciona una contraseña diferente, de entre 8 y 72 bytes.");
         jdbc.update("UPDATE identity.usuarios SET password_hash=?,version_sesion=version_sesion+1 WHERE id=?",
             claves.encode(r.nueva()),id);
         // No almacenar claves, hashes ni permisos en la auditoría.

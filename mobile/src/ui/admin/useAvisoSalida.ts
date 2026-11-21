@@ -6,7 +6,7 @@ export function useAvisoSalida(activo: boolean) {
   useEffect(() => {
     if (!activo) return;
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
-      Alert.alert('Tenés cambios sin guardar', 'Guardá o cancelá la edición antes de salir de la aplicación.');
+      Alert.alert('Tienes cambios sin guardar', 'Guarda o cancela la edición antes de salir de la aplicación.');
       return true;
     });
     return () => listener.remove();

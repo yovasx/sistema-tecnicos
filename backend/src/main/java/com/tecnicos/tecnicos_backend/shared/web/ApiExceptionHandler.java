@@ -43,12 +43,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> parametroInvalido(Exception ex) {
         return ResponseEntity.badRequest()
-                .body(ApiError.de("DATOS_INVALIDOS", "Revisá los identificadores y los parámetros de la consulta."));
+                .body(ApiError.de("DATOS_INVALIDOS", "Revisa los identificadores y los parámetros de la consulta."));
     }
 
     @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
     public ResponseEntity<ApiError> parametroFaltante(Exception ex) {
-        return ResponseEntity.badRequest().body(ApiError.de("DATOS_INVALIDOS","Completá los campos obligatorios de la solicitud."));
+        return ResponseEntity.badRequest().body(ApiError.de("DATOS_INVALIDOS","Completa los campos obligatorios de la solicitud."));
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
@@ -56,7 +56,7 @@ public class ApiExceptionHandler {
             HttpMediaTypeNotSupportedException ex) {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .body(ApiError.de("TIPO_CONTENIDO_NO_SOPORTADO",
-                        "Enviá el contenido como application/json."));
+                        "Envía el contenido como application/json."));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -79,7 +79,7 @@ public class ApiExceptionHandler {
                 .map(this::aCampoError)
                 .toList();
         return ResponseEntity.badRequest()
-                .body(ApiError.de("DATOS_INVALIDOS", "Revisá los datos ingresados.", campos));
+                .body(ApiError.de("DATOS_INVALIDOS", "Revisa los datos ingresados.", campos));
     }
 
     @ExceptionHandler(DataAccessException.class)
@@ -102,7 +102,7 @@ public class ApiExceptionHandler {
         if (sqlState == null) {
             log.error("Fallo de acceso a datos sin SQLSTATE", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Probá de nuevo."));
+                    .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Intenta de nuevo."));
         }
 
         return switch (sqlState) {
@@ -132,12 +132,12 @@ public class ApiExceptionHandler {
 
             // Permiso denegado en la base (p. ej. app.usuario_id ausente en una escritura administrativa).
             case "42501" -> ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiError.de("PERMISO_INSUFICIENTE", "No tenés permiso para realizar esta acción."));
+                    .body(ApiError.de("PERMISO_INSUFICIENTE", "No tienes permiso para realizar esta acción."));
 
             default -> {
                 log.error("SQLSTATE no contemplado: {}", sqlState, ex);
                 yield ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Probá de nuevo."));
+                        .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Intenta de nuevo."));
             }
         };
     }
@@ -156,14 +156,14 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> estadoInvalido(IllegalStateException ex) {
         log.error("Estado inválido de la aplicación", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Probá de nuevo."));
+                .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Intenta de nuevo."));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> inesperado(Exception ex) {
         log.error("Excepción no contemplada", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Probá de nuevo."));
+                .body(ApiError.de("ERROR_INTERNO", "Ocurrió un error inesperado. Intenta de nuevo."));
     }
 
     private ApiError.CampoError aCampoError(FieldError error) {

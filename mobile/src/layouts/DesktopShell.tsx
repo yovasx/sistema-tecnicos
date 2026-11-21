@@ -138,7 +138,7 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
           </Pressable>
         </View>
         {destino ? <View style={{ padding: 20, gap: 12 }}>
-          <Aviso tono="advertencia" titulo="Tenés cambios sin guardar">Si continuás, se perderán los datos que todavía no guardaste.</Aviso>
+          <Aviso tono="advertencia" titulo="Tienes cambios sin guardar">Si continúas, se perderán los datos que todavía no guardaste.</Aviso>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <BotonPrimario titulo="Seguir editando" tamano="escritorio" onPress={() => setDestino(null)} />
             <BotonPrimario titulo="Descartar y continuar" variante="secundario" tamano="escritorio"

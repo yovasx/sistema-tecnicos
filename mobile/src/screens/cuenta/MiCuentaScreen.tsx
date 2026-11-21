@@ -78,11 +78,11 @@ export function MiCuentaScreen() {
           <Tarjeta style={{ gap: 16 }}>
             <Texto variante="subtitulo">Acceso y seguridad</Texto>
             <Dato etiqueta="Método de acceso" valor={accesoVisible[cuenta.acceso]} />
-            {cuenta.acceso === 'google' ? <Aviso titulo="Ingresás con Google">
-              Para volver a entrar, elegí Continuar con Google y la misma cuenta. No tenés una contraseña Fixly;
+            {cuenta.acceso === 'google' ? <Aviso titulo="Ingresas con Google">
+              Para volver a entrar, selecciona Continuar con Google y la misma cuenta. No tienes una contraseña Fixly;
               la seguridad de tu contraseña Google se administra desde Google.
             </Aviso> : <>
-              <Texto variante="caption">Cambiar tu contraseña cerrará todas tus sesiones. Después, ingresá con la nueva contraseña.</Texto>
+              <Texto variante="caption">Cambiar tu contraseña cerrará todas tus sesiones. Después, ingresa con la nueva contraseña.</Texto>
               <BotonPrimario titulo="Cambiar contraseña" variante="secundario" tamano="escritorio"
                 deshabilitado={vinculando}
                 onPress={() => { setMensaje(''); setVista('password'); }} />
@@ -131,11 +131,11 @@ function FormularioDatos({ cuenta, onCancelar, onGuardado }: {
   async function guardar() {
     if (bloqueo.current || conflicto) return;
     const e: Record<string, string> = {};
-    if (form.nombre.trim().length < 2) e.nombre = 'Ingresá al menos 2 caracteres.';
-    if (form.apellido.trim().length < 2) e.apellido = 'Ingresá al menos 2 caracteres.';
+    if (form.nombre.trim().length < 2) e.nombre = 'Ingresa al menos 2 caracteres.';
+    if (form.apellido.trim().length < 2) e.apellido = 'Ingresa al menos 2 caracteres.';
     if (cuenta.tipoCliente === 'empresa') {
-      if (form.razonSocial.trim().length < 2) e.razonSocial = 'Completá la razón social.';
-      if (!/^\d{5,20}$/.test(form.nit.trim())) e.nit = 'Ingresá entre 5 y 20 dígitos.';
+      if (form.razonSocial.trim().length < 2) e.razonSocial = 'Completa la razón social.';
+      if (!/^\d{5,20}$/.test(form.nit.trim())) e.nit = 'Ingresa entre 5 y 20 dígitos.';
     }
     setErrores(e); if (Object.keys(e).length) return;
     bloqueo.current = true; setOcupado(true); setError('');
@@ -143,7 +143,7 @@ function FormularioDatos({ cuenta, onCancelar, onGuardado }: {
       const d = await perfilRepository.editar(form);
       const sincronizada = await refrescarUsuario();
       onGuardado(d, sincronizada ? 'Tu información se guardó correctamente.' :
-        'Información guardada. No pudimos actualizar el encabezado; recargá para verlo actualizado.');
+        'Información guardada. No pudimos actualizar el encabezado; recarga para verlo actualizado.');
     } catch (e) {
       setError(errorTexto(e));
       if (e instanceof ErrorApi) {
@@ -154,7 +154,7 @@ function FormularioDatos({ cuenta, onCancelar, onGuardado }: {
   }
   return <Tarjeta style={{ gap: 16 }}>
     <Texto variante="subtitulo">Editar mis datos</Texto>
-    {protegida ? <Aviso>Tu nombre y apellido aprobados requieren revisión documental. Podés actualizar el teléfono sin cambiar tu aprobación.</Aviso> : null}
+    {protegida ? <Aviso>Tu nombre y apellido aprobados requieren revisión documental. Puedes actualizar el teléfono sin cambiar tu aprobación.</Aviso> : null}
     <CampoTexto etiqueta="Nombre" value={form.nombre} onChangeText={v => cambiar('nombre', v)}
       maxLength={100} error={errores.nombre} editable={!ocupado && !protegida} />
     <CampoTexto etiqueta="Apellido" value={form.apellido} onChangeText={v => cambiar('apellido', v)}
@@ -167,8 +167,8 @@ function FormularioDatos({ cuenta, onCancelar, onGuardado }: {
       <CampoTexto etiqueta="NIT" value={form.nit} onChangeText={v => cambiar('nit', v)}
         maxLength={20} keyboardType="number-pad" error={errores.nit} editable={!ocupado} />
     </> : null}
-    {error ? <Aviso tono="peligro">{error}{conflicto ? ' Cancelá la edición y actualizá el perfil. Tu borrador se conserva hasta que lo descartes.' : ''}</Aviso> : null}
-    {salida ? <Aviso tono="advertencia">Tenés cambios sin guardar. Confirmá si querés descartarlos.</Aviso> : null}
+    {error ? <Aviso tono="peligro">{error}{conflicto ? ' Cancela la edición y actualiza el perfil. Tu borrador se conserva hasta que lo descartes.' : ''}</Aviso> : null}
+    {salida ? <Aviso tono="advertencia">Tienes cambios sin guardar. Confirma si quieres descartarlos.</Aviso> : null}
     <View style={fila}>
       <BotonPrimario titulo="Guardar cambios" cargando={ocupado} deshabilitado={!sucio || conflicto} onPress={() => void guardar()} />
       <BotonPrimario titulo={salida ? 'Descartar edición' : 'Cancelar edición'} variante="secundario" deshabilitado={ocupado}
@@ -193,9 +193,9 @@ export function FormularioPassword({ onCancelar }: { onCancelar: () => void }) {
   async function guardar() {
     if (bloqueo.current) return;
     const e: Record<string, string> = {};
-    if (!actual) e.actual = 'Ingresá tu contraseña actual.';
-    if (nueva.length < 8 || nueva.length > 72) e.nueva = 'Usá entre 8 y 72 caracteres.';
-    if (actual === nueva) e.nueva = 'Elegí una contraseña diferente.';
+    if (!actual) e.actual = 'Ingresa tu contraseña actual.';
+    if (nueva.length < 8 || nueva.length > 72) e.nueva = 'Usa entre 8 y 72 caracteres.';
+    if (actual === nueva) e.nueva = 'Selecciona una contraseña diferente.';
     if (nueva !== confirmacion) e.confirmacion = 'Las contraseñas no coinciden.';
     setErrores(e); if (Object.keys(e).length) return;
     bloqueo.current = true; setOcupado(true); setError('');
@@ -211,7 +211,7 @@ export function FormularioPassword({ onCancelar }: { onCancelar: () => void }) {
   }
   return <Tarjeta style={{ gap: 16 }}>
     <Texto variante="subtitulo">Cambiar contraseña Fixly</Texto>
-    <Aviso tono="advertencia">Al confirmar se cerrarán todas tus sesiones, incluida esta. Volvé a ingresar con tu nueva contraseña.</Aviso>
+    <Aviso tono="advertencia">Al confirmar se cerrarán todas tus sesiones, incluida esta. Vuelve a ingresar con tu nueva contraseña.</Aviso>
     <CampoTexto etiqueta="Contraseña actual" value={actual} onChangeText={setActual} esPassword
       autoComplete="current-password" maxLength={72} editable={!ocupado} error={errores.actual} />
     <CampoTexto etiqueta="Nueva contraseña" value={nueva} onChangeText={setNueva} esPassword
@@ -219,7 +219,7 @@ export function FormularioPassword({ onCancelar }: { onCancelar: () => void }) {
     <CampoTexto etiqueta="Repetir nueva contraseña" value={confirmacion} onChangeText={setConfirmacion} esPassword
       autoComplete="new-password" maxLength={72} editable={!ocupado} error={errores.confirmacion} />
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}
-    {salida ? <Aviso tono="advertencia">Confirmá si querés descartar los datos ingresados.</Aviso> : null}
+    {salida ? <Aviso tono="advertencia">Confirma si quieres descartar los datos ingresados.</Aviso> : null}
     <View style={fila}>
       <BotonPrimario titulo="Confirmar cambio y cerrar sesiones" cargando={ocupado} onPress={() => void guardar()} />
       <BotonPrimario titulo={salida ? 'Descartar cambio' : 'Cancelar cambio'} variante="secundario" deshabilitado={ocupado}

@@ -38,7 +38,7 @@ public class VerificadorGoogle {
                 || email==null || email.length()>150 || !email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) throw new IllegalArgumentException();
             return jwt;
         } catch (RuntimeException e) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED,"GOOGLE_INVALIDO","No pudimos verificar el acceso con Google. Intentá de nuevo.");
+            throw new ApiException(HttpStatus.UNAUTHORIZED,"GOOGLE_INVALIDO","No pudimos verificar el acceso con Google. Intenta de nuevo.");
         }
     }
 }

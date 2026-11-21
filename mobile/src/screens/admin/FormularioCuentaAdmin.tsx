@@ -40,9 +40,9 @@ export function FormularioCuentaAdmin({ cuenta, propio = false, onGuardado, onCa
   async function guardar() {
     if (bloqueo.current) return;
     const errores: Record<string, string> = {};
-    if (form.nombre.trim().length < 2) errores.nombre = 'Ingresá al menos 2 caracteres.';
-    if (form.apellido.trim().length < 2) errores.apellido = 'Ingresá al menos 2 caracteres.';
-    if (form.motivo.trim().length < 5) errores.motivo = 'Explicá el cambio en al menos 5 caracteres.';
+    if (form.nombre.trim().length < 2) errores.nombre = 'Ingresa al menos 2 caracteres.';
+    if (form.apellido.trim().length < 2) errores.apellido = 'Ingresa al menos 2 caracteres.';
+    if (form.motivo.trim().length < 5) errores.motivo = 'Explica el cambio en al menos 5 caracteres.';
     setErrores(errores);
     if (Object.keys(errores).length) return;
     bloqueo.current = true; setOcupado(true); setError('');
@@ -54,7 +54,7 @@ export function FormularioCuentaAdmin({ cuenta, propio = false, onGuardado, onCa
           razonSocial: cuenta.razonSocial ?? '', nit: cuenta.nit ?? '' });
       const sincronizada = usuario?.id !== actual.id || await refrescarUsuario();
       onGuardado(actual, sincronizada ? 'Datos guardados. El cambio quedó auditado.' :
-        'Datos guardados. No pudimos refrescar el encabezado; recargá la página para actualizarlo.');
+        'Datos guardados. No pudimos refrescar el encabezado; recarga la página para actualizarlo.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos guardar los datos.');
     } finally { bloqueo.current = false; setOcupado(false); }
@@ -62,7 +62,7 @@ export function FormularioCuentaAdmin({ cuenta, propio = false, onGuardado, onCa
   return <View style={{ gap: 16 }}>
     <Texto variante="subtitulo">Editar datos generales</Texto>
     {identidadProtegida ? <Aviso titulo="Identidad aprobada">
-      El nombre y apellido requieren una corrección documental. Podés actualizar el teléfono
+      El nombre y apellido requieren una corrección documental. Puedes actualizar el teléfono
       sin modificar la aprobación, las especialidades ni la cobertura.
     </Aviso> : null}
     <CampoTexto etiqueta="Nombre" value={form.nombre} onChangeText={v => cambiar('nombre', v)}
@@ -74,8 +74,8 @@ export function FormularioCuentaAdmin({ cuenta, propio = false, onGuardado, onCa
     <CampoTexto etiqueta="Motivo de la edición" value={form.motivo} onChangeText={v => cambiar('motivo', v)}
       multiline maxLength={500} editable={!ocupado} error={errores.motivo} />
     <Texto variante="caption">El correo y el rol se conservan. Este formulario no cambia contraseñas ni documentos.</Texto>
-    {error ? <Aviso tono="peligro">{error} Si la ficha cambió, cancelá y actualizala antes de volver a guardar.</Aviso> : null}
-    {confirmarSalida ? <Aviso tono="advertencia">Tenés cambios sin guardar. Confirmá si querés descartarlos.</Aviso> : null}
+    {error ? <Aviso tono="peligro">{error} Si la ficha cambió, cancela y actualízala antes de volver a guardar.</Aviso> : null}
+    {confirmarSalida ? <Aviso tono="advertencia">Tienes cambios sin guardar. Confirma si quieres descartarlos.</Aviso> : null}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
       <BotonPrimario titulo="Guardar cambios" tamano="escritorio" cargando={ocupado} deshabilitado={!sucio}
         onPress={() => void guardar()} />

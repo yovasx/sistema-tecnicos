@@ -35,16 +35,16 @@ const MAX_EVIDENCIA = 8 * 1024 * 1024;
 
 function errorDescripcion(valor: string): string {
   const largo = valor.trim().length;
-  if (largo === 0) return 'Contá qué necesitás arreglar.';
-  if (largo < 10) return 'Escribí al menos 10 caracteres.';
+  if (largo === 0) return 'Describe qué necesitas arreglar.';
+  if (largo < 10) return 'Escribe al menos 10 caracteres.';
   if (largo > 2000) return 'La descripción no puede superar los 2000 caracteres.';
   return '';
 }
 
 function errorReferencia(valor: string): string {
   const largo = valor.trim().length;
-  if (largo === 0) return 'Ingresá una dirección o referencia.';
-  if (largo < 5) return 'Agregá un poco más de detalle (mínimo 5 caracteres).';
+  if (largo === 0) return 'Ingresa una dirección o referencia.';
+  if (largo < 5) return 'Agrega un poco más de detalle (mínimo 5 caracteres).';
   if (largo > 300) return 'La referencia no puede superar los 300 caracteres.';
   return '';
 }
@@ -113,7 +113,7 @@ export function SolicitudServicioWizard() {
         if (!vigente) return;
         setErrorCategorias(
           (e as ErrorApi).sinConexion
-            ? 'No pudimos cargar las categorías. Revisá tu conexión.'
+            ? 'No pudimos cargar las categorías. Revisa tu conexión.'
             : 'No pudimos cargar las categorías.',
         );
       })
@@ -142,9 +142,9 @@ export function SolicitudServicioWizard() {
   const errorRef = errorReferencia(borrador.referencia);
   const lat = coordenada(borrador.latitud, 90);
   const lng = coordenada(borrador.longitud, 180);
-  const errorLat = borrador.latitud.trim() === '' ? 'Ingresá la latitud.' : lat === null ? 'Entre -90 y 90.' : '';
+  const errorLat = borrador.latitud.trim() === '' ? 'Ingresa la latitud.' : lat === null ? 'Entre -90 y 90.' : '';
   const errorLng =
-    borrador.longitud.trim() === '' ? 'Ingresá la longitud.' : lng === null ? 'Entre -180 y 180.' : '';
+    borrador.longitud.trim() === '' ? 'Ingresa la longitud.' : lng === null ? 'Entre -180 y 180.' : '';
 
   const puedeAvanzar =
     paso === 0
@@ -225,7 +225,7 @@ export function SolicitudServicioWizard() {
       }));
       setErrorEvidencia('');
     } catch {
-      setErrorEvidencia('No pudimos abrir el selector de archivos. Intentá de nuevo.');
+      setErrorEvidencia('No pudimos abrir el selector de archivos. Intenta de nuevo.');
     }
   }
 
@@ -235,7 +235,7 @@ export function SolicitudServicioWizard() {
     try {
       await abrirMapaServicio(lat, lng);
     } catch {
-      setErrorUbicacion('No pudimos abrir el mapa. Podés continuar con las coordenadas manuales.');
+      setErrorUbicacion('No pudimos abrir el mapa. Puedes continuar con las coordenadas manuales.');
     }
   }
 
@@ -261,8 +261,8 @@ export function SolicitudServicioWizard() {
                 <Texto variante="titulo">¿Descartar la solicitud?</Texto>
                 <Texto variante="cuerpo" color={colores.secundario}>
                   {incierto
-                    ? 'No pudimos confirmar el envío. Si ya se guardó, va a aparecer en Mis servicios; si no, podés volver y reintentar sin duplicarla.'
-                    : 'Si cerrás ahora perdés lo que escribiste y no se envía nada.'}
+                    ? 'No pudimos confirmar el envío. Si ya se guardó, aparecerá en Mis servicios; si no, puedes volver a intentarlo sin duplicar la solicitud.'
+                    : 'Si cierras ahora, perderás los datos ingresados y no se enviará la solicitud.'}
                 </Texto>
                 <BotonPrimario
                   titulo={incierto ? 'Volver a la solicitud' : 'Seguir completando'}
@@ -291,11 +291,11 @@ export function SolicitudServicioWizard() {
                 </View>
                 <Texto variante="cuerpo" color={colores.secundario} centrado>
                   {resultado.estado === 'solicitado'
-                    ? 'Tu pedido quedó registrado. Todavía no tiene técnico asignado ni un precio final: cuando existan, los vas a ver en el seguimiento de la orden.'
-                    : `Tu pedido ya existía y su estado actual es ${estado?.texto ?? resultado.estado}. Podés ver el detalle en el seguimiento de la orden.`}
+                    ? 'Tu solicitud quedó registrada. Todavía no tiene técnico asignado ni un precio final: cuando estén disponibles, aparecerán en el seguimiento de la orden.'
+                    : `Tu solicitud ya existía y su estado actual es ${estado?.texto ?? resultado.estado}. Puedes ver el detalle en el seguimiento de la orden.`}
                 </Texto>
                 <Aviso tono="info" titulo="Seguimiento">
-                  Podés consultar el estado y la evidencia desde el listado de órdenes. No hace
+                  Puedes consultar el estado y la evidencia desde el listado de órdenes. No hace
                   falta volver a enviar la solicitud.
                 </Aviso>
                 <BotonPrimario titulo="Entendido" onPress={cerrar} />
@@ -342,9 +342,9 @@ export function SolicitudServicioWizard() {
                 >
                   {paso === 0 ? (
                     <>
-                      <Texto variante="subtitulo">¿Qué necesitás arreglar?</Texto>
+                      <Texto variante="subtitulo">¿Qué necesitas arreglar?</Texto>
                       <Texto variante="caption" color={colores.secundario}>
-                        Elegí la categoría que mejor describa el problema.
+                        Selecciona la categoría que mejor describa el problema.
                       </Texto>
                       {cargandoCategorias ? (
                         <ActivityIndicator color={colores.marca} />
@@ -397,13 +397,13 @@ export function SolicitudServicioWizard() {
                       </View>
                       {!cargandoCategorias && !errorCategorias && categorias.length === 0 ? (
                         <Aviso tono="advertencia">
-                          No hay categorías disponibles en este momento. Probá de nuevo más
+                          No hay categorías disponibles en este momento. Intenta de nuevo más
                           tarde.
                         </Aviso>
                       ) : null}
                       {intentado && !borrador.categoria ? (
                         <Texto variante="caption" color={colores.peligro}>
-                          Elegí una categoría para continuar.
+                          Selecciona una categoría para continuar.
                         </Texto>
                       ) : null}
                       <Texto variante="caption" color={colores.terciario}>
@@ -498,7 +498,7 @@ export function SolicitudServicioWizard() {
                           </Texto>
                         ) : null}
                         <Texto variante="caption" color={colores.terciario}>
-                          JPG, PNG o PDF hasta 8 MB. Solo vos y el equipo de Fixly pueden verlo.
+                          JPG, PNG o PDF hasta 8 MB. Solo tú y el equipo de Fixly pueden verlo.
                         </Texto>
                       </View>
                     </>
@@ -507,7 +507,7 @@ export function SolicitudServicioWizard() {
                   {paso === 2 ? (
                     <>
                       <Aviso tono="info" titulo="Tu ubicación">
-                        La usamos solo para esta solicitud. Podés compartirla desde el GPS o
+                        La usamos solo para esta solicitud. Puedes compartirla desde el GPS o
                         escribir las coordenadas a mano.
                       </Aviso>
                       <BotonPrimario
@@ -581,7 +581,7 @@ export function SolicitudServicioWizard() {
 
                   {paso === 3 ? (
                     <>
-                      <Texto variante="subtitulo">Revisá tu solicitud</Texto>
+                      <Texto variante="subtitulo">Revisa tu solicitud</Texto>
                       <View style={estilos.resumen}>
                         <Dato etiqueta="Categoría" valor={categoriaElegida?.nombre ?? '—'} />
                         <Dato etiqueta="Descripción" valor={borrador.descripcion.trim()} />
@@ -608,7 +608,7 @@ export function SolicitudServicioWizard() {
                         <Aviso tono={incierto ? 'advertencia' : 'peligro'}>
                           {error}
                           {incierto
-                            ? ' Reintentá con el mismo botón: la solicitud no se duplica.'
+                            ? ' Reintenta con el mismo botón: la solicitud no se duplica.'
                             : ''}
                         </Aviso>
                       ) : null}

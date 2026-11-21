@@ -74,7 +74,7 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
         observador.observe(contenedor.current);
       }
     }).catch(() => {
-      if (vigente) { setFallo(true); error.current('No pudimos cargar Google. Reintentá; si creaste tu cuenta con Google, no necesitás una contraseña Fixly.'); }
+      if (vigente) { setFallo(true); error.current('No pudimos cargar Google. Reintenta; si creaste tu cuenta con Google, no necesitas una contraseña Fixly.'); }
     });
     return () => {
       vigente = false;

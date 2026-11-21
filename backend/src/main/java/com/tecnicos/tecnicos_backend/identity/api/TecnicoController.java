@@ -22,7 +22,7 @@ import java.io.IOException;
  * Onboarding del técnico: registro público y los pasos del expediente.
  *
  * <p>Todo lo autenticado pertenece al usuario del token: no se puede tocar el
- * expediente de otro. Las reglas duras están en la base (V5); acá solo se
+ * expediente de otro. Las reglas duras están en la base (V5); aquí solo se
  * reciben los datos y se devuelven errores del contrato de la API.</p>
  */
 @RestController

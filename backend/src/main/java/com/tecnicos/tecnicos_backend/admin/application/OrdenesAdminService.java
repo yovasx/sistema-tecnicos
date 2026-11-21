@@ -161,7 +161,7 @@ public class OrdenesAdminService {
         if(id<1) throw new ApiException(HttpStatus.BAD_REQUEST,"DATOS_INVALIDOS","El ID debe ser positivo.");
     }
     private static ApiException filtros() {
-        return new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisá los filtros, las fechas y la página de órdenes.");
+        return new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisa los filtros, las fechas y la página de órdenes.");
     }
     private static ApiException noEncontrada() {
         return new ApiException(HttpStatus.NOT_FOUND,"ORDEN_NO_ENCONTRADA","La orden no existe.");

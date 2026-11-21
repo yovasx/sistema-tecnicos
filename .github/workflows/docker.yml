@@ -15,6 +15,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Verificar español neutral
+        run: npm run verificar:lenguaje --prefix mobile
       - name: Validar Compose sin .env
         run: docker compose config --quiet
       - name: Construir desde cero

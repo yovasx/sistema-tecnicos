@@ -27,13 +27,13 @@ export function InicioCliente() {
         <ScrollView contentContainerStyle={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}>
           <Encabezado
             titulo={`Hola, ${usuario?.nombre.split(' ')[0] ?? 'bienvenido'}`}
-            subtitulo="¿Qué necesitás arreglar hoy?"
+            subtitulo="¿Qué necesitas arreglar hoy?"
           />
           <BotonPrimario titulo="Solicitar un servicio" onPress={() => abrir()} />
 
           <Texto variante="subtitulo">Servicios para tu hogar</Texto>
           <Texto variante="caption" color={colores.secundario}>
-            Tocá una categoría para empezar tu solicitud.
+            Selecciona una categoría para empezar tu solicitud.
           </Texto>
 
           {cargando ? <ActivityIndicator color={colores.marca} /> : null}
@@ -78,7 +78,7 @@ export function InicioCliente() {
 
           {!cargando && !error && categorias.length === 0 ? (
             <Aviso tono="advertencia">
-              No hay categorías disponibles en este momento. Probá de nuevo más tarde.
+              No hay categorías disponibles en este momento. Intenta de nuevo más tarde.
             </Aviso>
           ) : null}
         </ScrollView>

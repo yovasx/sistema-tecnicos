@@ -34,7 +34,7 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
         // Interactivo: evita reutilizar un idToken cacheado con un nonce anterior.
         const respuesta = await GoogleOneTapSignIn.presentExplicitSignIn();
         if (isSuccessResponse(respuesta)) await onCredencial({ idToken: respuesta.data.idToken, nonce });
-      } catch { onError('No pudimos iniciar Google. Verificá la conexión y la configuración del development build.'); }
+      } catch { onError('No pudimos iniciar Google. Verifica la conexión y la configuración de la compilación de desarrollo.'); }
       finally { bloqueo.current = false; setOcupado(false); }
     })();
   }} />;

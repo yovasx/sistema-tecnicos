@@ -150,7 +150,7 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"))
                 .andExpect(jsonPath("$.mensaje").value(
-                        "Tu cuenta está inactiva. Contactá a soporte para reactivarla."));
+                        "Tu cuenta está inactiva. Contacta a soporte para reactivarla."));
     }
 
     @Test

@@ -12,6 +12,8 @@ Antes de usar cualquier API de Expo, EAS o React Native:
 
 ## Comandos
 
+- Usar español neutral para Bolivia en todos los textos visibles. `npm run verificar:lenguaje` revisa UI y mensajes Java sin cambiar datos ni identificadores; CI ejecuta esta verificación antes de construir las imágenes.
+
 ```powershell
 npm install
 npm start                  # Expo/Metro en :9081

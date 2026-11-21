@@ -105,7 +105,7 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
           mas: false,
           refrescando: false,
           error: error.sinConexion
-            ? 'No pudimos cargar tus servicios. Revisá tu conexión.'
+            ? 'No pudimos cargar tus servicios. Revisa tu conexión.'
             : error.message || 'No pudimos cargar tus servicios.',
         }));
       }
@@ -138,7 +138,7 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
         const error = e as ErrorApi;
         setErrorDetalle(
           error.sinConexion
-            ? 'No pudimos cargar el detalle. Revisá tu conexión.'
+            ? 'No pudimos cargar el detalle. Revisa tu conexión.'
             : error.message || 'No pudimos cargar el detalle.',
         );
       })
@@ -278,7 +278,7 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
                 Todavía no pediste ningún servicio
               </Texto>
               <Texto variante="caption" color={colores.secundario} centrado>
-                Contanos qué necesitás arreglar y registramos tu solicitud.
+                Cuéntanos qué necesitas arreglar y registraremos tu solicitud.
               </Texto>
               <View style={estilos.vacioCta}>
                 <BotonPrimario titulo="Solicitar un servicio" onPress={() => abrir()} />

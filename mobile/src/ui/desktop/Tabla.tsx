@@ -12,7 +12,7 @@ export interface ColumnaTabla {
 /**
  * Tabla de escritorio: header sticky de 44 px, filas de 56 px, borders suaves.
  * Los datos los pasa la pantalla ya formateados a texto (Bs 65,00, fechas,
- * chips no caben acá: van como texto).
+ * chips no caben aquí: van como texto).
  */
 export function Tabla({
   columnas,

@@ -35,7 +35,7 @@ export function useCategoriasSolicitud() {
           categorias: [],
           cargando: false,
           error: (e as ErrorApi).sinConexion
-            ? 'No pudimos cargar las categorías. Revisá tu conexión.'
+            ? 'No pudimos cargar las categorías. Revisa tu conexión.'
             : 'No pudimos cargar las categorías.',
         });
       });

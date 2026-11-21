@@ -146,21 +146,21 @@ export function CatalogoAdminScreen() {
     }
     const visita = monto(form.tarifaVisita);
     if (visita === null || visita > 99999999.99) {
-      e.tarifaVisita = 'Ingresá de 0 a 99.999.999,99, con hasta dos decimales.';
+      e.tarifaVisita = 'Ingresa de 0 a 99.999.999,99, con hasta dos decimales.';
     }
     if (form.tarifaHora.trim()) {
       const hora = monto(form.tarifaHora);
       if (hora === null || hora > 99999999.99) {
-        e.tarifaHora = 'Ingresá de 0 a 99.999.999,99 con hasta dos decimales, o dejalo vacío.';
+        e.tarifaHora = 'Ingresa de 0 a 99.999.999,99 con hasta dos decimales, o déjalo vacío.';
       }
     }
     const recargo = monto(form.recargo);
     if (recargo === null || recargo < 0 || recargo > 100) {
-      e.recargo = 'Ingresá un porcentaje entre 0 y 100.';
+      e.recargo = 'Ingresa un porcentaje entre 0 y 100.';
     }
     const comision = monto(form.comision);
     if (comision === null || comision < 0 || comision > 100) {
-      e.comision = 'Ingresá un porcentaje entre 0 y 100.';
+      e.comision = 'Ingresa un porcentaje entre 0 y 100.';
     }
     setErrores(e);
     return Object.keys(e).length === 0;
@@ -284,7 +284,7 @@ export function CatalogoAdminScreen() {
           {cargando ? <ActivityIndicator color={colores.marca} size="large" /> : null}
           {!cargando && visibles.length === 0 ? (
             <Aviso titulo="Sin resultados">
-              No hay categorías con ese criterio. Probá otra búsqueda o creá una categoría nueva.
+              No hay categorías con ese criterio. Intenta otra búsqueda o crea una categoría nueva.
             </Aviso>
           ) : null}
 
@@ -442,7 +442,7 @@ export function CatalogoAdminScreen() {
               </View>
 
               {confirmarDesactivar ? (
-                <Aviso tono="advertencia" titulo="Confirmá la desactivación">
+                <Aviso tono="advertencia" titulo="Confirma la desactivación">
                   La categoría dejará de estar disponible para nuevas solicitudes. Los registros anteriores y el
                   historial de precios se conservan.
                 </Aviso>
@@ -466,9 +466,9 @@ export function CatalogoAdminScreen() {
             </Tarjeta>
           ) : (
             <Tarjeta style={s.tarjeta}>
-              <Texto variante="subtitulo">Seleccioná una categoría</Texto>
+              <Texto variante="subtitulo">Selecciona una categoría</Texto>
               <Texto color={colores.secundario}>
-                Acá se editan el nombre, la descripción, las tarifas y la comisión. También podés crear una categoría
+                Aquí se editan el nombre, la descripción, las tarifas y la comisión. También puedes crear una categoría
                 nueva.
               </Texto>
               <Texto variante="caption">
