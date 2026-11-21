@@ -9,6 +9,7 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
 import { FormularioCuentaAdmin } from './FormularioCuentaAdmin';
+import { FormularioPassword } from '../cuenta/MiCuentaScreen';
 
 export function MiPerfilAdminScreen() {
   const { usuario } = useSesion();
@@ -17,6 +18,7 @@ export function MiPerfilAdminScreen() {
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [editando, setEditando] = useState(false);
+  const [seguridad, setSeguridad] = useState(false);
   const cargar = useCallback(async () => {
     setCargando(true); setError('');
     try { setCuenta(await adminRepository.perfil()); }
@@ -27,7 +29,7 @@ export function MiPerfilAdminScreen() {
   return <View style={{ gap: 24, maxWidth: 960 }}>
     <Encabezado titulo="Mi perfil" subtitulo="Tu información personal como administrador de Fixly."
       derecha={<BotonPrimario titulo="Actualizar perfil" variante="secundario" tamano="escritorio"
-        deshabilitado={cargando || editando} onPress={() => void cargar()} />} />
+        deshabilitado={cargando || editando || seguridad} onPress={() => void cargar()} />} />
     {mensaje ? <Aviso tono="exito">{mensaje}</Aviso> : null}
     {error ? <><Aviso tono="peligro">{error}</Aviso><BotonPrimario titulo="Reintentar perfil"
       onPress={() => void cargar()} /></> : null}
@@ -42,11 +44,19 @@ export function MiPerfilAdminScreen() {
           <Texto variante="caption">Administrador · Cuenta de la sesión actual</Texto>
           <Texto>Teléfono: {cuenta.telefono || 'Sin dato registrado'}</Texto>
           <BotonPrimario titulo="Editar mi información" tamano="escritorio"
+            deshabilitado={seguridad}
             onPress={() => { setEditando(true); setMensaje(''); }} />
         </>}
       </Tarjeta>
-      <Aviso titulo="Acceso y seguridad">Tu correo, rol y método de acceso no se cambian desde este formulario.
-        No podés desactivar tu propia cuenta.</Aviso>
+      {!editando ? seguridad ? <FormularioPassword onCancelar={() => setSeguridad(false)} /> :
+        <Tarjeta style={{ gap: 16 }}>
+          <Texto variante="subtitulo">Acceso y seguridad</Texto>
+          <Texto>Método de acceso: {cuenta.acceso === 'google' ? 'Google' :
+            cuenta.acceso === 'google_y_password' ? 'Google y contraseña Fixly' : 'Contraseña Fixly'}</Texto>
+          <Texto variante="caption">El correo y el rol se conservan. No podés desactivar tu propia cuenta.</Texto>
+          {cuenta.acceso !== 'google' ? <BotonPrimario titulo="Cambiar contraseña" variante="secundario"
+            tamano="escritorio" onPress={() => { setSeguridad(true); setMensaje(''); }} /> : null}
+        </Tarjeta> : null}
     </> : null}
   </View>;
 }

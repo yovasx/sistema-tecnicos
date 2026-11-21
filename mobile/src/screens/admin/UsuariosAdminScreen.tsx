@@ -18,6 +18,7 @@ import { TablaAdmin } from '../../ui/admin/TablaAdmin';
 import { InvitarUsuarioAdmin } from './InvitarUsuarioAdmin';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import { leerRutaAdmin, guardarRutaAdmin } from '../../infrastructure/navigation/rutaAdmin';
+import { useNavegacionAdmin } from '../../navigation/NavegacionAdmin';
 
 const ROLES = [['todos', 'Todos'], ['cliente', 'Clientes'], ['tecnico', 'Técnicos'], ['administrador', 'Administradores']] as const;
 const ESTADOS = [['todos', 'Todos'], ['activo', 'Activos'], ['inactivo', 'Inactivos']] as const;
@@ -37,6 +38,8 @@ function formulario(d: DetalleUsuarioAdmin): EditarUsuarioAdmin {
 
 /** W48: lectura paginada real y ficha administrativa, sin editar identidades ni roles. */
 export function UsuariosAdminScreen() {
+  const { usuario } = useSesion();
+  const navegar = useNavegacionAdmin();
   const { ancho } = useResponsive();
   const [filtros, setFiltros] = useState(iniciales);
   const [texto, setTexto] = useState('');
@@ -65,6 +68,11 @@ export function UsuariosAdminScreen() {
     setFiltros(f => ({ ...f, [campo]: valor, pagina: 0 }));
   }
   function abrir(id: number | null) { guardarRutaAdmin('usuarios', id); setId(id); }
+  if (id === usuario?.id) return <View style={s.raiz}>
+    <Encabezado titulo="Tu cuenta" subtitulo="Gestioná tu información personal desde Mi perfil, separado de la administración de otras cuentas." />
+    <BotonPrimario titulo="Ir a Mi perfil" onPress={() => navegar({ seccion: 'perfil' })} />
+    <BotonPrimario titulo="Volver a Usuarios" variante="secundario" onPress={() => abrir(null)} />
+  </View>;
   if (id !== null) return <FichaUsuario key={id} id={id} onVolver={() => abrir(null)}
     onGuardado={() => setRecarga(n => n + 1)} />;
   if (invitando) return <InvitarUsuarioAdmin onVolver={() => setInvitando(false)} />;
@@ -109,6 +117,7 @@ export function UsuariosAdminScreen() {
            <View style={{ flex: 1, gap: 4 }}><Texto variante="etiqueta" numberOfLines={1}>{u.nombre}</Texto>
             <Texto variante="caption" numberOfLines={1}>{u.email}</Texto>
             <Texto variante="caption">Cuenta #{u.id}</Texto></View>
+            {u.id === usuario?.id ? <Chip texto="Tu cuenta" tono="marca" /> : null}
         </View> },
         { clave: 'rol', titulo: 'ROL / PERFIL', ancho: 150, render: u => <View style={{ gap: 4 }}>
           <Texto variante="etiqueta">{rolVisible[u.rol]}</Texto>
@@ -116,9 +125,10 @@ export function UsuariosAdminScreen() {
             u.rol === 'tecnico' ? 'Cuenta técnica' : 'Cuenta administrativa'}</Texto></View> },
         { clave: 'estado', titulo: 'ESTADO', ancho: 110, render: u => <Chip texto={u.activo ? 'Activo' : 'Inactivo'} tono={u.activo ? 'exito' : 'neutro'} /> },
         ...(ancho >= 1200 ? [{ clave: 'registro', titulo: 'REGISTRO', ancho: 140, render: (u: FilaUsuarioAdmin) => <Texto variante="caption">{new Date(u.creadoEn).toLocaleDateString('es-BO')}</Texto> }] : []),
-        { clave: 'accion', titulo: 'ACCIÓN', ancho: 160, render: u => <BotonPrimario titulo="Ver ficha"
-          etiquetaAccesible={`Ver ficha de ${u.nombre}`}
-          variante="secundario" tamano="escritorio" deshabilitado={cargando} onPress={() => abrir(u.id)} /> },
+        { clave: 'accion', titulo: 'ACCIÓN', ancho: 160, render: u => <BotonPrimario titulo={u.id === usuario?.id ? 'Mi perfil' : 'Ver ficha'}
+          etiquetaAccesible={u.id === usuario?.id ? 'Abrir mi perfil' : `Ver ficha de ${u.nombre}`}
+          variante="secundario" tamano="escritorio" deshabilitado={cargando}
+          onPress={() => u.id === usuario?.id ? navegar({ seccion: 'perfil' }) : abrir(u.id)} /> },
       ]} /> : null}
   </View>;
 }

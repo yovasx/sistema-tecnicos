@@ -1,1 +1,14 @@
-export function useAvisoSalida(_activo: boolean) {}
+import { useEffect } from 'react';
+import { Alert, BackHandler } from 'react-native';
+
+/** El borrador vive en memoria; no almacenar contraseñas ni datos personales. */
+export function useAvisoSalida(activo: boolean) {
+  useEffect(() => {
+    if (!activo) return;
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert('Tenés cambios sin guardar', 'Guardá o cancelá la edición antes de salir de la aplicación.');
+      return true;
+    });
+    return () => listener.remove();
+  }, [activo]);
+}

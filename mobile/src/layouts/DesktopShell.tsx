@@ -68,11 +68,11 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
         </View>
 
         <ScrollView style={estilos.lista} contentContainerStyle={estilos.listaContenido}>
-          {secciones.map((s, indice) => {
+          {secciones.filter(s => s.clave !== 'perfil').map((s, indice, lista) => {
             const esActiva = s.clave === activa;
             return (
               <Fragment key={s.clave}>
-              {s.grupo && secciones[indice - 1]?.grupo !== s.grupo ?
+              {s.grupo && lista[indice - 1]?.grupo !== s.grupo ?
                 <Texto variante="caption" style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 }}>{s.grupo.toUpperCase()}</Texto> : null}
               <Pressable
                 key={s.clave}
@@ -104,6 +104,12 @@ function ContenidoDesktop({ secciones, etiqueta }: DesktopShellProps) {
         </ScrollView>
 
         <View style={estilos.pie}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Abrir Mi cuenta"
+            accessibilityState={{ selected: activa === 'perfil' }}
+            onPress={() => navegar('perfil')} style={[estilos.item, activa === 'perfil' && estilos.itemActivo]}>
+            <Ionicons name="person-circle-outline" size={22} color={colores.marca} />
+            <Texto variante="etiqueta" color={colores.marca}>Mi cuenta</Texto>
+          </Pressable>
           <Texto variante="caption" numberOfLines={1}>
             {usuario?.email ?? '—'}
           </Texto>
