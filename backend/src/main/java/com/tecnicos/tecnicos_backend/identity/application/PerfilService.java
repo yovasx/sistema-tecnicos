@@ -27,7 +27,7 @@ public class PerfilService {
             """,String.class,id);
         var filas=jdbc.query("""
             SELECT u.id,u.revision_admin,u.nombre,u.apellido,u.email,u.telefono,u.rol::text,
-                u.tipo_cliente::text,u.razon_social,u.nit,p.estado_validacion::text,
+                u.tipo_cliente::text,u.razon_social,u.nit,u.foto_perfil_url,p.estado_validacion::text,
                 CASE WHEN g.usuario_id IS NOT NULL AND u.password_hash IS NOT NULL THEN 'google_y_password'
                      WHEN g.usuario_id IS NOT NULL THEN 'google' ELSE 'password' END AS acceso
             FROM identity.usuarios u
@@ -37,9 +37,19 @@ public class PerfilService {
             """,(r,n)->new Detalle(r.getLong("id"),r.getLong("revision_admin"),r.getString("nombre"),
                 r.getString("apellido"),r.getString("email"),r.getString("telefono"),r.getString("rol"),
                 r.getString("tipo_cliente"),r.getString("razon_social"),r.getString("nit"),
-                r.getString("acceso"),r.getString("estado_validacion"),especialidades),id);
+                r.getString("acceso"),r.getString("estado_validacion"),especialidades,
+                urlPublica(r.getString("foto_perfil_url"))),id);
         if (filas.isEmpty()) throw new ApiException(HttpStatus.FORBIDDEN,"CUENTA_NO_DISPONIBLE","La cuenta no está disponible.");
         return filas.getFirst();
+    }
+
+    /**
+     * La columna guarda la ruta privada del almacén. La API expone solo un
+     * opaco público: el cliente nunca ve ni elige una ruta de disco.
+     */
+    static String urlPublica(String almacenada) {
+        return almacenada!=null && almacenada.matches("/perfiles/[a-f0-9-]{36}\\.(png|jpg|jpeg)")
+            ? "/api/avatares/"+almacenada.substring("/perfiles/".length()) : null;
     }
     @Transactional
     public Detalle editar(long id, Editar r) {

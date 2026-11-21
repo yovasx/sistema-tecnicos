@@ -118,6 +118,14 @@ public class ApiExceptionHandler {
                     .body(ApiError.de("CAMBIO_CONCURRENTE", mensajeDeFuncion(causa)));
             case "P0404" -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiError.de("USUARIO_NO_ENCONTRADO", mensajeDeFuncion(causa)));
+            case "P0422" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("LIMITE_DIRECCIONES", mensajeDeFuncion(causa)));
+            case "P0423" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .body(ApiError.de("CALIFICACION_NO_PERMITIDA", mensajeDeFuncion(causa)));
+            case "P0424" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("SEGUIMIENTO_NO_DISPONIBLE", mensajeDeFuncion(causa)));
+            case "P0425" -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiError.de("DIRECCION_NO_ENCONTRADA", mensajeDeFuncion(causa)));
             // Violación de unicidad: el usuario intentó crear algo que ya existe.
             case "23505" -> ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiError.de("REGISTRO_DUPLICADO", "Ya existe un registro con esos datos."));

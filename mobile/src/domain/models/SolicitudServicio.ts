@@ -59,6 +59,7 @@ export interface PaginaServicios {
 }
 
 export interface DetalleServicio extends FilaServicio {
+  miCalificacion: number | null;
   descripcion: string;
   referencia: string;
   latitud: number;

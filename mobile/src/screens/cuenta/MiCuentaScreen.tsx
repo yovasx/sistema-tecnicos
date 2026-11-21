@@ -17,6 +17,9 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
 import { VincularGoogle } from '../auth/VincularGoogle';
+import { FotoPerfil } from './FotoPerfil';
+import { DireccionesCliente } from './DireccionesCliente';
+import { ReputacionPropia } from './ReputacionPropia';
 
 const accesoVisible = { password: 'Contraseña Fixly', google: 'Google', google_y_password: 'Google y contraseña Fixly' };
 const rolVisible = { cliente: 'Cliente', tecnico: 'Técnico', administrador: 'Administrador' };
@@ -33,6 +36,10 @@ export function MiCuentaScreen() {
   const [mensaje, setMensaje] = useState('');
   const [vista, setVista] = useState<'consulta' | 'datos' | 'password'>('consulta');
   const [vinculando, setVinculando] = useState(false);
+  const [editandoDireccion, setEditandoDireccion] = useState(false);
+  const [cambiandoFoto, setCambiandoFoto] = useState(false);
+  const interaccionSecundaria = vinculando || editandoDireccion || cambiandoFoto;
+  useCambiosSinGuardar(false, cambiandoFoto);
   const peticion = useRef(0);
   const cargar = useCallback(async () => {
     const turno = ++peticion.current;
@@ -48,14 +55,17 @@ export function MiCuentaScreen() {
   const contenido = <View style={{ gap: 24, width: '100%', maxWidth: 960 }}>
     <Encabezado titulo="Mi cuenta" subtitulo="Tu información personal y las opciones de acceso a Fixly."
       derecha={vista === 'consulta' ? <BotonPrimario titulo="Actualizar perfil" variante="secundario"
-        tamano="escritorio" deshabilitado={cargando || vinculando} onPress={() => void cargar()} /> : undefined} />
+        tamano="escritorio" deshabilitado={cargando || interaccionSecundaria} onPress={() => void cargar()} /> : undefined} />
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}
     {mensaje ? <Aviso tono="exito">{mensaje}</Aviso> : null}
+    {editandoDireccion ? <Aviso>Guarda o cancela la dirección antes de editar otra sección de tu cuenta.</Aviso> : null}
     {cargando ? <ActivityIndicator color={colores.marca} /> : cuenta && cuenta.id === usuario?.id ? <>
       <Tarjeta style={{ gap: 16 }}>
         <View style={fila}><Chip texto={rolVisible[cuenta.rol]} tono="marca" />
           {cuenta.tipoCliente === 'empresa' ? <Chip texto="Empresa" /> : null}
           <Chip texto="Tu cuenta" /></View>
+        {vista === 'consulta' && !vinculando && !editandoDireccion && cuenta.rol !== 'administrador'
+          ? <FotoPerfil cuenta={cuenta} onCambio={setCuenta} onInteraccion={setCambiandoFoto} /> : null}
         <Texto variante="titulo">{cuenta.razonSocial || `${cuenta.nombre} ${cuenta.apellido}`}</Texto>
         <Texto color={colores.secundario}>{cuenta.email}</Texto>
         <Texto variante="caption">El correo, el rol y el tipo de cuenta no se cambian desde este apartado.</Texto>
@@ -72,7 +82,7 @@ export function MiCuentaScreen() {
               <Dato etiqueta="Razón social" valor={cuenta.razonSocial} /><Dato etiqueta="NIT" valor={cuenta.nit} />
             </> : null}
             <BotonPrimario titulo="Editar mi información" tamano="escritorio"
-              deshabilitado={vinculando}
+              deshabilitado={interaccionSecundaria}
               onPress={() => { setMensaje(''); setVista('datos'); }} />
           </Tarjeta>
           <Tarjeta style={{ gap: 16 }}>
@@ -84,19 +94,23 @@ export function MiCuentaScreen() {
             </Aviso> : <>
               <Texto variante="caption">Cambiar tu contraseña cerrará todas tus sesiones. Después, ingresa con la nueva contraseña.</Texto>
               <BotonPrimario titulo="Cambiar contraseña" variante="secundario" tamano="escritorio"
-                deshabilitado={vinculando}
+                deshabilitado={interaccionSecundaria}
                 onPress={() => { setMensaje(''); setVista('password'); }} />
             </>}
-            {cuenta.acceso === 'password' && (cuenta.rol === 'tecnico' || (cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona')) ?
+            {!editandoDireccion && !cambiandoFoto && cuenta.acceso === 'password' && (cuenta.rol === 'tecnico' || (cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona')) ?
               <VincularGoogle onInteraccion={setVinculando} onVinculado={() => { void cargar(); }} /> : null}
           </Tarjeta>
+          {cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona' && !vinculando && !cambiandoFoto ? <>
+            <DireccionesCliente onEdicion={setEditandoDireccion} />
+            <ReputacionPropia />
+          </> : null}
           {cuenta.rol === 'tecnico' ? <Tarjeta style={{ gap: 16 }}>
             <Texto variante="subtitulo">Perfil profesional</Texto>
             <Dato etiqueta="Validación documental" valor={cuenta.estadoValidacion || 'Sin expediente registrado'} />
             <Dato etiqueta="Especialidades registradas" valor={cuenta.especialidades.join(', ') || 'Sin especialidades registradas'} />
             <Texto variante="caption">La aprobación, los documentos y la cobertura no se modifican con la edición de datos personales.</Texto>
           </Tarjeta> : null}
-          {!esDesktop ? <BotonPrimario titulo="Cerrar sesión" variante="secundario" deshabilitado={vinculando}
+          {!esDesktop ? <BotonPrimario titulo="Cerrar sesión" variante="secundario" deshabilitado={interaccionSecundaria}
             onPress={() => void cerrarSesion()} /> : null}
         </>}
     </> : !cargando ? <BotonPrimario titulo="Reintentar perfil" onPress={() => void cargar()} /> : null}

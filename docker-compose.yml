@@ -92,6 +92,8 @@ services:
       context: ./mobile
       args:
         EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:-}
+        EXPO_PUBLIC_MAPA_TILES_URL: ${EXPO_PUBLIC_MAPA_TILES_URL:-}
+        EXPO_PUBLIC_MAPA_ATRIBUCION: ${EXPO_PUBLIC_MAPA_ATRIBUCION:-}
     pull_policy: build
     restart: unless-stopped
     depends_on:

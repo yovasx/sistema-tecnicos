@@ -15,6 +15,7 @@ export interface PerfilPropio {
   acceso: MetodoAcceso;
   estadoValidacion: string | null;
   especialidades: string[];
+  fotoUrl: string | null;
 }
 export interface EditarPerfil {
   revision: number;

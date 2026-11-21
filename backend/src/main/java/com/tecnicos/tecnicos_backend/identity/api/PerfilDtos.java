@@ -7,7 +7,7 @@ public final class PerfilDtos {
     private PerfilDtos() {}
     public record Detalle(long id, long revision, String nombre, String apellido, String email,
         String telefono, String rol, String tipoCliente, String razonSocial, String nit,
-        String acceso, String estadoValidacion, List<String> especialidades) {}
+        String acceso, String estadoValidacion, List<String> especialidades, String fotoUrl) {}
     public record Editar(
         @NotNull(message="Actualiza el perfil antes de guardar.")
         @PositiveOrZero(message="La revisión del perfil no es válida.") Long revision,

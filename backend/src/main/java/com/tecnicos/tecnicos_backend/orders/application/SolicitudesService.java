@@ -104,15 +104,19 @@ public class SolicitudesService {
         var filas=jdbc.query("""
             SELECT o.*,c.nombre AS categoria,ST_Y(o.ubicacion_cliente::geometry) AS latitud,
                 ST_X(o.ubicacion_cliente::geometry) AS longitud,
-                CASE WHEN t.eliminado_en IS NULL THEN NULLIF(concat_ws(' ',t.nombre,t.apellido),'') END AS tecnico
+                CASE WHEN t.eliminado_en IS NULL THEN NULLIF(concat_ws(' ',t.nombre,t.apellido),'') END AS tecnico,
+                cal.puntaje AS mi_calificacion
             FROM orders.ordenes_servicio o JOIN orders.categorias_servicio c ON c.id=o.categoria_id
-            LEFT JOIN identity.usuarios t ON t.id=o.tecnico_id WHERE o.id=? AND o.cliente_id=?
+            LEFT JOIN identity.usuarios t ON t.id=o.tecnico_id
+            LEFT JOIN reputation.calificaciones cal ON cal.orden_id=o.id AND cal.calificador_id=?
+            WHERE o.id=? AND o.cliente_id=?
             """,(r,n)->new Detalle(r.getLong("id"),r.getInt("categoria_id"),r.getString("categoria"),r.getString("estado"),
                 r.getBoolean("tarifa_urgencia"),r.getString("descripcion_falla"),r.getString("direccion_referencia"),
                 r.getDouble("latitud"),r.getDouble("longitud"),privado(r.getString("foto_evidencia_url")),
                 extensionDeUrl(r.getString("foto_evidencia_url")),
                 fecha(r,"creado_en"),fecha(r,"asignado_en"),fecha(r,"llegada_estimada_en"),fecha(r,"llegada_en"),
-                fecha(r,"finalizado_en"),r.getString("tecnico"),r.getString("motivo_cancelacion"),fecha(r,"cancelado_en")),id,cliente);
+                fecha(r,"finalizado_en"),r.getString("tecnico"),r.getString("motivo_cancelacion"),fecha(r,"cancelado_en"),
+                r.getObject("mi_calificacion",Integer.class)),cliente,id,cliente);
         if(filas.isEmpty()) throw noEncontrada();
         return filas.getFirst();
     }

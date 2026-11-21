@@ -29,6 +29,7 @@ import { useResponsive } from '../../theme/responsive';
 import { colores, espacio, radio } from '../../theme/tokens';
 import { iconoCategoria } from '../publico/categorias';
 import { estadoServicio } from './estadosServicio';
+import { ElegirDireccionGuardada } from './ElegirDireccionGuardada';
 
 const PASOS = ['Categoría', 'Detalle', 'Ubicación', 'Confirmar'];
 const MAX_EVIDENCIA = 8 * 1024 * 1024;
@@ -506,6 +507,9 @@ export function SolicitudServicioWizard() {
 
                   {paso === 2 ? (
                     <>
+                      <ElegirDireccionGuardada bloqueado={ocupado || incierto || buscandoUbicacion}
+                        onElegir={d => cambiar(b => ({ ...b, latitud: String(d.latitud),
+                          longitud: String(d.longitud), referencia: d.referencia }))} />
                       <Aviso tono="info" titulo="Tu ubicación">
                         La usamos solo para esta solicitud. Puedes compartirla desde el GPS o
                         escribir las coordenadas a mano.
@@ -581,6 +585,11 @@ export function SolicitudServicioWizard() {
 
                   {paso === 3 ? (
                     <>
+                      <Aviso titulo="Antes de enviar">
+                        Revisa que la categoría corresponda a la falla, confirma el punto de atención y
+                        agrega una foto si ayuda a entender el problema. No compartas contraseñas ni documentos personales.
+                        La solicitud no confirma un técnico, un precio final ni una hora de llegada.
+                      </Aviso>
                       <Texto variante="subtitulo">Revisa tu solicitud</Texto>
                       <View style={estilos.resumen}>
                         <Dato etiqueta="Categoría" valor={categoriaElegida?.nombre ?? '—'} />

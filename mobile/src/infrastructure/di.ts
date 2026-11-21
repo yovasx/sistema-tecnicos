@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { HogarApiRepository } from './http/HogarApiRepository';
 import { AdminApiRepository } from './http/AdminApiRepository';
 import { AuthApiRepository } from './http/AuthApiRepository';
 import { PublicoApiRepository } from './http/PublicoApiRepository';
@@ -21,6 +22,7 @@ export const tokenStorage =
 
 export const authRepository = new AuthApiRepository();
 export const perfilRepository = new PerfilApiRepository();
+export const hogarRepository = new HogarApiRepository();
 export const adminRepository = new AdminApiRepository();
 export const publicoRepository = new PublicoApiRepository();
 export const tecnicoRepository = new TecnicoApiRepository();

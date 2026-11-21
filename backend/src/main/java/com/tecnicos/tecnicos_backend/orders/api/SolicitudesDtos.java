@@ -29,5 +29,6 @@ public final class SolicitudesDtos {
                           OffsetDateTime creadoEn, OffsetDateTime asignadoEn,
                           OffsetDateTime llegadaEstimadaEn, OffsetDateTime llegadaEn,
                           OffsetDateTime finalizadoEn, String tecnico,
-                          String motivoCancelacion, OffsetDateTime canceladoEn) {}
+                          String motivoCancelacion, OffsetDateTime canceladoEn,
+                          Integer miCalificacion) {}
 }

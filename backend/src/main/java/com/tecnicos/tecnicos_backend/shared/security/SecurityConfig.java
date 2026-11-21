@@ -55,6 +55,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tecnicos/registro").permitAll()
                         // Catálogo público: solo nombre, descripción y tarifas.
                         .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
+                        // Foto de perfil: UUID v4 opaco, sin datos de la cuenta.
+                        .requestMatchers(HttpMethod.GET, "/api/avatares/*").permitAll()
+                        // Solo handshake: el primer mensaje exige ticket efímero.
+                        .requestMatchers(HttpMethod.GET, "/api/ws/seguimiento").permitAll()
+                        .requestMatchers("/api/perfil/direcciones/**", "/api/perfil/preferencias").hasRole("CLIENTE")
+                        .requestMatchers("/api/perfil/foto").hasAnyRole("CLIENTE","TECNICO")
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
                         .requestMatchers("/error").permitAll()
                         // El backoffice solo lo abre el administrador.

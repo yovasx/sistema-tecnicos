@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CalificarServicio } from './CalificarServicio';
+import { SeguimientoServicio } from './SeguimientoServicio';
 import axios from 'axios';
 import {
   ActivityIndicator,
@@ -363,6 +365,10 @@ function DetalleServicioVista({
         subtitulo={`${detalle.categoria} · ${fechaHoraBolivia(detalle.creadoEn)}`}
         derecha={<Chip texto={estado.texto} tono={estado.tono} />}
       />
+      <SeguimientoServicio key={`seguimiento-${detalle.id}`} orden={detalle.id}
+        latitud={detalle.latitud} longitud={detalle.longitud} estadoOrden={detalle.estado} />
+      {detalle.estado === 'finalizado' && detalle.tecnico ? <CalificarServicio key={`calificacion-${detalle.id}`}
+        orden={detalle.id} actual={detalle.miCalificacion} onGuardada={onActualizar} /> : null}
 
       {detalle.estado === 'solicitado' ? (
         <Aviso tono="info" titulo="Solicitud registrada">

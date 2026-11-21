@@ -4,6 +4,10 @@ Plataforma para solicitar servicios técnicos a domicilio: los clientes publican
 
 > **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos, consulta administrativa de órdenes y solicitud de servicio del cliente con seguimiento en «Mis servicios». La asignación de técnicos, el diagnóstico/cotización, la reparación, pagos y liquidaciones siguen pendientes. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
 
+Cliente hogar V18/V19: foto, direcciones, valoraciones privadas y mapa Leaflet con
+WebSocket por orden. El seguimiento real necesita un técnico asignado que reporte
+su posición; no implementa el matching. [Alcance, API y verificación](docs/cliente-hogar.md).
+
 ## Stack
 
 | Capa | Tecnología |
