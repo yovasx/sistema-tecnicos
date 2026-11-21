@@ -21,7 +21,7 @@ public record TecnicoRegistroRequest(
         String apellido,
 
         @NotBlank(message = "El email es obligatorio.")
-        @Email(message = "Ingresá un email válido.")
+        @Email(message = "Ingresa un correo electrónico válido.")
         @Size(max = 150, message = "El email no puede superar 150 caracteres.")
         String email,
 

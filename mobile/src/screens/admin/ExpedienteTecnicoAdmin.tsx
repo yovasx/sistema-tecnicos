@@ -57,10 +57,10 @@ export function ExpedienteTecnicoAdmin({ id, expediente: d, cuentaActiva, onCamb
     setError('');
     if (accion === 'observar' && (!Object.keys(observaciones).length ||
         Object.values(observaciones).some(v => v.trim().length < 3))) {
-      setError('Completá una observación de al menos 3 caracteres para cada campo seleccionado.'); return;
+      setError('Completa una observación de al menos 3 caracteres para cada campo seleccionado.'); return;
     }
     if (accion === 'rechazar' && motivo.trim().length < 3) {
-      setError('Escribí un motivo de rechazo de al menos 3 caracteres.'); return;
+      setError('Escribe un motivo de rechazo de al menos 3 caracteres.'); return;
     }
     setConfirmacion(accion);
   }
@@ -98,7 +98,7 @@ export function ExpedienteTecnicoAdmin({ id, expediente: d, cuentaActiva, onCamb
     {!d.certificacionesUrl.length ? <Aviso>No hay certificados técnicos registrados en este expediente.</Aviso> : null}
     {Object.entries(d.observaciones).map(([k, v]) => <Aviso key={k} tono="advertencia" titulo={etiquetas[k] ?? (k === 'motivo' ? 'Motivo del rechazo' : k)}>{v}</Aviso>)}
     {d.estadoExpediente === 'en_revision' ? <>
-      <Aviso titulo="Revisión humana">Compará la identidad y la fecha con el CI, y revisá que los certificados sean legibles y correspondan al técnico. Un archivo cargado no prueba su autenticidad.</Aviso>
+      <Aviso titulo="Revisión humana">Compara la identidad y la fecha con el CI, y revisa que los certificados sean legibles y correspondan al técnico. Un archivo cargado no prueba su autenticidad.</Aviso>
       {!cuentaActiva ? <Aviso tono="advertencia">La cuenta está inactiva. Aprobar documentos no la reactiva ni habilita su acceso a la plataforma.</Aviso> : null}
       <Texto variante="etiqueta">Campos a observar</Texto>
       <View style={s.fila}>{camposExpediente.map(([campo, titulo]) => <Pressable key={campo} accessibilityRole="checkbox"
@@ -124,7 +124,7 @@ export function ExpedienteTecnicoAdmin({ id, expediente: d, cuentaActiva, onCamb
       </>}
     </> : null}
     {confirmacion ? <View style={s.confirmacion}>
-      <Aviso tono={confirmacion === 'aprobar' ? 'info' : 'advertencia'} titulo="Confirmá tu decisión">
+      <Aviso tono={confirmacion === 'aprobar' ? 'info' : 'advertencia'} titulo="Confirma tu decisión">
         {confirmacion === 'aprobar' ? 'Se registrará tu aprobación documental. La cuenta debe estar activa para acceder a Fixly.' :
           confirmacion === 'observar' ? 'El técnico deberá corregir cada campo observado y volver a enviar el expediente.' :
             'El expediente quedará rechazado y el técnico no tendrá acceso al panel operativo. Esta decisión queda auditada.'}

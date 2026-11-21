@@ -21,7 +21,7 @@ export function AceptarInvitacionScreen({ onEntrar }: { onEntrar: () => void }) 
   async function aceptar() {
     if (bloqueo.current) return;
     if (!email.trim() || !/^[a-f0-9]{64}$/.test(permiso.trim()) || password.length < 10 || password !== repeticion) {
-      setError('Revisá el correo, el código de invitación y las contraseñas. Usá al menos 10 caracteres y repetí la misma contraseña.'); return;
+      setError('Revisa el correo, el código de invitación y las contraseñas. Usa al menos 10 caracteres y repite la misma contraseña.'); return;
     }
     bloqueo.current = true; setOcupado(true); setError('');
     try {
@@ -31,9 +31,9 @@ export function AceptarInvitacionScreen({ onEntrar }: { onEntrar: () => void }) 
     finally { bloqueo.current = false; setOcupado(false); }
   }
   return <MarcoAuth onVolver={ocupado ? undefined : onEntrar}>
-    <View style={{ gap: 8 }}><Texto variante="titulo">Activá tu cuenta</Texto>
-      <Texto color={colores.secundario}>Usá la invitación enviada por la administración y elegí tu propia contraseña.</Texto></View>
-    {listo ? <><Aviso tono="exito" titulo="Cuenta activada">Ya podés iniciar sesión. Si sos técnico, completá el expediente para solicitar la aprobación.</Aviso>
+    <View style={{ gap: 8 }}><Texto variante="titulo">Activa tu cuenta</Texto>
+      <Texto color={colores.secundario}>Usa la invitación enviada por la administración y selecciona tu propia contraseña.</Texto></View>
+    {listo ? <><Aviso tono="exito" titulo="Cuenta activada">Ya puedes iniciar sesión. Si eres técnico, completa el expediente para solicitar la aprobación.</Aviso>
       <BotonPrimario titulo="Ir a iniciar sesión" onPress={onEntrar} /></> : <>
       {error ? <Aviso tono="peligro">{error}</Aviso> : null}
       <CampoTexto etiqueta="Correo de la invitación" value={email} onChangeText={setEmail} keyboardType="email-address"
@@ -42,7 +42,7 @@ export function AceptarInvitacionScreen({ onEntrar }: { onEntrar: () => void }) 
         autoCorrect={false} maxLength={64} editable={!ocupado} />
       <CampoTexto etiqueta="Tu nueva contraseña" value={password} onChangeText={setPassword}
         esPassword autoComplete="new-password" maxLength={72} editable={!ocupado} />
-      <CampoTexto etiqueta="Repetí tu nueva contraseña" value={repeticion} onChangeText={setRepeticion}
+      <CampoTexto etiqueta="Repite tu nueva contraseña" value={repeticion} onChangeText={setRepeticion}
         esPassword autoComplete="new-password" maxLength={72} editable={!ocupado} />
       <Texto variante="caption">La invitación vence en 24 horas y solo se puede utilizar una vez.</Texto>
       <BotonPrimario titulo="Activar cuenta" cargando={ocupado} onPress={() => void aceptar()} />

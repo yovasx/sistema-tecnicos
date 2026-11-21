@@ -2,7 +2,7 @@
 
 Plataforma para solicitar servicios técnicos a domicilio: los clientes publican una orden, los técnicos reciben ofertas, y el administrador valida cuentas y gestiona el catálogo. Incluye base geoespacial, chat, cotizaciones versionadas, pagos, liquidaciones y reputación.
 
-> **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos y consulta administrativa de órdenes. El flujo operativo de solicitudes/asignación, pagos y liquidaciones sigue pendiente. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
+> **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos, consulta administrativa de órdenes y solicitud de servicio del cliente con seguimiento en «Mis servicios». La asignación de técnicos, el diagnóstico/cotización, la reparación, pagos y liquidaciones siguen pendientes. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
 
 ## Stack
 
@@ -322,6 +322,8 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | Método | Endpoint | Estado |
 |---|---|---|
 | GET | `/api/ping` | ✅ implementado; devuelve 200 con estado real de la base, o 503 si no responde |
+| GET | `/api/admin/dashboard?dias=7` | ✅ snapshot operativo de 7/30 días de Bolivia; colas acotadas y `no-store` |
+| GET/PUT | `/api/admin/perfil` | ✅ perfil del administrador del JWT; revisión optimista, motivo y auditoría |
 | POST | `/api/auth/login` | ✅ implementado; email + contraseña → JWT HS256 |
 | POST | `/api/auth/registro` | ✅ implementado; alta pública de cliente (persona/empresa) → JWT; el `rol` siempre es `cliente` |
 | POST | `/api/auth/recuperacion/solicitar` | ✅ respuesta genérica + `solicitudId`; código por email si corresponde |
@@ -361,6 +363,11 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/admin/ordenes` | ✅ consulta paginada; búsqueda por ID/nombres, estado, categoría, asignación y fechas |
 | GET | `/api/admin/ordenes/{id}` | ✅ ficha privada del servicio, personas, ubicación y fechas |
 | GET | `/api/admin/ordenes/{id}/historial` | ✅ transiciones registradas paginadas; sin reconstrucción de eventos |
+| GET | `/api/ordenes/categorias` | ✅ catálogo activo con id y tarifa vigente, solo para clientes autenticados |
+| POST | `/api/ordenes` | ✅ multipart idempotente; crea la orden en `solicitado` con actor y evidencia opcional |
+| GET | `/api/ordenes` | ✅ solicitudes del cliente del JWT, paginadas y sin datos de ubicación/contacto |
+| GET | `/api/ordenes/{id}` | ✅ detalle propio con estado, técnico (si existe) y fechas reales |
+| GET | `/api/ordenes/{id}/evidencia` | ✅ archivo privado del dueño o administrador; `no-store` y `attachment` |
 
 El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Son públicas GET `/api/ping` y `/api/publico/**`, POST `/api/auth/login`, `/api/auth/registro`, `/api/tecnicos/registro`, `/api/auth/recuperacion/*`, `/api/auth/google`, `/api/auth/google/desafio` y `/api/auth/invitaciones/aceptar`. **Vincular Google exige sesión**.
 
@@ -397,7 +404,8 @@ para consumidores existentes. Las cuentas eliminadas no se muestran.
    confirmación explícita en la interfaz.
 2. El servidor envía un permiso aleatorio por SMTP. En desarrollo se lee en
    Mailpit (`http://localhost:8025`), no en la respuesta de la API.
-3. El destinatario entra a **Ingresar → Tengo una invitación**, pega el correo
+3. El destinatario abre **Activar cuenta invitada** desde la bienvenida (o la ruta
+   web `/#activar-cuenta`), pega el correo
    y el código recibido y elige una contraseña de al menos 10 caracteres
    (máximo 72 bytes). Luego inicia sesión normalmente.
 4. La cuenta solo se crea al aceptar. Los técnicos comienzan pendientes y
@@ -444,6 +452,77 @@ Web menor de 1024 px y nativo conservan el aviso de backoffice web.
 La fase reutiliza el esquema actual, sin migración nueva ni cambios a la
 máquina de estados. La reparación continúa requiriendo cotización aceptada y
 la asignación debe pasar por el flujo de ofertas cuando se implemente.
+
+### Inicio administrativo y perfil propio
+
+El **Dashboard** es un centro de operaciones, no otra tabla de Usuarios.
+Consulta `/api/admin/dashboard` en un snapshot de lectura y muestra órdenes
+abiertas, solicitudes en `solicitado` sin técnico, expedientes `en_revision`
+de cuentas activas y técnicos aprobados con cuenta activa. Esto último **no**
+equivale a disponibilidad ni a matching implementado.
+
+La serie de 7 o 30 días usa `America/La_Paz`, incluye días sin actividad y cuenta
+órdenes creadas aunque después cambien de estado. El período solo afecta la
+serie; los indicadores y colas son actuales. Se muestran hasta cinco solicitudes
+(urgentes primero, luego antiguas) y cinco expedientes enviados, sin contactos,
+documentos ni ubicación. Los enlaces abren las fichas existentes. No hay tabla
+de usuarios, ingresos inventados ni actualización en tiempo real; **Actualizar
+panel** vuelve a consultar y un fallo no deja cifras antiguas como actuales.
+
+El encabezado muestra siempre la **cuenta de la sesión**, no la persona abierta
+en Usuarios/Técnicos. **Mi perfil** permite cambiar nombre, apellido y teléfono
+propios con motivo y revisión, usando `/api/admin/perfil`: el servidor obtiene
+el destinatario del JWT. Reutiliza `admin_svc.editar_usuario` y su auditoría V12,
+sin migración nueva ni cambios de rol, correo o contraseña. Después de guardar
+se refresca `/api/auth/me`; una respuesta atrasada no cambia la identidad de
+una sesión posterior.
+
+La ficha de **Técnicos** permite editar los datos generales permitidos sin
+salir del módulo. El nombre de un técnico aprobado sigue protegido; especialidades,
+cobertura, CI y documentos conservan sus flujos específicos, no un CRUD genérico.
+Activar/desactivar una cuenta no altera aprobación ni disponibilidad. Los módulos
+todavía no implementados se identifican con **Próximamente** en el menú.
+
+### Solicitud de servicio del cliente (V14)
+
+En **Inicio** (persona y empresa) y en las tarjetas del catálogo, el cliente
+abre un asistente de cuatro pasos: categoría, detalle, ubicación y confirmación.
+Al enviar, la orden queda en `solicitado`; no se asigna técnico, no se genera
+oferta ni cotización y no se promete precio final ni tiempo de llegada.
+
+- **Datos:** categoría activa, descripción de 10 a 2000 caracteres, urgencia,
+  latitud/longitud dentro de rango y dirección o referencia de 5 a 300. La
+  ubicación se obtiene con GPS solo al pulsar **Usar mi ubicación** (permiso
+  explícito, sin seguimiento) o se escribe a mano. OpenStreetMap se abre solo
+  por acción del usuario, sin mapa incrustado.
+- **Evidencia opcional:** JPG, PNG o PDF de hasta 8 MB, con validación de
+  extensión y firma real. Se guarda como archivo privado
+  `/perfiles/<uuid>.<ext>`; nunca se expone una URL pública. La descarga exige
+  sesión del dueño o de un administrador y responde `no-store` y `attachment`.
+- **Idempotencia:** cada intento usa una clave UUID por cliente y una huella
+  SHA-256 del contenido. Reintentar devuelve la misma orden, incluso si el
+  estado ya avanzó o la categoría se desactivó; dos envíos simultáneos crean
+  una sola orden. Reutilizar la clave con otro contenido responde 409
+  `CLAVE_SOLICITUD_REUTILIZADA`; una categoría desactivada responde 409
+  `CATEGORIA_NO_DISPONIBLE`.
+- **Mis servicios / Órdenes:** el cliente ve solo sus órdenes, paginadas de 20
+  en 20, con estado real, categoría y fecha. El detalle muestra descripción,
+  referencia, coordenadas, técnico y fechas únicamente cuando existen. El
+  listado no transporta dirección, contactos, coordenadas ni URLs.
+- **Privacidad:** el backend filtra siempre por el cliente del JWT y no acepta
+  un id de cliente en el cuerpo. Las respuestas usan `no-store`. En esta fase,
+  el detalle propio y la evidencia están disponibles para el cliente; el
+  administrador consulta la dirección en la ficha privada y puede descargar
+  la evidencia por la API autenticada. El acceso del técnico asignado queda
+  pendiente del flujo de atención. OpenStreetMap no recibe referrer.
+- **Límites de esta fase:** el cliente no cancela, reasigna ni fuerza estados;
+  la atención de la solicitud (ofertas, diagnóstico y reparación) queda para
+  los siguientes módulos.
+
+V14 agrega `orders.solicitudes_cliente` (clave idempotente por cliente y orden)
+y la función `orders.crear_solicitud_cliente`, que valida en Postgres, publica
+`app.usuario_id` para la auditoría y usa la máquina de estados existente. No
+edita migraciones aplicadas ni crea ofertas o cotizaciones al dar de alta.
 
 ### Gestión de técnicos (W61) y revisión documental (W49)
 
@@ -530,7 +609,14 @@ Tests: `.\gradlew.bat test --tests "*RecuperacionControllerTest"` desde `backend
 La integración está preparada, pero **no se habilita ni se afirma probada con Google real sin los IDs de Google Cloud**. Login con Google y SMTP a Gmail son integraciones independientes.
 
 1. Creá/configurá la pantalla de consentimiento de Google Cloud y un cliente OAuth de tipo **Web**. Registrá `http://localhost:9081` como origen JavaScript para desarrollo y tu dominio HTTPS en producción. No hace falta un client secret en la app.
-2. En `mobile/.env.local` definí `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`. En `.env` de la raíz agregá el mismo ID a `GOOGLE_CLIENT_IDS` (separados por coma si hay varios). Reiniciá Metro y recreá el backend con `docker compose up -d --build backend`.
+2. En desarrollo con Metro, definí `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` en
+   `mobile/.env.local`. Para la **web Docker**, definilo también en el `.env`
+   de la raíz: ese build no lee `mobile/.env.local`. Agregá el mismo ID a
+   `GOOGLE_CLIENT_IDS` de la raíz (separados por coma si hay varios) y autorizá
+   el origen web en Google Cloud. Para Docker ejecutá
+   `docker compose up -d --build web backend`; para Metro, reinicialo.
+   Sin ID público, el botón se oculta; si falla Google con ID configurado, se
+   muestra un error con reintento, no una autenticación ficticia.
 3. Web usa el botón oficial de Google Identity Services, callback en memoria y nonce emitido por el backend.
 4. Nativo usa `react-native-nitro-google-signin` y requiere **development build, no Expo Go**. Configurá los clientes Android/iOS reales en Google Cloud, SHA-1 de los certificados de Android, package/bundle IDs y URL scheme invertido de iOS. Completá `ANDROID_PACKAGE`, `IOS_BUNDLE_IDENTIFIER`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME` y luego `EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED=true`. `app.config.ts` agrega el plugin con Web ID + scheme; reconstruí el binario según la [guía de Expo](https://docs.expo.dev/guides/google-authentication/). No se generan ni editan carpetas nativas a mano.
 

@@ -27,12 +27,14 @@ function cargar(): Promise<GoogleId> {
   return carga;
 }
 export function googleDisponible() { return !!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID; }
-export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
+export function BotonGoogle({ onCredencial, onError, proposito = 'acceso', deshabilitado = false }: BotonGoogleProps) {
   const contenedor = useRef<HTMLDivElement>(null);
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
   const recibir = useRef(onCredencial);
   const error = useRef(onError);
+  const bloqueado = useRef(deshabilitado);
+  bloqueado.current = deshabilitado;
   recibir.current = onCredencial; error.current = onError;
   useEffect(() => {
     if (!googleDisponible()) return;
@@ -55,12 +57,12 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
         width: Math.min(400, ancho),
       });
     };
-    void Promise.all([cargar(), authRepository.desafioGoogle()]).then(([google, { nonce }]) => {
+    void Promise.all([cargar(), authRepository.desafioGoogle(proposito)]).then(([google, { nonce }]) => {
       if (!vigente || !contenedor.current) return;
       google.initialize({
         client_id: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!, nonce, auto_select: false,
         callback: (r) => {
-          if (!vigente || enCurso) return;
+          if (!vigente || enCurso || bloqueado.current) return;
           enCurso = true;
           void recibir.current({ idToken: r.credential, nonce }).finally(() => {
             enCurso = false;
@@ -74,17 +76,18 @@ export function BotonGoogle({ onCredencial, onError }: BotonGoogleProps) {
         observador.observe(contenedor.current);
       }
     }).catch(() => {
-      if (vigente) { setFallo(true); error.current('Google no está disponible. Podés ingresar con correo y contraseña.'); }
+      if (vigente) { setFallo(true); error.current('No pudimos cargar Google. Reintenta; si creaste tu cuenta con Google, no necesitas una contraseña Fixly.'); }
     });
     return () => {
       vigente = false;
       observador?.disconnect();
       contenedor.current?.replaceChildren();
     };
-  }, [intento]);
+  }, [intento, proposito]);
   if (!googleDisponible()) return null;
   return <View style={{ minHeight: 44 }}>
-    <div ref={contenedor} style={{ width: '100%', minHeight: 44 }} />
+    <div ref={contenedor} aria-disabled={deshabilitado}
+      style={{ width: '100%', minHeight: 44, pointerEvents: deshabilitado ? 'none' : 'auto', opacity: deshabilitado ? 0.5 : 1 }} />
     {fallo ? <BotonPrimario titulo="Reintentar Google" variante="secundario" onPress={() => setIntento((v) => v + 1)} /> : null}
   </View>;
 }

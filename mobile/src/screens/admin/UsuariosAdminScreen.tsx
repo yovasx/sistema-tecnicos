@@ -18,6 +18,7 @@ import { TablaAdmin } from '../../ui/admin/TablaAdmin';
 import { InvitarUsuarioAdmin } from './InvitarUsuarioAdmin';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import { leerRutaAdmin, guardarRutaAdmin } from '../../infrastructure/navigation/rutaAdmin';
+import { useNavegacionAdmin } from '../../navigation/NavegacionAdmin';
 
 const ROLES = [['todos', 'Todos'], ['cliente', 'Clientes'], ['tecnico', 'Técnicos'], ['administrador', 'Administradores']] as const;
 const ESTADOS = [['todos', 'Todos'], ['activo', 'Activos'], ['inactivo', 'Inactivos']] as const;
@@ -37,6 +38,8 @@ function formulario(d: DetalleUsuarioAdmin): EditarUsuarioAdmin {
 
 /** W48: lectura paginada real y ficha administrativa, sin editar identidades ni roles. */
 export function UsuariosAdminScreen() {
+  const { usuario } = useSesion();
+  const navegar = useNavegacionAdmin();
   const { ancho } = useResponsive();
   const [filtros, setFiltros] = useState(iniciales);
   const [texto, setTexto] = useState('');
@@ -65,13 +68,18 @@ export function UsuariosAdminScreen() {
     setFiltros(f => ({ ...f, [campo]: valor, pagina: 0 }));
   }
   function abrir(id: number | null) { guardarRutaAdmin('usuarios', id); setId(id); }
+  if (id === usuario?.id) return <View style={s.raiz}>
+    <Encabezado titulo="Tu cuenta" subtitulo="Gestiona tu información personal desde Mi perfil, separado de la administración de otras cuentas." />
+    <BotonPrimario titulo="Ir a Mi perfil" onPress={() => navegar({ seccion: 'perfil' })} />
+    <BotonPrimario titulo="Volver a Usuarios" variante="secundario" onPress={() => abrir(null)} />
+  </View>;
   if (id !== null) return <FichaUsuario key={id} id={id} onVolver={() => abrir(null)}
     onGuardado={() => setRecarga(n => n + 1)} />;
   if (invitando) return <InvitarUsuarioAdmin onVolver={() => setInvitando(false)} />;
   return <View style={s.raiz}>
     <View style={s.miga}><Ionicons name="people-outline" size={16} color={colores.marca} />
       <Texto variante="caption">Personas / Gestión de usuarios</Texto></View>
-    <Encabezado titulo="Usuarios" subtitulo="Consultá las cuentas y gestioná sus datos y acceso desde un solo lugar."
+    <Encabezado titulo="Usuarios" subtitulo="Consulta las cuentas y gestiona sus datos y acceso desde un solo lugar."
       derecha={<BotonPrimario titulo="Invitar usuario" tamano="escritorio" onPress={() => setInvitando(true)} />} />
     <View style={s.resumenLista}>
       <View style={s.icono}><Ionicons name="people-outline" size={24} color={colores.marca} /></View>
@@ -98,7 +106,7 @@ export function UsuariosAdminScreen() {
         </View>
       </View>
     </Tarjeta>
-    {error ? <Aviso tono="peligro" titulo="No pudimos actualizar el listado">{error} Usá Actualizar para reintentar.</Aviso> : null}
+    {error ? <Aviso tono="peligro" titulo="No pudimos actualizar el listado">{error} Usa Actualizar para reintentar.</Aviso> : null}
     {cargando ? <View style={s.miga}><ActivityIndicator color={colores.marca} /><Texto variante="caption">Cargando cuentas…</Texto></View> : null}
     {!error && datos ? <TablaAdmin filas={datos.elementos} clave={u => String(u.id)} anchoMinimo={ancho >= 1200 ? 880 : 700}
       pagina={datos.pagina} tamano={datos.tamano} total={datos.total} ocupado={cargando}
@@ -106,23 +114,27 @@ export function UsuariosAdminScreen() {
       columnas={[
         { clave: 'usuario', titulo: 'USUARIO', render: u => <View style={s.identidad}>
           <View style={s.avatar}><Texto variante="etiqueta" color={colores.marca}>{u.nombre.split(/\s+/).slice(0, 2).map(n => n[0]).join('').toUpperCase()}</Texto></View>
-          <View style={{ flex: 1, gap: 4 }}><Texto variante="etiqueta" numberOfLines={1}>{u.nombre}</Texto>
-            <Texto variante="caption" numberOfLines={1}>{u.email}</Texto></View>
+           <View style={{ flex: 1, gap: 4 }}><Texto variante="etiqueta" numberOfLines={1}>{u.nombre}</Texto>
+            <Texto variante="caption" numberOfLines={1}>{u.email}</Texto>
+            <Texto variante="caption">Cuenta #{u.id}</Texto></View>
+            {u.id === usuario?.id ? <Chip texto="Tu cuenta" tono="marca" /> : null}
         </View> },
         { clave: 'rol', titulo: 'ROL / PERFIL', ancho: 150, render: u => <View style={{ gap: 4 }}>
           <Texto variante="etiqueta">{rolVisible[u.rol]}</Texto>
-          <Texto variante="caption">{u.tipoCliente === 'empresa' ? 'Empresa' : 'Persona'}</Texto></View> },
+          <Texto variante="caption">{u.rol === 'cliente' ? (u.tipoCliente === 'empresa' ? 'Empresa' : 'Persona') :
+            u.rol === 'tecnico' ? 'Cuenta técnica' : 'Cuenta administrativa'}</Texto></View> },
         { clave: 'estado', titulo: 'ESTADO', ancho: 110, render: u => <Chip texto={u.activo ? 'Activo' : 'Inactivo'} tono={u.activo ? 'exito' : 'neutro'} /> },
         ...(ancho >= 1200 ? [{ clave: 'registro', titulo: 'REGISTRO', ancho: 140, render: (u: FilaUsuarioAdmin) => <Texto variante="caption">{new Date(u.creadoEn).toLocaleDateString('es-BO')}</Texto> }] : []),
-        { clave: 'accion', titulo: 'ACCIÓN', ancho: 160, render: u => <BotonPrimario titulo="Ver ficha"
-          etiquetaAccesible={`Ver ficha de ${u.nombre}`}
-          variante="secundario" tamano="escritorio" deshabilitado={cargando} onPress={() => abrir(u.id)} /> },
+        { clave: 'accion', titulo: 'ACCIÓN', ancho: 160, render: u => <BotonPrimario titulo={u.id === usuario?.id ? 'Mi perfil' : 'Ver ficha'}
+          etiquetaAccesible={u.id === usuario?.id ? 'Abrir mi perfil' : `Ver ficha de ${u.nombre}`}
+          variante="secundario" tamano="escritorio" deshabilitado={cargando}
+          onPress={() => u.id === usuario?.id ? navegar({ seccion: 'perfil' }) : abrir(u.id)} /> },
       ]} /> : null}
   </View>;
 }
 
 function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () => void; onGuardado: () => void }) {
-  const { usuario } = useSesion();
+  const { usuario, refrescarUsuario } = useSesion();
   const { ancho } = useResponsive();
   const [detalle, setDetalle] = useState<DetalleUsuarioAdmin | null>(null);
   const [form, setForm] = useState<EditarUsuarioAdmin | null>(null);
@@ -170,14 +182,14 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
   async function guardar(estado = false) {
     if (!detalle || !form || bloqueo.current) return;
     const e: Record<string, string> = {};
-    if (estado) { if (motivo.trim().length < 5) e.estado = 'Escribí un motivo de al menos 5 caracteres.'; }
+    if (estado) { if (motivo.trim().length < 5) e.estado = 'Escribe un motivo de al menos 5 caracteres.'; }
     else {
-      if (form.nombre.trim().length < 2) e.nombre = 'Ingresá al menos 2 caracteres.';
-      if (form.apellido.trim().length < 2) e.apellido = 'Ingresá al menos 2 caracteres.';
-      if (form.motivo.trim().length < 5) e.motivo = 'Explicá el cambio en al menos 5 caracteres.';
+      if (form.nombre.trim().length < 2) e.nombre = 'Ingresa al menos 2 caracteres.';
+      if (form.apellido.trim().length < 2) e.apellido = 'Ingresa al menos 2 caracteres.';
+      if (form.motivo.trim().length < 5) e.motivo = 'Explica el cambio en al menos 5 caracteres.';
       if (detalle.tipoCliente === 'empresa') {
-        if (form.razonSocial.trim().length < 2) e.razonSocial = 'Completá la razón social.';
-        if (!/^\d{5,20}$/.test(form.nit)) e.nit = 'Ingresá entre 5 y 20 dígitos.';
+        if (form.razonSocial.trim().length < 2) e.razonSocial = 'Completa la razón social.';
+        if (!/^\d{5,20}$/.test(form.nit)) e.nit = 'Ingresa entre 5 y 20 dígitos.';
       }
     }
     setErrores(e); if (Object.keys(e).length) return;
@@ -188,6 +200,7 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
       setDetalle(d); setForm(formulario(d)); setEditando(false); setAccionEstado(false); setMotivo('');
       setMensaje(estado ? `Cuenta ${d.activo ? 'reactivada' : 'desactivada'}. La acción quedó registrada.` : 'Datos guardados. El cambio quedó registrado en el historial.');
       onGuardado();
+      if (d.id === usuario?.id) await refrescarUsuario();
     } catch (e) { setError(errorTexto(e)); }
     finally { setOcupado(false); bloqueo.current = false; }
   }
@@ -196,8 +209,8 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
       <BotonPrimario titulo="Volver a Usuarios" variante="secundario" tamano="escritorio" deshabilitado={ocupado} onPress={volver} />
       <Texto variante="caption">Personas / Usuarios / Ficha #{id}</Texto>
     </View>
-    {salida ? <Aviso tono="advertencia" titulo="Tenés cambios sin guardar">
-      Volvé al formulario para conservarlos o descartalos para salir.
+    {salida ? <Aviso tono="advertencia" titulo="Tienes cambios sin guardar">
+      Vuelve al formulario para conservarlos o descártalos para salir.
     </Aviso> : null}
     {salida ? <View style={s.filtros}><BotonPrimario titulo="Seguir editando" tamano="escritorio" onPress={() => setSalida(null)} />
       <BotonPrimario titulo={salida === 'recargar' ? 'Descartar y recargar' : 'Descartar y volver'} tamano="escritorio" variante="secundario"
@@ -238,7 +251,7 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
                 error={errores.nit} maxLength={20} editable={!ocupado} />
             </> : null}
             <CampoTexto etiqueta="Motivo de la edición" value={form.motivo} onChangeText={v => cambiar('motivo', v)}
-              error={errores.motivo} placeholder="Explicá por qué se actualizan los datos" multiline maxLength={500} editable={!ocupado} />
+              error={errores.motivo} placeholder="Explica por qué se actualizan los datos" multiline maxLength={500} editable={!ocupado} />
             <View style={s.filtros}><BotonPrimario titulo="Guardar cambios" tamano="escritorio" cargando={ocupado} onPress={() => void guardar()} />
               <BotonPrimario titulo="Cancelar edición" tamano="escritorio" variante="secundario" deshabilitado={ocupado} onPress={cancelar} /></View>
           </> : <>
@@ -259,11 +272,11 @@ function FichaUsuario({ id, onVolver, onGuardado }: { id: number; onVolver: () =
             <Texto variante="subtitulo">Estado de la cuenta</Texto>
             <Texto color={colores.secundario}>{detalle.activo ? 'Desactivar impide nuevos accesos e invalida las sesiones existentes. No elimina datos ni decisiones técnicas.' :
               'Reactivar permite iniciar una sesión nueva. No recupera sesiones anteriores ni aprueba al técnico.'}</Texto>
-            {usuario?.id === detalle.id ? <Aviso>No podés desactivar tu propia cuenta.</Aviso> :
+            {usuario?.id === detalle.id ? <Aviso>No puedes desactivar tu propia cuenta.</Aviso> :
               !editando && !accionEstado ? <BotonPrimario titulo={detalle.activo ? 'Desactivar cuenta' : 'Reactivar cuenta'}
                 variante="secundario" tamano="escritorio" onPress={() => { setAccionEstado(true); setMensaje(''); setError(''); }} /> : null}
             {accionEstado ? <>
-              <Aviso tono={detalle.activo ? 'advertencia' : 'info'} titulo="Confirmá el cambio">
+              <Aviso tono={detalle.activo ? 'advertencia' : 'info'} titulo="Confirma el cambio">
                 {detalle.activo ? 'La cuenta dejará de acceder a Fixly. Si tiene órdenes en curso, la operación será rechazada.' :
                   'La cuenta podrá iniciar sesión nuevamente. Sus permisos y su validación técnica no cambian.'}
               </Aviso>

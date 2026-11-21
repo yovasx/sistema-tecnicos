@@ -33,7 +33,10 @@ apiClient.interceptors.response.use(
       || url === '/api/auth/google' || url === '/api/auth/google/desafio'
       || url.includes('/api/auth/recuperacion');
 
-    if (error?.response?.status === 401 && !esFormularioPublico) {
+    // Un 401 atrasado de la cuenta anterior no debe cerrar la nueva sesión.
+    const tokenPeticion = error?.config?.headers?.Authorization;
+    if (error?.response?.status === 401 && !esFormularioPublico &&
+        tokenPeticion === apiClient.defaults.headers.common.Authorization) {
       alVencerSesion?.();
     }
 

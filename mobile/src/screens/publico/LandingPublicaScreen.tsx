@@ -17,10 +17,11 @@ export interface LandingPublicaScreenProps {
   /** Abre el selector de cuenta para registrarse. */
   onCrearCuenta: () => void;
   onSoyTecnico: () => void;
+  onActivarCuenta: () => void;
 }
 
 const PASOS = [
-  { numero: '1', titulo: 'Elegís tu problema', detalle: 'Contás qué pasa y en qué zona estás.' },
+  { numero: '1', titulo: 'Describe el problema', detalle: 'Indica qué ocurre y en qué zona necesitas el servicio.' },
   {
     numero: '2',
     titulo: 'Cotización y técnico asignado',
@@ -43,7 +44,7 @@ const SOPORTE = 'soporte@fixly.bo';
  * al login (W63). En el teléfono se usa una bienvenida compacta, no esta
  * landing.
  */
-export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: LandingPublicaScreenProps) {
+export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, onActivarCuenta }: LandingPublicaScreenProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [yCategorias, setYCategorias] = useState(0);
   const [yComoFunciona, setYComoFunciona] = useState(0);
@@ -177,7 +178,7 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
             </Texto>
             <View style={estilos.lineaHero} />
             <Texto variante="caption" color={colores.secundario}>
-              Empezá por conocer los servicios:
+              Empieza por conocer los servicios:
             </Texto>
             <View style={estilos.puntos}>
               {categorias.map((c) => (
@@ -279,9 +280,9 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
         <View style={estilos.garantia}>
           <Ionicons name="shield-checkmark" size={24} color={colores.exito} />
           <View style={estilos.garantiaTexto}>
-            <Texto variante="cuerpoFuerte">¿Sos un profesional técnico?</Texto>
+            <Texto variante="cuerpoFuerte">¿Eres un profesional técnico?</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Creá tu perfil, subí tus certificados y enviá tu expediente a revisión.
+              Crea tu perfil, sube tus certificados y envía tu expediente a revisión.
             </Texto>
           </View>
           <BotonPrimario
@@ -292,6 +293,9 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico }: 
         </View>
 
         <View style={estilos.footer}>
+          <Texto variante="caption" color={colores.marca} accessibilityRole="button" onPress={onActivarCuenta}>
+            Activar cuenta invitada
+          </Texto>
           <Texto
             variante="caption"
             color={colores.terciario}

@@ -1,12 +1,6 @@
-import { PantallaPendiente } from '../../ui/PantallaPendiente';
+import { MisServicios } from '../cliente/MisServicios';
 
-/** Las órdenes de la empresa piden la API de orders, todavía sin controlador. */
+/** La empresa comparte el listado de órdenes del cliente; solo cambia el título. */
 export function OrdenesEmpresa() {
-  return (
-    <PantallaPendiente
-      titulo="Órdenes"
-      descripcion="Listado de órdenes de la empresa con estado, técnico asignado y totales. Depende del controlador de orders y de la máquina de estados que ya vive en Postgres."
-      pantallaStitch="Fixly · Seguimiento orden #1042 (F15)"
-    />
-  );
+  return <MisServicios titulo="Órdenes" />;
 }

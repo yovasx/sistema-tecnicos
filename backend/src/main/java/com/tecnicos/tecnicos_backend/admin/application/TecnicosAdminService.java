@@ -31,7 +31,7 @@ public class TecnicosAdminService {
            || !Set.of("todos","activo","inactivo").contains(cuenta)
            || !Set.of("todos","borrador","en_revision","observado","aprobado","rechazado").contains(expediente)
            || !Set.of("todos","disponible","fuera_servicio","ocupado").contains(disponibilidad)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisá los filtros de técnicos.");
+            throw new ApiException(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Revisa los filtros de técnicos.");
         }
         String base=" FROM identity.usuarios u JOIN identity.perfiles_tecnico p ON p.usuario_id=u.id ";
         String where=" WHERE u.rol='tecnico' AND u.eliminado_en IS NULL ";

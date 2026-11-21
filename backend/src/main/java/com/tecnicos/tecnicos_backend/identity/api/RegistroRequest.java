@@ -26,7 +26,7 @@ public record RegistroRequest(
         String apellido,
 
         @NotBlank(message = "El email es obligatorio.")
-        @Email(message = "Ingresá un email válido.")
+        @Email(message = "Ingresa un correo electrónico válido.")
         @Size(max = 150, message = "El email no puede superar 150 caracteres.")
         String email,
 
@@ -37,7 +37,7 @@ public record RegistroRequest(
         @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres.")
         String password,
 
-        @NotNull(message = "Elegí el tipo de cuenta.")
+        @NotNull(message = "Selecciona el tipo de cuenta.")
         TipoCliente tipoCliente,
 
         @Size(max = 150, message = "La razón social no puede superar 150 caracteres.")
@@ -49,7 +49,7 @@ public record RegistroRequest(
     /**
      * Normaliza los textos antes de que corra la validación: si alguien pega
      * "  Ana@Correo.BO " desde el teléfono, no queremos rechazarlo por los
-     * espacios ni guardar el email con mayúsculas. El rol nunca llega acá.
+     * espacios ni guardar el email con mayúsculas. El rol nunca llega aquí.
      */
     public RegistroRequest {
         nombre = limpiar(nombre);

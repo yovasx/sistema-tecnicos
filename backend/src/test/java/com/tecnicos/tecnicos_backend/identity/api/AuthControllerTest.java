@@ -150,7 +150,7 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"))
                 .andExpect(jsonPath("$.mensaje").value(
-                        "Tu cuenta está inactiva. Contactá a soporte para reactivarla."));
+                        "Tu cuenta está inactiva. Contacta a soporte para reactivarla."));
     }
 
     @Test
@@ -192,10 +192,10 @@ class AuthControllerTest {
     void el_token_del_login_sirve_para_entrar_a_la_api_protegida() throws Exception {
         String token = JsonPath.read(cuerpo(login(EMAIL_TECNICO, CLAVE)), "$.token");
 
-        // /api/ordenes todavía no tiene controlador: 404 significa que la
-        // seguridad aceptó el token emitido por el login.
-        mvc.perform(get("/api/ordenes").header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound());
+        // /api/auth/me exige token: 200 significa que la seguridad aceptó el
+        // token emitido por el login.
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
     }
 
     @Test

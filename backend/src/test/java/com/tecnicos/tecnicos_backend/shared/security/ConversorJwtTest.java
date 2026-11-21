@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * El conversor es el puente entre el token y las reglas de autorización: si
- * falla acá, {@code hasRole("TECNICO")} deja de funcionar en todos lados.
+ * falla aquí, {@code hasRole("TECNICO")} deja de funcionar en todos lados.
  */
 class ConversorJwtTest {
 

@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  * Cuerpo de {@code POST /api/admin/categorias} y
  * {@code PUT /api/admin/categorias/{id}}.
  *
- * <p>La validación de forma vive acá; la de negocio (unicidad, vigencias,
+ * <p>La validación de forma vive aquí; la de negocio (unicidad, vigencias,
  * límites reales de la base) vive en {@code admin_svc.guardar_categoria}.</p>
  */
 public record GuardarCategoriaRequest(

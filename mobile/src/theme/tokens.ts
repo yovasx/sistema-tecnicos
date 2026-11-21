@@ -4,7 +4,7 @@ import { Platform, TextStyle, ViewStyle } from 'react-native';
  * Design system Fixly Blue.
  *
  * Una sola fuente de verdad para colores, tipografía, espaciado y radios.
- * Las pantallas no deberían escribir hex sueltos: si un color no está acá, no
+ * Las pantallas no deberían escribir hex sueltos: si un color no está aquí, no
  * pertenece al sistema.
  */
 export const colores = {

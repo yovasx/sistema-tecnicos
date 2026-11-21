@@ -46,7 +46,7 @@ public class InvitacionesAdminService {
             admin,r.email(),json.writeValueAsString(datos),permiso);
         try { correo.enviarInvitacion(r.email().trim(),permiso); }
         catch(RuntimeException e) { throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
-            "CORREO_NO_DISPONIBLE","No pudimos enviar la invitación. No se creó ninguna cuenta. Intentá más tarde."); }
+            "CORREO_NO_DISPONIBLE","No pudimos enviar la invitación. No se creó ninguna cuenta. Intenta más tarde."); }
     }
     @Transactional
     public void aceptar(AceptarInvitacion r) {

@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tecnicos/expediente/documentos/*")
                             .hasAnyRole("TECNICO", "ADMINISTRADOR")
                         .requestMatchers("/api/tecnicos/**").hasRole("TECNICO")
+                        .requestMatchers(HttpMethod.GET,"/api/ordenes/*/evidencia").hasAnyRole("CLIENTE","ADMINISTRADOR")
+                        .requestMatchers("/api/ordenes","/api/ordenes/**").hasRole("CLIENTE")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(errores -> errores

@@ -81,7 +81,7 @@ function DirectorioOrdenes() {
     !!filtros.categoria || !!filtros.desde || !!filtros.hasta;
   return <View style={s.raiz}>
     <View style={s.fila}><Ionicons name="receipt-outline" size={18} color={colores.marca} /><Texto variante="caption">Operación / Órdenes</Texto></View>
-    <Encabezado titulo="Órdenes" subtitulo="Consultá el servicio, las personas y el historial registrado de cada solicitud."
+    <Encabezado titulo="Órdenes" subtitulo="Consulta el servicio, las personas y el historial registrado de cada solicitud."
       derecha={<BotonPrimario titulo="Actualizar órdenes" tamano="escritorio" variante="secundario"
         deshabilitado={cargando} onPress={() => setRecarga(n => n + 1)} />} />
     <View style={s.entre}><Texto variante="subtitulo">{datos?.total ?? '—'} {datos?.total === 1 ? 'orden encontrada' : 'órdenes encontradas'}</Texto>
@@ -101,28 +101,28 @@ function DirectorioOrdenes() {
       {categorias.length ? <FiltroAdmin etiqueta="Categoría del servicio" valor={String(borrador.categoria ?? 'todos')}
         opciones={[['todos', 'Todas'], ...categorias.map(c => [String(c.id), `${c.nombre}${c.activa ? '' : ' (inactiva)'}`] as const)]}
         onChange={v => setBorrador(b => ({ ...b, categoria: v === 'todos' ? undefined : Number(v) }))} /> : null}
-      {errorCategorias ? <Aviso tono="peligro" titulo="Categorías no disponibles">{errorCategorias} Usá Actualizar órdenes para reintentar.</Aviso> : null}
+      {errorCategorias ? <Aviso tono="peligro" titulo="Categorías no disponibles">{errorCategorias} Usa Actualizar órdenes para reintentar.</Aviso> : null}
       <View style={s.filaFiltros}>
         <View style={s.fecha}><CampoTexto etiqueta="Creada desde" value={borrador.desde} placeholder="AAAA-MM-DD" maxLength={10}
-          error={errorFechas && desdeInvalido ? 'Escribí una fecha válida: AAAA-MM-DD.' : undefined}
+          error={errorFechas && desdeInvalido ? 'Escribe una fecha válida: AAAA-MM-DD.' : undefined}
           onChangeText={desde => setBorrador(b => ({ ...b, desde }))} onSubmitEditing={aplicar} /></View>
         <View style={s.fecha}><CampoTexto etiqueta="Creada hasta" value={borrador.hasta} placeholder="AAAA-MM-DD" maxLength={10}
-          error={errorFechas && (hastaInvalido || rangoInvertido) ? rangoInvertido ? 'La fecha final no puede ser anterior a la inicial.' : 'Escribí una fecha válida: AAAA-MM-DD.' : undefined}
+          error={errorFechas && (hastaInvalido || rangoInvertido) ? rangoInvertido ? 'La fecha final no puede ser anterior a la inicial.' : 'Escribe una fecha válida: AAAA-MM-DD.' : undefined}
           onChangeText={hasta => setBorrador(b => ({ ...b, hasta }))} onSubmitEditing={aplicar} /></View>
       </View>
       <View style={s.entre}>
         <View style={{ gap: 8 }}><Texto variante="caption">Fechas de creación en horario de Bolivia. Ambos días están incluidos.</Texto>
-          {sinAplicar ? <Chip texto="Filtros sin aplicar" tono="advertencia" /> : <Texto variante="caption">Más recientes primero · aplicá los filtros para actualizar la búsqueda.</Texto>}</View>
+          {sinAplicar ? <Chip texto="Filtros sin aplicar" tono="advertencia" /> : <Texto variante="caption">Más recientes primero · aplica los filtros para actualizar la búsqueda.</Texto>}</View>
         <View style={s.fila}><BotonPrimario titulo="Limpiar filtros de órdenes" variante="secundario" tamano="escritorio" onPress={limpiar} />
           <BotonPrimario titulo="Aplicar filtros" tamano="escritorio" onPress={aplicar} /></View>
       </View>
     </Tarjeta>
-    {error ? <Aviso tono="peligro" titulo="No pudimos cargar las órdenes">{error} Podés reintentar con Actualizar órdenes.</Aviso> : null}
+    {error ? <Aviso tono="peligro" titulo="No pudimos cargar las órdenes">{error} Puedes reintentar con Actualizar órdenes.</Aviso> : null}
     {cargando ? <View style={s.fila}><ActivityIndicator color={colores.marca} /><Texto variante="caption">Cargando órdenes…</Texto></View> : null}
     {!error && !cargando && datos?.total === 0 ? <Tarjeta style={{ gap: 12 }}>
       <Ionicons name="receipt-outline" size={30} color={colores.marca} />
       <Texto variante="subtitulo">{hayFiltros ? 'No hay órdenes que coincidan' : 'Todavía no hay órdenes registradas'}</Texto>
-      <Texto color={colores.secundario}>{hayFiltros ? 'Probá otra búsqueda, ampliá las fechas o limpiá los filtros.' :
+      <Texto color={colores.secundario}>{hayFiltros ? 'Intenta otra búsqueda, amplía las fechas o limpia los filtros.' :
         'Este módulo mostrará las solicitudes reales cuando existan. No se agregan órdenes de ejemplo ni se crean desde administración.'}</Texto>
     </Tarjeta> : !error && datos ? <TablaAdmin filas={datos.elementos} clave={o => String(o.id)}
       pagina={datos.pagina} tamano={datos.tamano} total={datos.total} ocupado={cargando}

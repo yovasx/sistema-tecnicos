@@ -40,7 +40,7 @@ const CAMPOS_PASO_1 = ['nombre', 'apellido', 'razonSocial', 'nit', 'email', 'tel
  *
  * No se pide todo de golpe: primero la identidad mínima y después la
  * contraseña. La cuenta de empresa agrega razón social y NIT porque la factura
- * va a su nombre. El rol nunca se elige: el backend siempre crea clientes.
+ * va a su nombre. El registro técnico tiene un propósito propio en el servidor.
  */
 export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntrar }: RegistroScreenProps) {
   const { esDesktop } = useResponsive();
@@ -59,12 +59,14 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   const [errores, setErrores] = useState<Errores>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [googleOcupado, setGoogleOcupado] = useState(false);
   const envioEnCurso = useRef(false);
 
   // El botón atrás de Android retrocede un paso del asistente, no pierde todo.
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (googleOcupado || enviando) return true;
       if (paso === 2) {
         setPaso(1);
         setErrorGeneral(null);
@@ -74,7 +76,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       return true;
     });
     return () => suscripcion.remove();
-  }, [paso, onVolver]);
+  }, [paso, onVolver, googleOcupado, enviando]);
 
   function limpiarError(campo: string) {
     setErrores((previos) => {
@@ -89,25 +91,25 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
     const nuevos: Errores = {};
     if (!nombre.trim()) {
       nuevos.nombre = esEmpresa
-        ? 'Escribí el nombre del responsable.'
-        : 'Escribí tu nombre.';
+        ? 'Escribe el nombre del responsable.'
+        : 'Escribe tu nombre.';
     }
     if (!apellido.trim()) {
       nuevos.apellido = esEmpresa
-        ? 'Escribí el apellido del responsable.'
-        : 'Escribí tu apellido.';
+        ? 'Escribe el apellido del responsable.'
+        : 'Escribe tu apellido.';
     }
     if (esEmpresa) {
-      if (!razonSocial.trim()) nuevos.razonSocial = 'Escribí la razón social.';
-      if (!nit.trim()) nuevos.nit = 'Escribí el NIT de la empresa.';
+      if (!razonSocial.trim()) nuevos.razonSocial = 'Escribe la razón social.';
+      if (!nit.trim()) nuevos.nit = 'Escribe el NIT de la empresa.';
     }
     if (!email.trim()) {
-      nuevos.email = 'Escribí tu email.';
+      nuevos.email = 'Escribe tu correo electrónico.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      nuevos.email = 'Ingresá un email válido.';
+      nuevos.email = 'Ingresa un correo electrónico válido.';
     }
     if (telefono.trim() && !/^[0-9+\-\s()]{7,20}$/.test(telefono.trim())) {
-      nuevos.telefono = 'Ingresá un teléfono válido (7 a 20 caracteres).';
+      nuevos.telefono = 'Ingresa un teléfono válido (7 a 20 caracteres).';
     }
     return nuevos;
   }
@@ -120,7 +122,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       nuevos.password = 'La contraseña no puede superar 72 caracteres.';
     }
     if (!confirmacion) {
-      nuevos.confirmacion = 'Repetí la contraseña.';
+      nuevos.confirmacion = 'Repite la contraseña.';
     } else if (confirmacion !== password) {
       nuevos.confirmacion = 'Las contraseñas no coinciden.';
     }
@@ -128,6 +130,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   function continuar() {
+    if (googleOcupado || enviando) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     const nuevos = validarPaso1();
@@ -138,6 +141,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   function volver() {
+    if (googleOcupado || enviando) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     if (paso === 2) {
@@ -148,7 +152,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   async function enviar() {
-    if (envioEnCurso.current) return;
+    if (envioEnCurso.current || googleOcupado) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     const nuevos = validarPaso2();
@@ -195,12 +199,12 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
         setPaso(1);
       } else if (error.codigo === 'DATOS_EMPRESA_INCOMPLETOS') {
         setErrores({
-          razonSocial: 'Completá la razón social.',
-          nit: 'Completá el NIT.',
+          razonSocial: 'Completa la razón social.',
+          nit: 'Completa el NIT.',
         });
         setPaso(1);
       } else {
-        setErrorGeneral(error.message || 'No pudimos crear tu cuenta. Intentá de nuevo.');
+        setErrorGeneral(error.message || 'No pudimos crear tu cuenta. Intenta de nuevo.');
       }
     } finally {
       envioEnCurso.current = false;
@@ -213,14 +217,14 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       ? esEmpresa
         ? 'Datos de la empresa'
         : tecnico ? 'Tu cuenta de técnico' : 'Tus datos'
-      : 'Creá tu contraseña';
+      : 'Crea tu contraseña';
 
   const subtitulo =
     paso === 1
       ? esEmpresa
         ? 'La factura va a nombre de tu empresa. El responsable es quien usa la cuenta.'
         : 'Así te contactamos cuando pidas un servicio.'
-      : 'Con esta contraseña entrás a Fixly y ves el estado de tus servicios.';
+      : 'Con esta contraseña ingresas a Fixly y consultas el estado de tu cuenta.';
 
   return (
     <MarcoPublico
@@ -289,7 +293,8 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               {paso === 1 ? (
                 <View style={estilos.formulario}>
-                  {!esEmpresa && !tecnico ? <AccesoGoogle /> : null}
+                  {!esEmpresa ? <AccesoGoogle proposito={tecnico ? 'tecnico' : 'cliente'}
+                    deshabilitado={enviando} onInteraccion={setGoogleOcupado} /> : null}
                   {esEmpresa ? (
                     <>
                       <CampoTexto
@@ -386,7 +391,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
                     textContentType="newPassword"
                   />
                   <CampoTexto
-                    etiqueta="Repetí la contraseña"
+                    etiqueta="Repite la contraseña"
                     value={confirmacion}
                     onChangeText={(v) => {
                       setConfirmacion(v);
@@ -418,7 +423,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               <View style={estilos.acciones}>
                 {paso === 1 ? (
-                  <BotonPrimario titulo="Continuar" onPress={continuar} />
+                  <BotonPrimario titulo="Continuar" deshabilitado={googleOcupado} onPress={continuar} />
                 ) : (
                   <BotonPrimario
                     titulo="Crear cuenta"
@@ -433,7 +438,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               <View style={estilos.pie}>
                 <Texto variante="caption" color={colores.secundario}>
-                  ¿Ya tenés cuenta?
+                  ¿Ya tienes cuenta?
                 </Texto>
                 <Texto
                   variante="etiqueta"
@@ -482,8 +487,10 @@ const estilos = StyleSheet.create({
     paddingBottom: espacio.xl,
   },
   scrollEscritorio: {
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: espacio.xl,
+    paddingTop: espacio.xl,
+    paddingBottom: espacio.xl,
   },
   caja: {
     width: '100%',
@@ -491,7 +498,8 @@ const estilos = StyleSheet.create({
     gap: espacio.base,
   },
   cajaEscritorio: {
-    flex: 0,
+    // La tarjeta debe medir su contenido, no flex-basis: 0% en React Native Web.
+    flexShrink: 0,
     width: '100%',
     maxWidth: 560,
     backgroundColor: colores.superficie,

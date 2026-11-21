@@ -51,7 +51,7 @@ public class TecnicoService {
         auditoria.aplicarEnTransaccion();
         String email=r.email().trim().toLowerCase(Locale.ROOT);
         if (usuarios.existsByEmailIgnoreCase(email)) {
-            throw error(HttpStatus.CONFLICT,"EMAIL_YA_REGISTRADO","Ya existe una cuenta con ese email. Iniciá sesión.");
+            throw error(HttpStatus.CONFLICT,"EMAIL_YA_REGISTRADO","Ya existe una cuenta con ese correo. Inicia sesión.");
         }
         if (r.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>72) {
             throw error(HttpStatus.BAD_REQUEST,"DATOS_INVALIDOS","La contraseña no puede superar 72 bytes.");
@@ -75,9 +75,9 @@ public class TecnicoService {
         } catch (RuntimeException e) {
             // Rollback del código y del cooldown: no afirmar un envío que no ocurrió.
             throw error(HttpStatus.SERVICE_UNAVAILABLE,"EMAIL_NO_DISPONIBLE",
-                    "No pudimos enviar el email. Intentá de nuevo en unos minutos.");
+                    "No pudimos enviar el correo. Intenta de nuevo en unos minutos.");
         }
-        return new OtpSolicitadoResponse("Código enviado. Revisá tu email; vence en 10 minutos.");
+        return new OtpSolicitadoResponse("Código enviado. Revisa tu correo; vence en 10 minutos.");
     }
 
     @Transactional(noRollbackFor = ApiException.class)
@@ -87,9 +87,9 @@ public class TecnicoService {
         String resultado=jdbc.queryForObject("SELECT identity.confirmar_codigo_email(?,?)",String.class,id,codigo);
         if (!"CONFIRMADO".equals(resultado)) {
             String mensaje=switch (Objects.requireNonNull(resultado)) {
-                case "EXPIRADO" -> "El código expiró. Pedí uno nuevo.";
-                case "BLOQUEADO" -> "Superaste los 5 intentos. Pedí un código nuevo.";
-                case "SIN_CODIGO" -> "Pedí un código nuevo para verificar tu email.";
+                case "EXPIRADO" -> "El código expiró. Solicita uno nuevo.";
+                case "BLOQUEADO" -> "Superaste los 5 intentos. Solicita un código nuevo.";
+                case "SIN_CODIGO" -> "Solicita un código nuevo para verificar tu correo.";
                 default -> "Código incorrecto.";
             };
             // La función no lanza RAISE al fallar: el incremento de intentos persiste.
@@ -115,7 +115,7 @@ public class TecnicoService {
         List<MultipartFile> archivos=new ArrayList<>(certs);
         if (frente!=null) archivos.add(frente);
         if (dorso!=null) archivos.add(dorso);
-        if (archivos.isEmpty()) throw error(HttpStatus.BAD_REQUEST,"DOCUMENTOS_INCOMPLETOS","Elegí un documento.");
+        if (archivos.isEmpty()) throw error(HttpStatus.BAD_REQUEST,"DOCUMENTOS_INCOMPLETOS","Selecciona un documento.");
         for (var f:archivos) validarArchivo(f);
         // Guardar referencias previas para retirarlas SOLO después del commit.
         // No conservar copias huérfanas del CI cuando el técnico corrige una foto.
@@ -165,7 +165,7 @@ public class TecnicoService {
                 && cabecera[0]==(byte)255 && cabecera[1]==(byte)216 && cabecera[2]==(byte)255;
         boolean pdf=nombre.endsWith(".pdf") && cabecera.length>=5
                 && new String(cabecera,0,5,java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-");
-        if (!png&&!jpg&&!pdf) throw error(HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","Usá documentos JPG, PNG o PDF válidos.");
+        if (!png&&!jpg&&!pdf) throw error(HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","Usa documentos JPG, PNG o PDF válidos.");
     }
 
     @Transactional
@@ -263,7 +263,7 @@ public class TecnicoService {
         boolean actorActivo=Boolean.TRUE.equals(jdbc.queryForObject(
                 "SELECT EXISTS(SELECT 1 FROM identity.usuarios WHERE id=? AND activo AND eliminado_en IS NULL)",
                 Boolean.class,id));
-        if (!actorActivo) throw error(HttpStatus.FORBIDDEN,"SIN_ACCESO","No tenés acceso a este documento.");
+        if (!actorActivo) throw error(HttpStatus.FORBIDDEN,"SIN_ACCESO","No tienes acceso a este documento.");
         boolean acceso=Boolean.TRUE.equals(jdbc.queryForObject("""
             SELECT EXISTS(SELECT 1 FROM identity.perfiles_tecnico p
             JOIN identity.usuarios u ON u.id=p.usuario_id
@@ -282,7 +282,7 @@ public class TecnicoService {
             SELECT EXISTS(SELECT 1 FROM identity.perfiles_tecnico p JOIN identity.usuarios u ON u.id=p.usuario_id
             WHERE p.usuario_id=? AND u.activo AND u.eliminado_en IS NULL AND u.rol='tecnico')
             """,Boolean.class,id));
-        if (!existe) throw error(HttpStatus.FORBIDDEN,"SIN_ACCESO","No tenés acceso a este expediente.");
+        if (!existe) throw error(HttpStatus.FORBIDDEN,"SIN_ACCESO","No tienes acceso a este expediente.");
     }
 
     private void ejecutar(String sql,Object... args) {

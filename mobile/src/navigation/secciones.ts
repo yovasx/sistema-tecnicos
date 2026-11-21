@@ -18,6 +18,7 @@ import { CatalogoAdminScreen } from '../screens/admin/CatalogoAdminScreen';
 import { ValidacionAdminScreen } from '../screens/admin/ValidacionAdminScreen';
 import { TecnicosAdminScreen } from '../screens/admin/TecnicosAdminScreen';
 import { OrdenesAdminScreen } from '../screens/admin/OrdenesAdminScreen';
+import { MiPerfilAdminScreen } from '../screens/admin/MiPerfilAdminScreen';
 import {
   MapaAdminScreen,
   DisputasAdminScreen,
@@ -38,6 +39,7 @@ export interface Seccion {
   icono: keyof typeof Ionicons.glyphMap;
   pantalla: ComponentType;
   grupo?: string;
+  pendiente?: boolean;
 }
 
 /**
@@ -80,6 +82,7 @@ export function seccionesTecnico(): Seccion[] {
 export function seccionesAdmin(): Seccion[] {
   const secciones: Seccion[] = [
     { clave: 'dashboard', titulo: 'Dashboard', icono: 'grid', pantalla: DashboardAdminScreen },
+    { clave: 'perfil', titulo: 'Mi perfil', icono: 'person-circle', pantalla: MiPerfilAdminScreen },
     { clave: 'ordenes', titulo: 'Órdenes', icono: 'receipt', pantalla: OrdenesAdminScreen },
     { clave: 'mapa', titulo: 'Mapa en vivo', icono: 'map', pantalla: MapaAdminScreen },
     { clave: 'usuarios', titulo: 'Usuarios', icono: 'people', pantalla: UsuariosAdminScreen },
@@ -133,6 +136,11 @@ export function seccionesAdmin(): Seccion[] {
     ['Operación', ['ordenes', 'mapa', 'disputas']],
     ['Finanzas', ['pagos', 'liquidaciones', 'reportes']],
     ['Administración', ['catalogo', 'soporte', 'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']],
+    ['Mi cuenta', ['perfil']],
   ];
-  return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({ ...secciones.find(s => s.clave === clave)!, grupo })));
+  const pendientes = new Set(['mapa', 'disputas', 'pagos', 'liquidaciones', 'reportes', 'soporte',
+    'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']);
+  return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({
+    ...secciones.find(s => s.clave === clave)!, grupo, pendiente: pendientes.has(clave),
+  })));
 }
