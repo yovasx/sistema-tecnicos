@@ -87,7 +87,7 @@ export function MiCuentaScreen() {
                 deshabilitado={vinculando}
                 onPress={() => { setMensaje(''); setVista('password'); }} />
             </>}
-            {cuenta.acceso === 'password' && cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona' ?
+            {cuenta.acceso === 'password' && (cuenta.rol === 'tecnico' || (cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona')) ?
               <VincularGoogle onInteraccion={setVinculando} onVinculado={() => { void cargar(); }} /> : null}
           </Tarjeta>
           {cuenta.rol === 'tecnico' ? <Tarjeta style={{ gap: 16 }}>

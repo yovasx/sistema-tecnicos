@@ -16,6 +16,7 @@ const formasRegionales = [
   'leé', 'creés', 'contactá', 'empezá', 'gestioná', 'registrá', 'editá', 'aplicá',
   'ampliá', 'limpiá', 'quitá', 'abrí', 'ignorá', 'recuperá', 'activá', 'reconocés',
   'actualizala', 'descartalos', 'acá', 'compará',
+  'entrás', 'debés',
 ];
 const patron = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${formasRegionales.join('|')})(?![\\p{L}\\p{N}_])`, 'giu');
 function coincidencias(texto) { return [...texto.matchAll(patron)].map(m => m[0]); }

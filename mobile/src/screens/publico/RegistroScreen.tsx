@@ -40,7 +40,7 @@ const CAMPOS_PASO_1 = ['nombre', 'apellido', 'razonSocial', 'nit', 'email', 'tel
  *
  * No se pide todo de golpe: primero la identidad mínima y después la
  * contraseña. La cuenta de empresa agrega razón social y NIT porque la factura
- * va a su nombre. El rol nunca se elige: el backend siempre crea clientes.
+ * va a su nombre. El registro técnico tiene un propósito propio en el servidor.
  */
 export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntrar }: RegistroScreenProps) {
   const { esDesktop } = useResponsive();
@@ -59,12 +59,14 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   const [errores, setErrores] = useState<Errores>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [googleOcupado, setGoogleOcupado] = useState(false);
   const envioEnCurso = useRef(false);
 
   // El botón atrás de Android retrocede un paso del asistente, no pierde todo.
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (googleOcupado || enviando) return true;
       if (paso === 2) {
         setPaso(1);
         setErrorGeneral(null);
@@ -74,7 +76,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       return true;
     });
     return () => suscripcion.remove();
-  }, [paso, onVolver]);
+  }, [paso, onVolver, googleOcupado, enviando]);
 
   function limpiarError(campo: string) {
     setErrores((previos) => {
@@ -128,6 +130,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   function continuar() {
+    if (googleOcupado || enviando) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     const nuevos = validarPaso1();
@@ -138,6 +141,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   function volver() {
+    if (googleOcupado || enviando) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     if (paso === 2) {
@@ -148,7 +152,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
   }
 
   async function enviar() {
-    if (envioEnCurso.current) return;
+    if (envioEnCurso.current || googleOcupado) return;
     Keyboard.dismiss();
     setErrorGeneral(null);
     const nuevos = validarPaso2();
@@ -220,7 +224,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
       ? esEmpresa
         ? 'La factura va a nombre de tu empresa. El responsable es quien usa la cuenta.'
         : 'Así te contactamos cuando pidas un servicio.'
-      : 'Con esta contraseña entrás a Fixly y ves el estado de tus servicios.';
+      : 'Con esta contraseña ingresas a Fixly y consultas el estado de tu cuenta.';
 
   return (
     <MarcoPublico
@@ -289,7 +293,8 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               {paso === 1 ? (
                 <View style={estilos.formulario}>
-                  {!esEmpresa && !tecnico ? <AccesoGoogle /> : null}
+                  {!esEmpresa ? <AccesoGoogle proposito={tecnico ? 'tecnico' : 'cliente'}
+                    deshabilitado={enviando} onInteraccion={setGoogleOcupado} /> : null}
                   {esEmpresa ? (
                     <>
                       <CampoTexto
@@ -418,7 +423,7 @@ export function RegistroScreen({ tipoCliente, tecnico = false, onVolver, onEntra
 
               <View style={estilos.acciones}>
                 {paso === 1 ? (
-                  <BotonPrimario titulo="Continuar" onPress={continuar} />
+                  <BotonPrimario titulo="Continuar" deshabilitado={googleOcupado} onPress={continuar} />
                 ) : (
                   <BotonPrimario
                     titulo="Crear cuenta"

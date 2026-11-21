@@ -145,9 +145,11 @@ export function SesionProvider({
   }, [authRepository, tokenStorage]);
 
   const iniciarGoogle = useCallback(async (idToken: string, nonce: string, nombre?: string, apellido?: string) => {
+    const turno = ++generacion.current;
     const sesion = await authRepository.google(idToken, nonce, nombre, apellido);
+    if (turno !== generacion.current) return;
     await tokenStorage.save(sesion.token);
-    ++generacion.current;
+    if (turno !== generacion.current) return;
     identidad.current = sesion.usuario.id;
     definirToken(sesion.token); setUsuario(sesion.usuario); setEstado('autenticado');
   }, [authRepository, tokenStorage]);

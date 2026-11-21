@@ -30,14 +30,14 @@ export function VincularGoogle({ onVinculado, onInteraccion }: {
       if (abierto && password && !salida) { setSalida(true); return; }
       setPassword(''); setSalida(false); setAbierto(v => !v);
     }}>
-      Vincular mi cuenta con Google
+      {abierto ? 'Cancelar vinculación' : 'Vincular mi cuenta con Google'}
     </Texto>
     {abierto ? <>
       <Texto variante="caption">Confirma tu contraseña Fixly y selecciona Google con el mismo correo. Esto no cambia tu contraseña.</Texto>
-      {salida ? <Aviso tono="advertencia">Vuelve a pulsar Vincular mi cuenta con Google para descartar el intento.</Aviso> : null}
+      {salida ? <Aviso tono="advertencia">Vuelve a seleccionar Cancelar vinculación para descartar los datos ingresados.</Aviso> : null}
       <CampoTexto etiqueta="Contraseña actual" value={password} onChangeText={setPassword} esPassword
         editable={!ocupado} maxLength={72} autoComplete="current-password" />
-      {password ? <BotonGoogle onError={setError} onCredencial={async ({ idToken, nonce }) => {
+      {password ? <BotonGoogle proposito="vinculacion" onError={setError} onCredencial={async ({ idToken, nonce }) => {
         if (bloqueo.current) return;
         bloqueo.current = true; setOcupado(true); setError('');
         try {

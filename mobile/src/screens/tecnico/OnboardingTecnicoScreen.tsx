@@ -14,6 +14,7 @@ import { BotonPrimario } from '../../ui/BotonPrimario';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { useResponsive } from '../../theme/responsive';
 import { colores, radio } from '../../theme/tokens';
+import { SeguridadTecnicoPendiente } from './SeguridadTecnicoPendiente';
 
 const PASOS = ['Tus datos', 'Documentos', 'Especialidades', 'Cobertura', 'Revisión'];
 const CAMPOS: Record<string, string> = {
@@ -49,6 +50,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [coordenadas, setCoordenadas] = useState(false);
+  const [seguridad, setSeguridad] = useState(false);
   const bloqueo = useRef(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const tamano = esDesktop ? 'escritorio' as const : 'movil' as const;
@@ -102,6 +104,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   const terminados = completos(e);
   const editable = e.estadoExpediente === 'borrador' || e.estadoExpediente === 'observado';
   const todos = terminados.every(Boolean) && Object.keys(e.observaciones).length === 0;
+  if (seguridad) return <SeguridadTecnicoPendiente onVolver={() => setSeguridad(false)} />;
 
   return (
     <MarcoPublico>
@@ -111,8 +114,10 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
             <View style={[s.caja, esDesktop && s.cajaDesktop]}>
               <View style={s.cabecera}>
                 <Texto variante="etiqueta" color={colores.marca}>Fixly · Alta de técnico</Texto>
-                <Texto accessibilityRole="button" onPress={() => void cerrarSesion()} color={colores.secundario} variante="etiqueta">Cerrar sesión</Texto>
+                <Texto accessibilityRole="button" onPress={ocupado ? undefined : () => void cerrarSesion()} color={colores.secundario} variante="etiqueta">Cerrar sesión</Texto>
               </View>
+              <BotonPrimario titulo="Mi cuenta · Acceso y seguridad" variante="secundario"
+                deshabilitado={ocupado} onPress={() => setSeguridad(true)} />
               <Texto variante="titulo">{editable ? 'Prepara tu perfil profesional' : 'Estado de tu expediente'}</Texto>
               <Texto variante="caption">Tu avance se guarda en tu cuenta. No recibirás servicios hasta que aprobemos tu expediente.</Texto>
               {Object.entries(e.observaciones).map(([campo, motivo]) => (
@@ -142,7 +147,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                     onChangeText={setCi} maxLength={20} placeholder="1234567-1A" autoCapitalize="characters" />
                   <CampoTexto etiqueta="Fecha de nacimiento (AAAA-MM-DD)" accessibilityLabel="Fecha de nacimiento"
                     value={fecha} onChangeText={setFecha} placeholder="1990-01-25" maxLength={10} />
-                  <Texto variante="caption">Debés tener entre 18 y 100 años. El CI debe coincidir con tus documentos.</Texto>
+                  <Texto variante="caption">Debes tener entre 18 y 100 años. El CI debe coincidir con tus documentos.</Texto>
                   <BotonPrimario titulo="Guardar y continuar" tamano={tamano} cargando={ocupado} onPress={() => {
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !ci.trim()) { setError('Completa el CI y una fecha con formato AAAA-MM-DD.'); return; }
                     void accion(() => repo.guardarDatos(ci.trim(), fecha), true);

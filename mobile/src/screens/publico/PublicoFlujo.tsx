@@ -87,6 +87,10 @@ export function PublicoFlujo() {
 
   return (
     <LoginScreen
+      onRegistroGoogle={tipo => {
+        setTipoCliente('persona');
+        setVista(tipo === 'tecnico' ? 'tecnico' : 'registro');
+      }}
       onVolver={() => setVista('bienvenida')}
       onCrearCuenta={() => setVista('tipoCuenta')}
       onRecuperar={() => setVista('recuperacion')}
