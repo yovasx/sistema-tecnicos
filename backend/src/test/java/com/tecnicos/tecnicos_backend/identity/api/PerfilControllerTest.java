@@ -115,6 +115,11 @@ class PerfilControllerTest {
         guardar(login(CLIENTE),datos(CLIENTE).replace("Maria Nueva","")).andExpect(status().isBadRequest());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.auditoria_perfil WHERE usuario_id=?",Integer.class,id(CLIENTE))).isZero();
     }
+    @Test void validaciones_del_servidor_estan_en_espanol() throws Exception {
+        guardar(login(CLIENTE),datos(CLIENTE).replace("Maria Nueva","n".repeat(101)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.campos[0].mensaje").value("El nombre debe tener entre 2 y 100 caracteres."));
+    }
     @Test void admin_no_elude_el_motivo_del_perfil_administrativo() throws Exception {
         String email="admin@fixly.bo";
         guardar(login(email),datos(email)).andExpect(status().isForbidden());
