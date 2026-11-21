@@ -43,17 +43,22 @@ public class GoogleService {
             String email=perfil.getClaimAsString("email").toLowerCase(Locale.ROOT);
             var existente=usuarios.findByEmailIgnoreCase(email);
             if (existente.isPresent()) {
+                var cuenta=existente.get();
+                if (cuenta.getRol()!=com.tecnicos.tecnicos_backend.identity.domain.RolUsuario.cliente
+                    || cuenta.getTipoCliente()!=com.tecnicos.tecnicos_backend.identity.domain.TipoCliente.persona)
+                    throw new ApiException(HttpStatus.CONFLICT,"GOOGLE_CUENTA_NO_COMPATIBLE",
+                        "Este correo pertenece a una cuenta que no admite acceso con Google. Esta opción solo está disponible para clientes personales. Inicia sesión con tu correo y contraseña; si no la recuerdas, utiliza Recuperar acceso.");
                 // Una cuenta exclusivamente Google no puede seguir instrucciones de contraseña.
-                if (existente.get().getPasswordHash()==null) throw new ApiException(HttpStatus.CONFLICT,
+                if (cuenta.getPasswordHash()==null) throw new ApiException(HttpStatus.CONFLICT,
                     "GOOGLE_IDENTIDAD_DIFERENTE",
-                    "Ese correo ya está registrado con otra identidad Google. Elegí la cuenta Google con la que te registraste; no necesitás crear otra cuenta ni recuperar una contraseña.");
+                    "Ese correo ya está registrado con otra identidad Google. Selecciona la cuenta Google con la que te registraste; no necesitas crear otra cuenta ni recuperar una contraseña.");
                 throw new ApiException(HttpStatus.CONFLICT,"GOOGLE_VINCULACION_REQUERIDA",
-                    "Ese correo ya tiene una cuenta. Iniciá sesión con tu contraseña para vincular Google desde Mi cuenta.");
+                    "Ese correo ya tiene una cuenta. Inicia sesión con tu contraseña para vincular Google desde Mi cuenta.");
             }
             nombre=texto(perfil.getClaimAsString("given_name"),nombre);
             apellido=texto(perfil.getClaimAsString("family_name"),apellido);
             if (nombre==null || apellido==null) throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT,"GOOGLE_DATOS_REQUERIDOS",
-                "Completá tu nombre y apellido para crear la cuenta.");
+                "Completa tu nombre y apellido para crear la cuenta.");
             id=jdbc.queryForObject("SELECT identity.registrar_google(?,?,?,?)",Long.class,perfil.getSubject(),email,nombre,apellido);
         }
         consumir(nonce);
@@ -74,7 +79,7 @@ public class GoogleService {
             || u.getPasswordHash()==null || !claves.matches(password,u.getPasswordHash())
             || !u.getEmail().equalsIgnoreCase(perfil.getClaimAsString("email")))
             throw new ApiException(HttpStatus.BAD_REQUEST,"VINCULACION_INVALIDA",
-                "Necesitás tu contraseña actual y una cuenta Google con el mismo correo.");
+                "Necesitas tu contraseña actual y una cuenta Google con el mismo correo.");
         consumir(nonce);
         if (!jdbc.queryForList("SELECT usuario_id FROM identity.identidades_google WHERE sujeto=? OR usuario_id=?",
             Long.class,perfil.getSubject(),id).isEmpty())

@@ -125,6 +125,23 @@ class GoogleControllerTest {
             .andExpect(jsonPath("$.codigo").value("GOOGLE_VINCULACION_REQUERIDA"));
         assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.identidades_google WHERE sujeto=?",Integer.class,sujeto)).isZero();
     }
+    @Test void tecnico_no_recibe_instrucciones_de_vinculacion_no_disponible() throws Exception {
+        email="diego.vargas@ejemplo.bo";
+        postJson("/api/auth/google",datos()).andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("GOOGLE_CUENTA_NO_COMPATIBLE"))
+            .andExpect(jsonPath("$.mensaje").value(org.hamcrest.Matchers.containsString("solo está disponible para clientes personales")));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.identidades_google WHERE sujeto=?",Integer.class,sujeto)).isZero();
+        assertThat(jdbc.queryForObject("SELECT rol::text FROM identity.usuarios WHERE email=?",String.class,email)).isEqualTo("tecnico");
+        postJson("/api/auth/login","{\"email\":\""+email+"\",\"password\":\"Fixly2026!\"}")
+            .andExpect(status().isOk()).andExpect(jsonPath("$.usuario.rol").value("tecnico"));
+    }
+    @Test void empresa_y_admin_no_reciben_oferta_de_vinculacion() throws Exception {
+        for (String correo:List.of("contacto@ferreteria-lapaz.bo","admin@fixly.bo")) {
+            email=correo;
+            postJson("/api/auth/google",datos()).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("GOOGLE_CUENTA_NO_COMPATIBLE"));
+        }
+    }
     @Test void faltan_nombres_se_piden_sin_inventarlos() throws Exception {
         when(verificador.verificar(anyString(),anyString())).thenAnswer(i->perfil(false));
         postJson("/api/auth/google",datos()).andExpect(status().isUnprocessableContent())
