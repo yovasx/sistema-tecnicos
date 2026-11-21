@@ -7,10 +7,12 @@ import { Texto } from '../../ui/Texto';
 import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { colores } from '../../theme/tokens';
+import { ErrorApi } from '../../infrastructure/http/errores';
 
 export function AccesoGoogle() {
   const { iniciarGoogle } = useSesion();
   const [error, setError] = useState('');
+  const [referencia, setReferencia] = useState('');
   const [credencial, setCredencial] = useState<CredencialGoogle | null>(null);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
@@ -19,11 +21,14 @@ export function AccesoGoogle() {
   if (!googleDisponible()) return null;
   async function entrar(c: CredencialGoogle, completar = false) {
     if (bloqueo.current) return;
-    bloqueo.current = true; setOcupado(true); setError('');
+    bloqueo.current = true; setOcupado(true); setError(''); setReferencia('');
     try { await iniciarGoogle(c.idToken, c.nonce, completar ? nombre.trim() : undefined, completar ? apellido.trim() : undefined); }
     catch (e) {
       if ((e as { codigo?: string }).codigo === 'GOOGLE_DATOS_REQUERIDOS') setCredencial(c);
-      else { setCredencial(null); setError(e instanceof Error ? e.message : 'No pudimos ingresar con Google.'); }
+      else {
+        setCredencial(null); setError(e instanceof Error ? e.message : 'No pudimos ingresar con Google.');
+        if (e instanceof ErrorApi) setReferencia(e.codigo);
+      }
     } finally { bloqueo.current = false; setOcupado(false); }
   }
   return <View style={{ gap: 12 }}>
@@ -36,6 +41,7 @@ export function AccesoGoogle() {
       <Texto accessibilityRole="button" color={colores.marca} onPress={() => setCredencial(null)}>Usar otra cuenta</Texto>
     </> : <BotonGoogle onCredencial={entrar} onError={setError} />}
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}
+    {error && referencia ? <Texto variante="caption">Referencia de acceso: {referencia}</Texto> : null}
     <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
       <View style={{ height: 1, flex: 1, backgroundColor: colores.linea }} />
       <Texto variante="caption">o continuá con tu email</Texto>

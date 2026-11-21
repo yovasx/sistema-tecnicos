@@ -41,8 +41,15 @@ public class GoogleService {
             (rs,n)->rs.getLong(1),perfil.getSubject()).stream().findFirst().orElse(null);
         if (id==null) {
             String email=perfil.getClaimAsString("email").toLowerCase(Locale.ROOT);
-            if (usuarios.existsByEmailIgnoreCase(email)) throw new ApiException(HttpStatus.CONFLICT,"GOOGLE_VINCULACION_REQUERIDA",
-                "Ese correo ya tiene una cuenta. Iniciá sesión con tu contraseña; no vinculamos cuentas automáticamente.");
+            var existente=usuarios.findByEmailIgnoreCase(email);
+            if (existente.isPresent()) {
+                // Una cuenta exclusivamente Google no puede seguir instrucciones de contraseña.
+                if (existente.get().getPasswordHash()==null) throw new ApiException(HttpStatus.CONFLICT,
+                    "GOOGLE_IDENTIDAD_DIFERENTE",
+                    "Ese correo ya está registrado con otra identidad Google. Elegí la cuenta Google con la que te registraste; no necesitás crear otra cuenta ni recuperar una contraseña.");
+                throw new ApiException(HttpStatus.CONFLICT,"GOOGLE_VINCULACION_REQUERIDA",
+                    "Ese correo ya tiene una cuenta. Iniciá sesión con tu contraseña para vincular Google desde Mi cuenta.");
+            }
             nombre=texto(perfil.getClaimAsString("given_name"),nombre);
             apellido=texto(perfil.getClaimAsString("family_name"),apellido);
             if (nombre==null || apellido==null) throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT,"GOOGLE_DATOS_REQUERIDOS",

@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GoogleControllerTest {
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
+    @Autowired jakarta.persistence.EntityManager entidades;
     @MockitoBean VerificadorGoogle verificador;
     String email,sujeto,nonce;
     @BeforeEach void preparar() throws Exception {
@@ -64,9 +65,59 @@ class GoogleControllerTest {
     }
     @Test void login_con_nuevo_nonce_reutiliza_identidad_y_no_crea_otra_cuenta() throws Exception {
         var primero=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+        entidades.clear();
         nonce=leer(postJson("/api/auth/google/desafio","{}").andReturn(),"$.nonce");
         var segundo=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
         assertThat((Object)leer(primero,"$.usuario.id")).isEqualTo(leer(segundo,"$.usuario.id"));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.usuarios WHERE email=?",Integer.class,email)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.identidades_google WHERE sujeto=?",Integer.class,sujeto)).isEqualTo(1);
+    }
+    @Test void identidad_persistida_no_depende_del_email_o_nombres_actuales_de_google() throws Exception {
+        var primero=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+        email="otro-"+UUID.randomUUID()+"@prueba.bo";
+        when(verificador.verificar(anyString(),anyString())).thenAnswer(i->perfil(false));
+        entidades.clear();
+        nonce=leer(postJson("/api/auth/google/desafio","{}").andReturn(),"$.nonce");
+        var segundo=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+        assertThat((Object)leer(segundo,"$.usuario.id")).isEqualTo(leer(primero,"$.usuario.id"));
+        assertThat((Object)leer(segundo,"$.usuario.email")).isEqualTo(leer(primero,"$.usuario.email"));
+    }
+    @Test void otra_identidad_mismo_email_no_fusiona_ni_pide_password_inexistente() throws Exception {
+        postJson("/api/auth/google",datos()).andExpect(status().isOk());
+        sujeto=UUID.randomUUID().toString();
+        nonce=leer(postJson("/api/auth/google/desafio","{}").andReturn(),"$.nonce");
+        postJson("/api/auth/google",datos()).andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("GOOGLE_IDENTIDAD_DIFERENTE"));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.identidades_google WHERE sujeto=?",Integer.class,sujeto)).isZero();
+    }
+    @Test void cuenta_google_inactiva_no_reingresa() throws Exception {
+        var primero=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+        jdbc.update("UPDATE identity.usuarios SET activo=false WHERE id=?",((Number)leer(primero,"$.usuario.id")).longValue());
+        entidades.clear();
+        nonce=leer(postJson("/api/auth/google/desafio","{}").andReturn(),"$.nonce");
+        postJson("/api/auth/google",datos()).andExpect(status().isUnauthorized());
+    }
+    @Test
+    @Transactional(propagation=org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    void reingreso_entre_transacciones_reales_conserva_cuenta_y_password_nula() throws Exception {
+        String inicial=nonce;
+        try {
+            var primero=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+            nonce=leer(postJson("/api/auth/google/desafio","{}").andReturn(),"$.nonce");
+            var segundo=postJson("/api/auth/google",datos()).andExpect(status().isOk()).andReturn();
+            assertThat((Object)leer(segundo,"$.usuario.id")).isEqualTo(leer(primero,"$.usuario.id"));
+            String token=leer(segundo,"$.token");
+            mvc.perform(get("/api/auth/me").header("Authorization","Bearer "+token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM identity.usuarios WHERE email=?",Integer.class,email)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT password_hash FROM identity.usuarios WHERE email=?",String.class,email)).isNull();
+        } finally {
+            // Solo la identidad aleatoria de este test, en la base de QA.
+            jdbc.update("DELETE FROM identity.identidades_google WHERE sujeto=?",sujeto);
+            jdbc.update("DELETE FROM identity.usuarios WHERE email=?",email);
+            for (String n:List.of(inicial,nonce)) jdbc.update(
+                "DELETE FROM identity.desafios_google WHERE nonce_hash=encode(digest(?,'sha256'),'hex')",n);
+        }
     }
     @Test void no_fusiona_cuenta_local_por_coincidir_email() throws Exception {
         registrarLocal();
