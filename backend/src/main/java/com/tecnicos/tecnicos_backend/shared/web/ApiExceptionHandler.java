@@ -106,6 +106,10 @@ public class ApiExceptionHandler {
         }
 
         return switch (sqlState) {
+            case "P0417" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("GOOGLE_VINCULACION_REQUERIDA", mensajeDeFuncion(causa)));
+            case "P0418" -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiError.de("GOOGLE_YA_VINCULADO", mensajeDeFuncion(causa)));
             case "P0412" -> ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiError.de("CLAVE_SOLICITUD_REUTILIZADA", mensajeDeFuncion(causa)));
             case "P0413" -> ResponseEntity.status(HttpStatus.CONFLICT)
