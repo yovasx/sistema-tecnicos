@@ -15,7 +15,8 @@ export function htmlLeaflet() {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-var mapa, destino, tecnico, editable=false, centrado=false;
+var mapa, destino, tecnico, areas, editable=false, centrado=false, areasCentradas=false;
+function etiqueta(s){var nodo=document.createElement('span');nodo.textContent=s;return nodo}
 function valido(p){return p&&Number.isFinite(p.latitud)&&Math.abs(p.latitud)<=90&&Number.isFinite(p.longitud)&&Math.abs(p.longitud)<=180}
 function avisar(p){var s=JSON.stringify(p);if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(s);else parent.postMessage(p,'*')}
 window.actualizar=function(d){
@@ -28,15 +29,27 @@ window.actualizar=function(d){
  }
  editable=d.editable;
  var p=[d.destino.latitud,d.destino.longitud];
- if(!destino)destino=L.circleMarker(p,{radius:10,color:'#154b89',fillOpacity:1}).addTo(mapa).bindTooltip('Destino');
- else destino.setLatLng(p);
+  if(!destino)destino=L.circleMarker(p,{radius:10,color:'#154b89',fillOpacity:1}).addTo(mapa);
+  else destino.setLatLng(p);
+  destino.unbindTooltip().bindTooltip(etiqueta(d.etiquetaPunto||'Destino'));
+  if(areas)mapa.removeLayer(areas);
+  areas=L.featureGroup().addTo(mapa);
+  (d.areas||[]).forEach(function(a){
+   var estilo={color:a.propuesta?'#b36b00':'#154b89',weight:2,fillOpacity:0.12,dashArray:a.propuesta?'6 4':null},capa;
+   if(a.geometria&&(a.geometria.type==='Polygon'||a.geometria.type==='MultiPolygon'))capa=L.geoJSON(a.geometria,{style:estilo});
+   else if(valido(a.centro)&&Number.isFinite(a.radioMetros)&&a.radioMetros>=100&&a.radioMetros<=50000)capa=L.circle([a.centro.latitud,a.centro.longitud],Object.assign({radius:a.radioMetros},estilo));
+   if(capa)capa.bindTooltip(etiqueta(a.nombre||'Cobertura')).addTo(areas);
+  });
+  if(!areasCentradas&&areas.getLayers().length){
+   var limites=areas.getBounds();limites.extend(p);mapa.fitBounds(limites,{padding:[30,30],maxZoom:15});areasCentradas=true;
+  }
  if(valido(d.tecnico)){
   var t=[d.tecnico.latitud,d.tecnico.longitud];
   if(!tecnico)tecnico=L.circleMarker(t,{radius:9,color:'#1a8754',fillOpacity:1}).addTo(mapa).bindTooltip('Técnico');
   else tecnico.setLatLng(t);
   if(!centrado){mapa.fitBounds([p,t],{padding:[40,40],maxZoom:16});centrado=true}
  } else if(tecnico){mapa.removeLayer(tecnico);tecnico=null}
- document.getElementById('aviso').textContent=editable?'Toca el mapa para elegir el punto':'Azul: destino · Verde: técnico';
+  document.getElementById('aviso').textContent=editable?'Toca el mapa para elegir el punto':areas.getLayers().length?'Azul: cobertura vigente · Ámbar: propuesta':('Azul: '+(d.etiquetaPunto||'destino')+' · Verde: técnico');
  mapa.invalidateSize();
 };
 window.addEventListener('message',function(e){if(e.source!==parent)return;try{window.actualizar(typeof e.data==='string'?JSON.parse(e.data):e.data)}catch(_){}});

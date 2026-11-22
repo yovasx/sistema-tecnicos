@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { CategoriaSolicitud } from '../../domain/models/SolicitudServicio';
-import { solicitudesRepository } from '../../infrastructure/di';
+import { solicitudesRepository, operacionRepository } from '../../infrastructure/di';
 import { ErrorApi } from '../../infrastructure/http/errores';
 import { abrirMapaServicio } from '../../infrastructure/navigation/abrirMapaServicio';
 import { ubicacionActual } from '../../infrastructure/ubicacion/ubicacionActual';
@@ -184,6 +184,8 @@ export function SolicitudServicioWizard() {
     setBuscandoUbicacion(true);
     setErrorUbicacion('');
     try {
+      if (!(await operacionRepository.preferencias()).permitirGps)
+        throw new Error('El GPS puntual está desactivado en Configuración y privacidad. Puedes ingresar las coordenadas manualmente.');
       const punto = await ubicacionActual();
       cambiar((b) => ({
         ...b,

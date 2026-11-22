@@ -46,8 +46,8 @@ public class SeguimientoService {
               CASE WHEN t.activo AND t.eliminado_en IS NULL THEN t.foto_perfil_url END foto,
               rep.promedio,rep.total,
               ST_Y(g.punto::geometry) latitud,ST_X(g.punto::geometry) longitud,
-              g.precision_m,g.actualizado_en,
-              CASE WHEN g.actualizado_en>clock_timestamp()-interval '30 seconds'
+              g.precision_m,g.capturado_en AS actualizado_en,
+              CASE WHEN g.capturado_en>clock_timestamp()-interval '30 seconds'
                 THEN LEAST(32767, GREATEST(1,ceil(ST_Distance(g.punto,o.ubicacion_cliente)*1.35/333.33)))::int END eta
             FROM orders.ordenes_servicio o
             JOIN identity.usuarios u ON u.id=? AND u.activo AND u.eliminado_en IS NULL
@@ -57,7 +57,10 @@ public class SeguimientoService {
               WHERE calificado_id=t.id
             ) rep ON TRUE
             LEFT JOIN geo.ubicacion_actual g ON g.orden_id=o.id AND g.tecnico_id=o.tecnico_id
-              AND o.estado='en_camino' AND t.activo AND t.eliminado_en IS NULL
+               AND o.estado='en_camino' AND t.activo AND t.eliminado_en IS NULL
+               AND EXISTS(SELECT 1 FROM identity.perfiles_tecnico pt WHERE pt.usuario_id=t.id AND pt.estado_validacion='aprobado')
+              AND EXISTS(SELECT 1 FROM geo.sesiones_seguimiento s WHERE s.tecnico_id=t.id AND s.orden_id=o.id
+                AND s.cerrada_en IS NULL AND s.expira_en>clock_timestamp() AND s.version_sesion=t.version_sesion)
             WHERE o.id=? AND (o.cliente_id=u.id OR o.tecnico_id=u.id)
             """,(r,n)-> {
                 if (version!=null && version!=r.getLong("version_sesion")) throw noDisponible();
@@ -121,30 +124,27 @@ public class SeguimientoService {
         if(!consultar(acceso).estado().equals("en_camino")) throw noDisponible();
         return acceso;
     }
+    public record SesionGps(String sesion,long orden,boolean segundoPlano,Instant expiraEn) {}
     @Transactional
-    public void reportar(long tecnico,long orden,double lat,double lng,Float precision) {
+    public SesionGps iniciarGps(long orden,String plataforma,boolean segundo,long version,Instant expira) {
+        auditoria.aplicarEnTransaccion();
+        var id=jdbc.queryForObject("SELECT geo.iniciar_sesion_gps(?,?,?,?,?)",java.util.UUID.class,
+            orden,plataforma,segundo,version,expira==null?null:OffsetDateTime.ofInstant(expira,java.time.ZoneOffset.UTC));
+        return new SesionGps(id.toString(),orden,segundo,expira);
+    }
+    @Transactional
+    public void detenerGps(java.util.UUID sesion) {
+        auditoria.aplicarEnTransaccion();
+        jdbc.queryForObject("SELECT geo.detener_sesion_gps(?::uuid)",(r,n)->null,sesion.toString());
+    }
+    @Transactional
+    public void reportarGps(java.util.UUID sesion,double lat,double lng,Float precision,OffsetDateTime capturado) {
         auditoria.aplicarEnTransaccion();
         if(!Double.isFinite(lat)||Math.abs(lat)>90 || !Double.isFinite(lng)||Math.abs(lng)>180
-            || precision!=null && (!Float.isFinite(precision)||precision<0||precision>10000))
+            || precision==null || !Float.isFinite(precision)||precision<0||precision>200)
             throw new ApiException(HttpStatus.BAD_REQUEST,"UBICACION_INVALIDA","Revisa las coordenadas y su precisión.");
-        var filas=jdbc.queryForList("""
-            SELECT o.id FROM orders.ordenes_servicio o
-            JOIN identity.perfiles_tecnico p ON p.usuario_id=o.tecnico_id
-            JOIN identity.usuarios u ON u.id=p.usuario_id AND u.activo AND u.eliminado_en IS NULL
-            WHERE o.id=? AND o.tecnico_id=? AND o.estado='en_camino'
-              AND p.estado_validacion='aprobado' FOR UPDATE OF o,u
-            """,orden,tecnico);
-        if(filas.isEmpty()) throw noDisponible();
-        var ultima=jdbc.queryForList("""
-            SELECT actualizado_en FROM geo.ubicacion_actual WHERE tecnico_id=?
-              AND actualizado_en>clock_timestamp()-interval '3 seconds'
-            """,tecnico);
-        if(!ultima.isEmpty()) return;
-        // Las particiones históricas no se generan solas al cambiar de mes.
-        jdbc.queryForObject("SELECT pg_advisory_xact_lock(841913)",(r,n)->null);
-        jdbc.queryForObject("SELECT geo.crear_particion_ubicaciones(CURRENT_DATE)",String.class);
-        jdbc.queryForObject("SELECT geo.reportar_ubicacion_tecnico(?,?,?, ?,?::real)",
-            (r,n)->null,tecnico,orden,lat,lng,precision);
+        jdbc.queryForObject("SELECT geo.reportar_posicion_sesion(?::uuid,?,?,?::real,?)",Boolean.class,
+            sesion.toString(),lat,lng,precision,capturado);
     }
     static String hash(String valor) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")

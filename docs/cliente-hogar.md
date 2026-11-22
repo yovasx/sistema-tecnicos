@@ -95,9 +95,10 @@ Elegir un punto tiene alternativa manual/GPS puntual.
 - `Probar ruta simulada (desarrollo)` existe solo con `__DEV__`. No genera
   técnicos, no escribe ubicaciones, no cambia estados y no aparece en la
   exportación de producción.
-- El emisor real y el flujo operativo del técnico siguen siendo una entrega
-  independiente: el endpoint no inventa asignaciones ni comienza seguimiento
-  en segundo plano. Validar nativo en un development build actualizado.
+- El emisor real y el ciclo operativo del técnico están descritos en
+  `docs/operacion-tecnica.md` (V20–V22): sesiones GPS por orden, aceptación,
+  diagnóstico, cotización, reparación y finalización. Validar el segundo plano
+  nativo en un development build actualizado y con dispositivo real.
 
 ## Verificación
 

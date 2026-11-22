@@ -7,7 +7,7 @@ export interface HogarRepository {
   guardarDireccion(id: number | null, datos: GuardarDireccion): Promise<Direccion>;
   quitarDireccion(id: number): Promise<void>;
   reputacion(): Promise<Reputacion>;
-  calificar(orden: number, puntaje: number, comentario: string): Promise<void>;
+  calificar(orden: number, puntaje: number, comentario: string, tecnico?: boolean): Promise<void>;
   foto(archivo: EvidenciaServicio): Promise<PerfilPropio>;
   quitarFoto(): Promise<PerfilPropio>;
   seguimiento(orden: number): Promise<Seguimiento>;

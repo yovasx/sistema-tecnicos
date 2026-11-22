@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ws/seguimiento").permitAll()
                         .requestMatchers("/api/perfil/direcciones/**", "/api/perfil/preferencias").hasRole("CLIENTE")
                         .requestMatchers("/api/perfil/foto").hasAnyRole("CLIENTE","TECNICO")
+                        .requestMatchers("/api/servicios/**").hasAnyRole("CLIENTE","TECNICO")
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
                         .requestMatchers("/error").permitAll()
                         // El backoffice solo lo abre el administrador.

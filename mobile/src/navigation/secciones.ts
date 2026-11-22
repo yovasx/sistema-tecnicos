@@ -12,6 +12,8 @@ import { PanelTecnico } from '../screens/tecnico/PanelTecnico';
 import { ServiciosTecnico } from '../screens/tecnico/ServiciosTecnico';
 import { BilleteraTecnico } from '../screens/tecnico/BilleteraTecnico';
 import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
+import { CoberturaTecnico } from '../screens/tecnico/CoberturaTecnico';
+import { CoberturasAdminScreen } from '../screens/admin/CoberturasAdminScreen';
 import { DashboardAdminScreen } from '../screens/admin/DashboardAdminScreen';
 import { UsuariosAdminScreen } from '../screens/admin/UsuariosAdminScreen';
 import { CatalogoAdminScreen } from '../screens/admin/CatalogoAdminScreen';
@@ -73,7 +75,9 @@ export function seccionesTecnico(): Seccion[] {
   return [
     { clave: 'panel', titulo: 'Panel', icono: 'speedometer', pantalla: PanelTecnico },
     { clave: 'servicios', titulo: 'Servicios', icono: 'construct', pantalla: ServiciosTecnico },
+    { clave: 'cobertura', titulo: 'Mi cobertura', icono: 'map', pantalla: CoberturaTecnico },
     { clave: 'billetera', titulo: 'Billetera', icono: 'wallet', pantalla: BilleteraTecnico },
+    { clave: 'notificaciones', titulo: 'Notificaciones', icono: 'notifications', pantalla: NotificacionesCliente },
     { clave: 'perfil', titulo: 'Perfil', icono: 'person', pantalla: PerfilTecnico },
   ];
 }
@@ -87,6 +91,7 @@ export function seccionesAdmin(): Seccion[] {
     { clave: 'mapa', titulo: 'Mapa en vivo', icono: 'map', pantalla: MapaAdminScreen },
     { clave: 'usuarios', titulo: 'Usuarios', icono: 'people', pantalla: UsuariosAdminScreen },
     { clave: 'tecnicos', titulo: 'Técnicos', icono: 'construct', pantalla: TecnicosAdminScreen },
+    { clave: 'coberturas', titulo: 'Revisar coberturas', icono: 'map', pantalla: CoberturasAdminScreen },
     {
       clave: 'validacion',
       titulo: 'Validar técnicos',
@@ -132,7 +137,7 @@ export function seccionesAdmin(): Seccion[] {
   ];
   const grupos: [string, string[]][] = [
     ['Inicio', ['dashboard']],
-    ['Personas', ['usuarios', 'tecnicos', 'validacion']],
+    ['Personas', ['usuarios', 'tecnicos', 'validacion', 'coberturas']],
     ['Operación', ['ordenes', 'mapa', 'disputas']],
     ['Finanzas', ['pagos', 'liquidaciones', 'reportes']],
     ['Administración', ['catalogo', 'soporte', 'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']],

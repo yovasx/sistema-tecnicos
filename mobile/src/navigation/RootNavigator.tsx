@@ -27,10 +27,12 @@ import { PanelTecnico } from '../screens/tecnico/PanelTecnico';
 import { ServiciosTecnico } from '../screens/tecnico/ServiciosTecnico';
 import { BilleteraTecnico } from '../screens/tecnico/BilleteraTecnico';
 import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
+import { CoberturaTecnico } from '../screens/tecnico/CoberturaTecnico';
 import { AdminScreen } from '../screens/admin/AdminScreen';
 import { Texto } from '../ui/Texto';
 import { colores } from '../theme/tokens';
 import { AccesoTecnico } from '../screens/tecnico/AccesoTecnico';
+import { SeguimientoGpsProvider } from '../session/SeguimientoGpsProvider';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,6 +45,7 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Facturacion: 'card',
   Panel: 'speedometer',
   Billetera: 'wallet',
+  Cobertura: 'map',
   Admin: 'settings',
 };
 
@@ -89,7 +92,7 @@ export function RootNavigator() {
         </SolicitudServicioProvider>
       );
     }
-    return usuario?.rol === 'tecnico' ? <AccesoTecnico>{contenido}</AccesoTecnico> : contenido;
+    return usuario?.rol === 'tecnico' ? <AccesoTecnico><SeguimientoGpsProvider key={usuario.id}>{contenido}</SeguimientoGpsProvider></AccesoTecnico> : contenido;
   }
 
   return (
@@ -166,7 +169,9 @@ function TabsTecnico() {
     <Tab.Navigator screenOptions={opcionesTabs}>
       <Tab.Screen name="Panel" component={PanelTecnico} options={{ title: 'Panel' }} />
       <Tab.Screen name="Servicios" component={ServiciosTecnico} options={{ title: 'Servicios' }} />
+      <Tab.Screen name="Cobertura" component={CoberturaTecnico} options={{ title: 'Cobertura' }} />
       <Tab.Screen name="Billetera" component={BilleteraTecnico} options={{ title: 'Billetera' }} />
+      <Tab.Screen name="Notificaciones" component={NotificacionesCliente} options={{ title: 'Notif.' }} />
       <Tab.Screen name="Perfil" component={PerfilTecnico} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );

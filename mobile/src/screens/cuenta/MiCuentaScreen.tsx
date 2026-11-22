@@ -20,6 +20,7 @@ import { VincularGoogle } from '../auth/VincularGoogle';
 import { FotoPerfil } from './FotoPerfil';
 import { DireccionesCliente } from './DireccionesCliente';
 import { ReputacionPropia } from './ReputacionPropia';
+import { ConfiguracionHogar } from './ConfiguracionHogar';
 
 const accesoVisible = { password: 'Contraseña Fixly', google: 'Google', google_y_password: 'Google y contraseña Fixly' };
 const rolVisible = { cliente: 'Cliente', tecnico: 'Técnico', administrador: 'Administrador' };
@@ -102,8 +103,10 @@ export function MiCuentaScreen() {
           </Tarjeta>
           {cuenta.rol === 'cliente' && cuenta.tipoCliente === 'persona' && !vinculando && !cambiandoFoto ? <>
             <DireccionesCliente onEdicion={setEditandoDireccion} />
+            {!editandoDireccion ? <ConfiguracionHogar /> : null}
             <ReputacionPropia />
           </> : null}
+          {cuenta.rol === 'tecnico' && !vinculando && !cambiandoFoto ? <ReputacionPropia /> : null}
           {cuenta.rol === 'tecnico' ? <Tarjeta style={{ gap: 16 }}>
             <Texto variante="subtitulo">Perfil profesional</Texto>
             <Dato etiqueta="Validación documental" valor={cuenta.estadoValidacion || 'Sin expediente registrado'} />

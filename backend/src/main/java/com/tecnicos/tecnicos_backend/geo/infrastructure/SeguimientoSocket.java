@@ -88,6 +88,17 @@ public class SeguimientoSocket extends TextWebSocketHandler implements WebSocket
     @Scheduled(fixedDelay=60000,initialDelay=10000)
     public void limpiar() {
         jdbc.update("""
+            UPDATE geo.sesiones_seguimiento s SET cerrada_en=clock_timestamp()
+            WHERE cerrada_en IS NULL AND (expira_en<=clock_timestamp() OR NOT EXISTS(
+                SELECT 1 FROM identity.usuarios u WHERE u.id=s.tecnico_id AND u.activo
+                    AND u.eliminado_en IS NULL AND u.version_sesion=s.version_sesion))
+            """);
+        jdbc.update("""
+            DELETE FROM geo.ubicacion_actual g WHERE g.orden_id IS NOT NULL AND NOT EXISTS(
+                SELECT 1 FROM geo.sesiones_seguimiento s WHERE s.tecnico_id=g.tecnico_id AND s.orden_id=g.orden_id
+                    AND s.cerrada_en IS NULL AND s.expira_en>clock_timestamp())
+            """);
+        jdbc.update("""
             DELETE FROM geo.ubicacion_actual g WHERE g.orden_id IS NOT NULL AND NOT EXISTS(
                 SELECT 1 FROM orders.ordenes_servicio o JOIN identity.usuarios u ON u.id=o.tecnico_id
                 WHERE o.id=g.orden_id AND o.tecnico_id=g.tecnico_id AND o.estado='en_camino'
@@ -95,6 +106,7 @@ public class SeguimientoSocket extends TextWebSocketHandler implements WebSocket
             """);
         jdbc.update("DELETE FROM identity.tickets_seguimiento WHERE expira_en<clock_timestamp()");
         jdbc.queryForObject("SELECT geo.purgar_ubicaciones(30)",Long.class);
+        jdbc.update("DELETE FROM geo.sesiones_seguimiento WHERE cerrada_en<clock_timestamp()-interval '30 days'");
     }
     private void cerrar(Conexion c) {
         conexiones.remove(c.sesion.getId());

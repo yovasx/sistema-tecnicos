@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CalificarServicio } from './CalificarServicio';
 import { SeguimientoServicio } from './SeguimientoServicio';
+import { OperacionDelServicio } from '../servicios/OperacionDelServicio';
+import { CancelarSolicitud } from './CancelarSolicitud';
+import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import axios from 'axios';
 import {
   ActivityIndicator,
@@ -75,6 +78,7 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
   const [descargando, setDescargando] = useState(false);
   const [errorEvidencia, setErrorEvidencia] = useState('');
   const [errorMapa, setErrorMapa] = useState('');
+  const [interaccionDetalle, setInteraccionDetalle] = useState(false);
 
   const cargar = useCallback(
     async (pagina: number, modo: 'inicial' | 'mas' | 'refresco') => {
@@ -188,7 +192,9 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Volver a la lista de servicios"
-              onPress={() => setDetalleId(null)}
+              accessibilityState={{ disabled: interaccionDetalle }}
+              disabled={interaccionDetalle}
+              onPress={() => { setDetalleId(null); void cargar(0, 'refresco'); }}
               style={estilos.volver}
             >
               <Ionicons name="arrow-back" size={18} color={colores.marca} />
@@ -217,6 +223,7 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
                 onDescargar={() => void descargarEvidencia(detalle)}
                 onVerMapa={() => verEnMapa(detalle)}
                 onActualizar={() => setIntentoDetalle((n) => n + 1)}
+                onInteraccion={setInteraccionDetalle}
               />
             ) : null}
           </ScrollView>
@@ -349,6 +356,7 @@ function DetalleServicioVista({
   onDescargar,
   onVerMapa,
   onActualizar,
+  onInteraccion,
 }: {
   detalle: DetalleServicio;
   descargando: boolean;
@@ -356,8 +364,15 @@ function DetalleServicioVista({
   onDescargar: () => void;
   onVerMapa: () => void;
   onActualizar: () => void;
+  onInteraccion: (activa: boolean) => void;
 }) {
   const estado = estadoServicio(detalle.estado);
+  const [editandoOperacion, setEditandoOperacion] = useState(false);
+  const [editandoCalificacion, setEditandoCalificacion] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
+  const interaccion = editandoOperacion || editandoCalificacion || cancelando;
+  useCambiosSinGuardar(interaccion);
+  useEffect(() => { onInteraccion(interaccion); return () => onInteraccion(false); }, [interaccion, onInteraccion]);
   return (
     <>
       <Encabezado
@@ -368,7 +383,12 @@ function DetalleServicioVista({
       <SeguimientoServicio key={`seguimiento-${detalle.id}`} orden={detalle.id}
         latitud={detalle.latitud} longitud={detalle.longitud} estadoOrden={detalle.estado} />
       {detalle.estado === 'finalizado' && detalle.tecnico ? <CalificarServicio key={`calificacion-${detalle.id}`}
-        orden={detalle.id} actual={detalle.miCalificacion} onGuardada={onActualizar} /> : null}
+        orden={detalle.id} actual={detalle.miCalificacion} onGuardada={onActualizar}
+        onEdicion={setEditandoCalificacion} bloqueado={editandoOperacion} /> : null}
+      {detalle.estado === 'solicitado' ? <CancelarSolicitud orden={detalle.id} onCambio={onActualizar} onEdicion={setCancelando} /> : null}
+      {detalle.asignadoEn || detalle.tecnico || ['en_camino', 'en_diagnostico', 'en_reparacion', 'finalizado'].includes(detalle.estado)
+        ? <OperacionDelServicio orden={detalle.id} tecnico={false} estado={detalle.estado} onCambio={onActualizar}
+          onEdicion={setEditandoOperacion} bloqueado={editandoCalificacion} /> : null}
 
       {detalle.estado === 'solicitado' ? (
         <Aviso tono="info" titulo="Solicitud registrada">
@@ -463,6 +483,7 @@ function DetalleServicioVista({
       <BotonPrimario
         titulo="Actualizar estado"
         variante="secundario"
+        deshabilitado={interaccion}
         onPress={onActualizar}
       />
     </>

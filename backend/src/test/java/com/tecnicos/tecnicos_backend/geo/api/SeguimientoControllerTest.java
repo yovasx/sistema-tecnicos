@@ -83,10 +83,15 @@ class SeguimientoControllerTest {
     }
     @Test void reporte_tecnico_ligado_a_orden_y_lectura_solo_en_camino() throws Exception {
         long orden=orden();
+        String tokenTecnico=login(TECNICO);
+        var inicio=mvc.perform(post("/api/tecnicos/servicios/"+orden+"/gps")
+            .header("Authorization","Bearer "+tokenTecnico).contentType("application/json")
+            .content("{\"plataforma\":\"web\",\"segundoPlano\":false}")).andExpect(status().isOk()).andReturn();
+        String sesion=JsonPath.read(inicio.getResponse().getContentAsString(StandardCharsets.UTF_8),"$.sesion");
         mvc.perform(post("/api/tecnicos/ubicacion").header("Authorization","Bearer "+login(TECNICO))
             .contentType("application/json").content("""
-                {"orden":%d,"latitud":-16.501,"longitud":-68.131,"precision":12}
-                """.formatted(orden))).andExpect(status().isNoContent());
+                {"sesion":"%s","latitud":-16.501,"longitud":-68.131,"precision":12,"capturadoEn":"%s"}
+                """.formatted(sesion,Instant.now()))).andExpect(status().isNoContent());
         mvc.perform(get("/api/ordenes/"+orden+"/seguimiento").header("Authorization","Bearer "+login(CLIENTE)))
             .andExpect(status().isOk()).andExpect(jsonPath("$.posicion.latitud").value(-16.501))
             .andExpect(jsonPath("$.vigente").value(true)).andExpect(jsonPath("$.etaMinutos").isNumber());
@@ -96,10 +101,52 @@ class SeguimientoControllerTest {
             .andExpect(jsonPath("$.etaMinutos").isEmpty());
     }
     @Test void cliente_no_reporta_posiciones_y_otro_tecnico_no_reporta_orden_ajena() throws Exception {
-        long orden=orden(); String cuerpo="{\"orden\":"+orden+",\"latitud\":-16.5,\"longitud\":-68.13}";
-        mvc.perform(post("/api/tecnicos/ubicacion").header("Authorization","Bearer "+login(CLIENTE))
+        long orden=orden(); String cuerpo="{\"plataforma\":\"web\",\"segundoPlano\":false}";
+        mvc.perform(post("/api/tecnicos/servicios/"+orden+"/gps").header("Authorization","Bearer "+login(CLIENTE))
             .contentType("application/json").content(cuerpo)).andExpect(status().isForbidden());
-        mvc.perform(post("/api/tecnicos/ubicacion").header("Authorization","Bearer "+login("lucia.fernandez@ejemplo.bo"))
-            .contentType("application/json").content(cuerpo)).andExpect(status().isNotFound());
+        mvc.perform(post("/api/tecnicos/servicios/"+orden+"/gps").header("Authorization","Bearer "+login("lucia.fernandez@ejemplo.bo"))
+            .contentType("application/json").content(cuerpo)).andExpect(status().isConflict());
+    }
+    String iniciarGps(long orden,String token) throws Exception {
+        return leerSesion(mvc.perform(post("/api/tecnicos/servicios/"+orden+"/gps").header("Authorization","Bearer "+token)
+            .contentType("application/json").content("{\"plataforma\":\"web\",\"segundoPlano\":false}"))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+    String leerSesion(String json) { return JsonPath.read(json,"$.sesion"); }
+    org.springframework.test.web.servlet.ResultActions posicion(String token,String sesion,Instant fecha,double precision) throws Exception {
+        return mvc.perform(post("/api/tecnicos/ubicacion").header("Authorization","Bearer "+token).contentType("application/json")
+            .content("""
+                {"sesion":"%s","latitud":-16.5,"longitud":-68.13,"precision":%s,"capturadoEn":"%s"}
+                """.formatted(sesion,precision,fecha)));
+    }
+    @Test void detener_el_gps_retira_la_posicion_y_rechaza_envios_atrasados() throws Exception {
+        long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
+        posicion(t,s,Instant.now(),5).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/tecnicos/gps/"+s).header("Authorization","Bearer "+t)).andExpect(status().isNoContent());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_actual WHERE orden_id=?",Long.class,o)).isZero();
+        posicion(t,s,Instant.now(),5).andExpect(status().isConflict());
+    }
+    @Test void una_sesion_nueva_invalida_el_emisor_anterior() throws Exception {
+        long o=orden(); String t=login(TECNICO),anterior=iniciarGps(o,t),nueva=iniciarGps(o,t);
+        assertThat(nueva).isNotEqualTo(anterior);
+        posicion(t,nueva,Instant.now(),5).andExpect(status().isNoContent());
+        posicion(t,anterior,Instant.now(),5).andExpect(status().isConflict());
+    }
+    @Test void las_posiciones_antiguas_no_se_presentan_como_actuales() throws Exception {
+        long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
+        posicion(t,s,Instant.now().minusSeconds(31),5).andExpect(status().isUnprocessableContent());
+    }
+    @Test void la_precision_insuficiente_no_se_guarda() throws Exception {
+        long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
+        posicion(t,s,Instant.now(),201).andExpect(status().isBadRequest());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_actual WHERE orden_id=?",Long.class,o)).isZero();
+    }
+    @Test void revocar_la_sesion_retira_la_lectura_y_exige_nuevo_consentimiento() throws Exception {
+        long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
+        posicion(t,s,Instant.now(),5).andExpect(status().isNoContent());
+        jdbc.update("UPDATE identity.usuarios SET version_sesion=version_sesion+1 WHERE id=?",id(TECNICO));
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+login(CLIENTE)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.posicion").isEmpty());
+        posicion(login(TECNICO),s,Instant.now(),5).andExpect(status().isConflict());
     }
 }

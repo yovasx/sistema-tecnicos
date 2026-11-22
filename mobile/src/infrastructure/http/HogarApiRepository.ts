@@ -32,8 +32,8 @@ export class HogarApiRepository implements HogarRepository {
     try { return (await apiClient.get<Reputacion>('/api/perfil/reputacion')).data; }
     catch (e) { throw traducirError(e); }
   }
-  async calificar(orden: number, puntaje: number, comentario: string) {
-    try { await apiClient.post(`/api/ordenes/${orden}/calificacion`, { puntaje, comentario }); }
+  async calificar(orden: number, puntaje: number, comentario: string, tecnico = false) {
+    try { await apiClient.post(`${tecnico ? '/api/tecnicos/ordenes' : '/api/ordenes'}/${orden}/calificacion`, { puntaje, comentario }); }
     catch (e) { throw traducirError(e); }
   }
   async foto(archivo: EvidenciaServicio) {

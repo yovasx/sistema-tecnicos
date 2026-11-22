@@ -11,6 +11,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       ...(config.plugins ?? []),
       'expo-sharing',
+      ['expo-location', {
+        locationWhenInUsePermission: 'Permite usar tu ubicación cuando eliges compartirla en un servicio.',
+        locationAlwaysAndWhenInUsePermission: 'Comparte tu ubicación con tu cliente solo durante el trayecto que actives.',
+        isIosBackgroundLocationEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',
+        isAndroidBackgroundLocationEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',
+        isAndroidForegroundServiceEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',
+      }],
       ...(webId && iosScheme && process.env.EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED === 'true'
         ? [['react-native-nitro-google-signin', { iosUrlScheme: iosScheme }] as [string, { iosUrlScheme: string }]] : []),
     ],

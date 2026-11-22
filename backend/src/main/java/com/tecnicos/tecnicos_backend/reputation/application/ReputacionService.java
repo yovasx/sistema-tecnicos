@@ -62,6 +62,9 @@ public class ReputacionService {
                 SELECT count(*) FROM orders.ordenes_servicio
                 WHERE tecnico_id=? AND estado='finalizado'
                 """, Long.class, id);
+            canceladas = jdbc.queryForObject("""
+                SELECT count(*) FROM orders.ordenes_servicio WHERE tecnico_id=? AND estado='cancelado'
+                """,Long.class,id);
         }
         var recibidas = jdbc.query("""
             SELECT c.id,c.puntaje,c.comentario,c.registrado_en,cat.nombre AS categoria,

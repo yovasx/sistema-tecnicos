@@ -20,6 +20,7 @@ import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import { ExpedienteTecnicoAdmin, estadosDisponibilidad, estadosExpediente, camposExpediente } from './ExpedienteTecnicoAdmin';
 import { InvitarUsuarioAdmin } from './InvitarUsuarioAdmin';
 import { FormularioCuentaAdmin } from './FormularioCuentaAdmin';
+import { FichaCoberturaAdmin } from './CoberturasAdminScreen';
 
 const inicial: FiltrosTecnicos = { busqueda: '', cuenta: 'todos', expediente: 'todos', disponibilidad: 'todos', pagina: 0, tamano: 20 };
 const errorTexto = (e: unknown) => e instanceof Error ? e.message : 'No pudimos completar la consulta.';
@@ -163,7 +164,7 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
         Este técnico fue aprobado antes del expediente actual. La ausencia de documentos nuevos no revoca esa aprobación ni supone verificaciones que nunca se realizaron.
       </Aviso> : null}
       <FiltroAdmin etiqueta="Ficha del técnico" valor={vista} deshabilitado={editandoDatos || interaccion.sucio || ocupado}
-        opciones={[['perfil', 'Perfil y cobertura'], ['documentos', 'Documentos y revisión'], ['historial', 'Historial']]} onChange={setVista} />
+        opciones={[['perfil', 'Perfil y cobertura'], ['cobertura', 'Revisión de cobertura'], ['documentos', 'Documentos y revisión'], ['historial', 'Historial']]} onChange={setVista} />
       {vista === 'perfil' ? <View style={{ flexDirection: ancho >= 1360 ? 'row' : 'column', gap: 24 }}>
         <View style={{ flex: 2, minWidth: 0, gap: 24 }}>
           <Tarjeta style={{ gap: 20 }}>
@@ -215,7 +216,7 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
              onGuardado={cuenta => { setDetalle(p => p ? { ...p, cuenta } : p); setMensaje('Estado de cuenta actualizado y auditado.'); onCambio(); }} />
             : null}
         </View>
-      </View> : vista === 'documentos' ? <Tarjeta>
+      </View> : vista === 'cobertura' ? <FichaCoberturaAdmin id={id} onInteraccion={definirInteraccion} /> : vista === 'documentos' ? <Tarjeta>
         <ExpedienteTecnicoAdmin id={id} expediente={d.expediente} cuentaActiva={d.cuenta.activo}
           onCambio={revisionCompletada} onInteraccion={definirInteraccion} />
       </Tarjeta> : <HistorialTecnico id={id} revision={d.cuenta.revision} />}

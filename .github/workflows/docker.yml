@@ -18,10 +18,14 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: Instalar dependencias móviles
+        run: npm ci --no-audit --no-fund --prefix mobile
       - name: Verificar español neutral
         run: npm run verificar:lenguaje --prefix mobile
       - name: Validar Compose sin .env
         run: docker compose config --quiet
+      - name: Verificar ciclo de vida GPS sin hardware
+        run: npm run verificar:gps --prefix mobile
       - name: Construir desde cero
         run: docker compose build --no-cache backend web
       - name: Arrancar todos los servicios y esperar salud

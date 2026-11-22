@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Switch, View } from 'react-native';
 import { Direccion } from '../../domain/models/Hogar';
-import { hogarRepository } from '../../infrastructure/di';
+import { hogarRepository, operacionRepository } from '../../infrastructure/di';
 import { ubicacionActual } from '../../infrastructure/ubicacion/ubicacionActual';
 import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
@@ -105,7 +105,11 @@ function FormularioDireccion({ inicial, onCerrar, onGuardada }: {
   async function usarGps() {
     if (gps) return;
     setGps(true); setError('');
-    try { const p = await ubicacionActual(); setLatitud(String(p.lat)); setLongitud(String(p.lng)); }
+    try {
+      if (!(await operacionRepository.preferencias()).permitirGps)
+        throw new Error('El GPS puntual está desactivado en Configuración y privacidad. Puedes ingresar las coordenadas o usar el mapa.');
+      const p = await ubicacionActual(); setLatitud(String(p.lat)); setLongitud(String(p.lng));
+    }
     catch (e) { setError(e instanceof Error ? e.message : 'No pudimos obtener tu ubicación.'); }
     finally { setGps(false); }
   }

@@ -13,6 +13,7 @@ import { DatosRegistroTecnico } from '../domain/models/Expediente';
 import { EstadoSesion, UsuarioSesion } from '../domain/models/Sesion';
 import { AuthRepository } from '../domain/repositories/AuthRepository';
 import { TokenStorage } from '../domain/repositories/TokenStorage';
+import { cerrarRecursosSesion } from './cierreRecursos';
 import { observarRegresoASesion } from '../infrastructure/navigation/actualizacionSesion';
 import {
   definirToken,
@@ -60,6 +61,7 @@ export function SesionProvider({
   const cerrarSesion = useCallback(async () => {
     ++generacion.current;
     identidad.current = null;
+    await cerrarRecursosSesion();
     await tokenStorage.clear();
     definirToken(null);
     setUsuario(null);
