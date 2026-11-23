@@ -10,7 +10,11 @@ import java.util.UUID;
 public final class OperacionDtos {
     private OperacionDtos() {}
     public record Servicio(long id,String categoria,String estado,boolean urgencia,OffsetDateTime creadoEn) {}
-    public record TecnicoPanel(String disponibilidad,long finalizados,long activos,List<Servicio> solicitudes) {}
+    /** Oferta despachada por el match: la dirección y el cliente se revelan al aceptar. */
+    public record Oferta(long oferta,long orden,String categoria,boolean urgencia,
+        BigDecimal distanciaMetros,OffsetDateTime enviadaEn,OffsetDateTime expiraEn) {}
+    public record TecnicoPanel(String disponibilidad,long finalizados,long activos,
+        List<Oferta> ofertas,List<Servicio> solicitudes) {}
     public record DetalleTecnico(long id,String categoria,String estado,String descripcion,String referencia,
         double latitud,double longitud,String cliente,OffsetDateTime creadoEn,Integer miCalificacion) {}
     public record Motivo(@NotBlank(message="Describe el motivo.")

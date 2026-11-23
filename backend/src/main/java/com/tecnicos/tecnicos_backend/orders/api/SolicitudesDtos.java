@@ -23,6 +23,13 @@ public final class SolicitudesDtos {
     public record Fila(long id, int categoriaId, String categoria, String estado, boolean urgencia,
                        OffsetDateTime creadoEn) {}
 
+    /** Línea de facturación: la última cotización aceptada de una orden propia. */
+    public record LineaFacturacion(long orden, String categoria, String estadoOrden, String tecnico,
+                                   BigDecimal total, String moneda, OffsetDateTime aceptadaEn) {}
+
+    /** Solo importes reales de cotizaciones aceptadas; no hay cobros ni comprobantes emitidos. */
+    public record Facturacion(BigDecimal totalAceptado, String moneda, List<LineaFacturacion> lineas) {}
+
     public record Detalle(long id, int categoriaId, String categoria, String estado, boolean urgencia,
                           String descripcion, String referencia, double latitud, double longitud,
                           boolean evidenciaDisponible, String evidenciaExtension,
@@ -30,5 +37,7 @@ public final class SolicitudesDtos {
                           OffsetDateTime llegadaEstimadaEn, OffsetDateTime llegadaEn,
                           OffsetDateTime finalizadoEn, String tecnico,
                           String motivoCancelacion, OffsetDateTime canceladoEn,
-                          Integer miCalificacion) {}
+                          Integer miCalificacion,
+                          /** Técnicos a los que se envió la solicitud y cuántos siguen pendientes. */
+                          int ofertasEnviadas, int ofertasPendientes) {}
 }

@@ -18,6 +18,10 @@ public class OperacionController {
     @GetMapping("/api/tecnicos/servicios/{id}") public ResponseEntity<?> detalle(@AuthenticationPrincipal UsuarioAutenticado u,@PathVariable long id) { return ok(servicio.detalle(u.id(),id)); }
     @PutMapping("/api/tecnicos/disponibilidad") public ResponseEntity<Void> disponibilidad(@Valid @RequestBody OperacionDtos.Disponibilidad r) { servicio.disponibilidad(r.disponible()); return vacio(); }
     @PostMapping("/api/tecnicos/servicios/{id}/aceptar") public ResponseEntity<Void> aceptar(@PathVariable long id) { servicio.tomar(id); return vacio(); }
+    @PostMapping("/api/tecnicos/ofertas/{id}/aceptar")
+    public ResponseEntity<Void> aceptarOferta(@AuthenticationPrincipal UsuarioAutenticado u,@PathVariable long id) { servicio.aceptarOferta(u.id(),id); return vacio(); }
+    @PostMapping("/api/tecnicos/ofertas/{id}/rechazar")
+    public ResponseEntity<Void> rechazarOferta(@AuthenticationPrincipal UsuarioAutenticado u,@PathVariable long id) { servicio.rechazarOferta(u.id(),id); return vacio(); }
     @PostMapping("/api/tecnicos/servicios/{id}/llegada") public ResponseEntity<Void> llegada(@PathVariable long id) { servicio.avanzar(id,"llegada"); return vacio(); }
     @PostMapping("/api/tecnicos/servicios/{id}/reparacion") public ResponseEntity<Void> reparar(@PathVariable long id) { servicio.avanzar(id,"reparacion"); return vacio(); }
     @PostMapping("/api/tecnicos/servicios/{id}/finalizar") public ResponseEntity<Void> finalizar(@PathVariable long id) { servicio.avanzar(id,"finalizar"); return vacio(); }

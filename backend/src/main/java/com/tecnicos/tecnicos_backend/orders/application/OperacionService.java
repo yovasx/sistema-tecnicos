@@ -29,12 +29,28 @@ public class OperacionService {
               WHERE u.id=? AND u.activo AND u.eliminado_en IS NULL AND p.estado_validacion='aprobado')
             """,Boolean.class,id))) throw new ApiException(HttpStatus.FORBIDDEN,"TECNICO_NO_HABILITADO","El técnico no está habilitado.");
     }
-    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    @Transactional(isolation=Isolation.REPEATABLE_READ)
     public TecnicoPanel panel(long id) {
         habilitado(id);
+        // Expira ofertas vencidas y reintenta el despacho de solicitudes sin
+        // ofertas pendientes. Se hace al abrir el panel para no depender de un
+        // proceso externo y para no escribir en cada consulta del cliente.
+        jdbc.queryForObject("SELECT orders.mantener_ofertas()",Integer.class);
         String disponibilidad=jdbc.queryForObject("SELECT disponibilidad::text FROM identity.perfiles_tecnico WHERE usuario_id=?",String.class,id);
         long finalizados=jdbc.queryForObject("SELECT count(*) FROM orders.ordenes_servicio WHERE tecnico_id=? AND estado='finalizado'",Long.class,id);
         long activos=jdbc.queryForObject("SELECT count(*) FROM orders.ordenes_servicio WHERE tecnico_id=? AND estado NOT IN ('finalizado','cancelado')",Long.class,id);
+        var ofertas=jdbc.query("""
+            SELECT f.id oferta,o.id orden,c.nombre categoria,o.tarifa_urgencia,f.distancia_metros,
+              f.enviada_en,f.expira_en
+            FROM orders.ofertas_orden f
+            JOIN orders.ordenes_servicio o ON o.id=f.orden_id
+            JOIN orders.categorias_servicio c ON c.id=o.categoria_id AND c.activa
+            WHERE f.tecnico_id=? AND f.estado='enviada' AND f.expira_en>clock_timestamp()
+              AND o.estado='solicitado' AND o.tecnico_id IS NULL
+            ORDER BY f.expira_en,f.id LIMIT 20
+            """,(r,n)->new Oferta(r.getLong("oferta"),r.getLong("orden"),r.getString("categoria"),
+                r.getBoolean("tarifa_urgencia"),r.getBigDecimal("distancia_metros"),
+                r.getObject("enviada_en",OffsetDateTime.class),r.getObject("expira_en",OffsetDateTime.class)),id);
         var candidatos=jdbc.query("""
             SELECT o.id,c.nombre categoria,o.estado::text,o.tarifa_urgencia,o.creado_en
             FROM orders.ordenes_servicio o JOIN orders.categorias_servicio c ON c.id=o.categoria_id AND c.activa
@@ -46,7 +62,7 @@ public class OperacionService {
               AND ?='disponible' AND ?=0 ORDER BY o.tarifa_urgencia DESC,o.creado_en,o.id LIMIT 30
             """,(r,n)->new Servicio(r.getLong("id"),r.getString("categoria"),r.getString("estado"),
                 r.getBoolean("tarifa_urgencia"),r.getObject("creado_en",OffsetDateTime.class)),id,id,disponibilidad,activos);
-        return new TecnicoPanel(disponibilidad,finalizados,activos,candidatos);
+        return new TecnicoPanel(disponibilidad,finalizados,activos,ofertas,candidatos);
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
     public Pagina<Servicio> servicios(long id,int pagina) {
@@ -86,6 +102,36 @@ public class OperacionService {
         auditoria.aplicarEnTransaccion();
         if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT orders.tomar_servicio(?)",Boolean.class,orden)))
             throw new ApiException(HttpStatus.CONFLICT,"SERVICIO_NO_DISPONIBLE","La solicitud ya fue asignada.");
+    }
+    /** Acepta una oferta despachada por el match; la base resuelve la carrera. */
+    @Transactional public void aceptarOferta(long tecnico,long oferta) {
+        habilitado(tecnico);
+        auditoria.aplicarEnTransaccion();
+        if(Boolean.TRUE.equals(jdbc.queryForObject("SELECT orders.aceptar_oferta(?,?)",Boolean.class,oferta,tecnico)))
+            return;
+        // Reintentar la propia aceptación no es un conflicto.
+        boolean propia=Boolean.TRUE.equals(jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM orders.ofertas_orden f
+              JOIN orders.ordenes_servicio o ON o.id=f.orden_id
+              WHERE f.id=? AND f.tecnico_id=? AND f.estado='aceptada' AND o.tecnico_id=?)
+            """,Boolean.class,oferta,tecnico,tecnico));
+        if(!propia) throw new ApiException(HttpStatus.CONFLICT,"OFERTA_NO_DISPONIBLE",
+            "La oferta expiró o otro técnico llegó antes. Actualiza el panel.");
+    }
+    /** Rechaza una oferta propia para que el match busque otro técnico. */
+    @Transactional public void rechazarOferta(long tecnico,long oferta) {
+        habilitado(tecnico);
+        auditoria.aplicarEnTransaccion();
+        var estados=jdbc.queryForList("""
+            SELECT estado::text FROM orders.ofertas_orden
+            WHERE id=? AND tecnico_id=? FOR UPDATE
+            """,String.class,oferta,tecnico);
+        if(estados.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND,"OFERTA_NO_DISPONIBLE",
+            "La oferta no está disponible.");
+        if(!estados.getFirst().equals("enviada")) throw new ApiException(HttpStatus.CONFLICT,
+            "OFERTA_NO_DISPONIBLE","La oferta ya fue respondida.");
+        jdbc.query("SELECT orders.rechazar_oferta(?,?,?)",(r,n)->null,oferta,tecnico,
+            "El técnico no puede atenderla ahora.");
     }
     @Transactional public void avanzar(long orden,String accion) {
         auditoria.aplicarEnTransaccion();

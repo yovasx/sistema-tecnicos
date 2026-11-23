@@ -4,6 +4,7 @@ import {
   CategoriaSolicitud,
   CrearSolicitud,
   DetalleServicio,
+  Facturacion,
   PaginaServicios,
   ResultadoSolicitud,
 } from '../../domain/models/SolicitudServicio';
@@ -71,6 +72,14 @@ export class SolicitudesApiRepository implements SolicitudesRepository {
   async detalle(id: number): Promise<DetalleServicio> {
     try {
       return (await apiClient.get<DetalleServicio>(`/api/ordenes/${id}`)).data;
+    } catch (e) {
+      throw traducirError(e);
+    }
+  }
+
+  async facturacion(): Promise<Facturacion> {
+    try {
+      return (await apiClient.get<Facturacion>('/api/ordenes/facturacion')).data;
     } catch (e) {
       throw traducirError(e);
     }

@@ -73,4 +73,23 @@ export interface DetalleServicio extends FilaServicio {
   tecnico: string | null;
   motivoCancelacion: string | null;
   canceladoEn: string | null;
+  ofertasEnviadas: number;
+  ofertasPendientes: number;
+}
+
+/** Línea de facturación con la última cotización aceptada de una orden propia. */
+export interface LineaFacturacion {
+  orden: number;
+  categoria: string;
+  estadoOrden: EstadoServicio;
+  tecnico: string | null;
+  total: number;
+  moneda: string;
+  aceptadaEn: string | null;
+}
+
+export interface Facturacion {
+  totalAceptado: number;
+  moneda: string;
+  lineas: LineaFacturacion[];
 }

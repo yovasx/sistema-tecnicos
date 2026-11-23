@@ -2,9 +2,14 @@ export interface Pagina<T> { elementos: T[]; total: number; pagina: number; tama
 export interface ServicioTecnico {
   id: number; categoria: string; estado: string; urgencia: boolean; creadoEn: string;
 }
+/** Oferta del match: la dirección y el cliente se revelan al aceptar. */
+export interface OfertaTecnico {
+  oferta: number; orden: number; categoria: string; urgencia: boolean;
+  distanciaMetros: number | null; enviadaEn: string; expiraEn: string;
+}
 export interface PanelTecnicoDatos {
   disponibilidad: 'disponible' | 'ocupado' | 'fuera_servicio';
-  finalizados: number; activos: number; solicitudes: ServicioTecnico[];
+  finalizados: number; activos: number; ofertas: OfertaTecnico[]; solicitudes: ServicioTecnico[];
 }
 export interface DetalleTecnico {
   id: number; categoria: string; estado: string; descripcion: string; referencia: string;

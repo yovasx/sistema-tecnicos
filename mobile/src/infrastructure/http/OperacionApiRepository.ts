@@ -18,6 +18,8 @@ export class OperacionApiRepository implements OperacionRepository {
     try { await apiClient.put('/api/tecnicos/disponibilidad', { disponible }); } catch (e) { throw traducirError(e); }
   }
   aceptar(id: number) { return this.post(`/api/tecnicos/servicios/${id}/aceptar`); }
+  aceptarOferta(oferta: number) { return this.post(`/api/tecnicos/ofertas/${oferta}/aceptar`); }
+  rechazarOferta(oferta: number) { return this.post(`/api/tecnicos/ofertas/${oferta}/rechazar`); }
   avanzar(id: number, accion: 'llegada' | 'reparacion' | 'finalizar') { return this.post(`/api/tecnicos/servicios/${id}/${accion}`); }
   cancelar(id: number, motivo: string) { return this.post(`/api/ordenes/${id}/cancelar`, { motivo }); }
   cotizaciones(id: number, tecnico: boolean) {

@@ -70,6 +70,10 @@ public class SolicitudesService {
         conservar[0]=Objects.requireNonNull(r).creada();
         // Un reintento puede corresponder a una orden que ya avanzó: devolver su estado real.
         String estado=jdbc.queryForObject("SELECT estado::text FROM orders.ordenes_servicio WHERE id=?",String.class,r.id());
+        // Despacho real del match dentro de la misma transacción. Es idempotente:
+        // si la orden ya tiene ofertas o dejó de estar `solicitado`, no crea nada.
+        if("solicitado".equals(estado))
+            jdbc.queryForObject("SELECT orders.generar_ofertas(?)",Integer.class,r.id());
         return new CrearResultado(r.id(),estado,r.creada());
     }
     @Transactional(readOnly=true)
@@ -105,7 +109,10 @@ public class SolicitudesService {
             SELECT o.*,c.nombre AS categoria,ST_Y(o.ubicacion_cliente::geometry) AS latitud,
                 ST_X(o.ubicacion_cliente::geometry) AS longitud,
                 CASE WHEN t.eliminado_en IS NULL THEN NULLIF(concat_ws(' ',t.nombre,t.apellido),'') END AS tecnico,
-                cal.puntaje AS mi_calificacion
+                cal.puntaje AS mi_calificacion,
+                (SELECT count(*) FROM orders.ofertas_orden f WHERE f.orden_id=o.id) AS ofertas_enviadas,
+                (SELECT count(*) FROM orders.ofertas_orden f WHERE f.orden_id=o.id
+                   AND f.estado='enviada' AND f.expira_en>clock_timestamp()) AS ofertas_pendientes
             FROM orders.ordenes_servicio o JOIN orders.categorias_servicio c ON c.id=o.categoria_id
             LEFT JOIN identity.usuarios t ON t.id=o.tecnico_id
             LEFT JOIN reputation.calificaciones cal ON cal.orden_id=o.id AND cal.calificador_id=?
@@ -116,12 +123,45 @@ public class SolicitudesService {
                 extensionDeUrl(r.getString("foto_evidencia_url")),
                 fecha(r,"creado_en"),fecha(r,"asignado_en"),fecha(r,"llegada_estimada_en"),fecha(r,"llegada_en"),
                 fecha(r,"finalizado_en"),r.getString("tecnico"),r.getString("motivo_cancelacion"),fecha(r,"cancelado_en"),
-                r.getObject("mi_calificacion",Integer.class)),cliente,id,cliente);
+                r.getObject("mi_calificacion",Integer.class),
+                r.getInt("ofertas_enviadas"),r.getInt("ofertas_pendientes")),cliente,id,cliente);
         if(filas.isEmpty()) throw noEncontrada();
         return filas.getFirst();
     }
-    public record Archivo(InputStream contenido,String extension) {}
-    @Transactional(readOnly=true)
+    /**
+     * Facturación del cliente: solo cotizaciones aceptadas de sus propias
+     * órdenes. No crea comprobantes ni cobros porque no hay pasarela integrada.
+     */
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public Facturacion facturacion(long cliente) {
+        var lineas=jdbc.query("""
+            SELECT o.id, c.nombre categoria, o.estado::text estado_orden,
+                   CASE WHEN t.eliminado_en IS NULL THEN NULLIF(concat_ws(' ',t.nombre,t.apellido),'') END tecnico,
+                   q.total, q.moneda, q.respondida_en
+            FROM orders.ordenes_servicio o
+            JOIN orders.categorias_servicio c ON c.id=o.categoria_id
+            LEFT JOIN identity.usuarios t ON t.id=o.tecnico_id
+            JOIN LATERAL (
+                SELECT total, moneda, respondida_en FROM billing.cotizaciones
+                WHERE orden_id=o.id AND estado='aceptada' ORDER BY version DESC LIMIT 1
+            ) q ON TRUE
+            WHERE o.cliente_id=?
+            ORDER BY q.respondida_en DESC NULLS LAST, o.id DESC LIMIT 100
+            """,(r,n)->new LineaFacturacion(r.getLong("id"),r.getString("categoria"),r.getString("estado_orden"),
+                r.getString("tecnico"),r.getBigDecimal("total"),r.getString("moneda"),
+                fecha(r,"respondida_en")),cliente);
+        var total=jdbc.queryForObject("""
+            SELECT coalesce(sum(q.total),0) FROM orders.ordenes_servicio o
+            JOIN LATERAL (
+                SELECT total FROM billing.cotizaciones
+                WHERE orden_id=o.id AND estado='aceptada' AND moneda='BOB'
+                ORDER BY version DESC LIMIT 1
+            ) q ON TRUE
+            WHERE o.cliente_id=?
+            """,java.math.BigDecimal.class,cliente);
+        return new Facturacion(total, "BOB", lineas);
+    }
+    public record Archivo(InputStream contenido,String extension) {}    @Transactional(readOnly=true)
     public Archivo evidencia(UsuarioAutenticado usuario,long id) throws IOException {
         var urls=jdbc.query("""
             SELECT foto_evidencia_url FROM orders.ordenes_servicio

@@ -21,15 +21,15 @@ import { ValidacionAdminScreen } from '../screens/admin/ValidacionAdminScreen';
 import { TecnicosAdminScreen } from '../screens/admin/TecnicosAdminScreen';
 import { OrdenesAdminScreen } from '../screens/admin/OrdenesAdminScreen';
 import { MiPerfilAdminScreen } from '../screens/admin/MiPerfilAdminScreen';
+import { DisputasAdminScreen } from '../screens/admin/DisputasAdminScreen';
+import { AuditoriaAdminScreen } from '../screens/admin/AuditoriaAdminScreen';
+import { ModeracionChatAdminScreen } from '../screens/admin/ModeracionChatAdminScreen';
+import { NotificacionesAdminScreen } from '../screens/admin/NotificacionesAdminScreen';
+import { LiquidacionesAdminScreen } from '../screens/admin/LiquidacionesAdminScreen';
+import { MapaAdminScreen } from '../screens/admin/MapaAdminScreen';
+import { ReportesAdminScreen } from '../screens/admin/ReportesAdminScreen';
 import {
-  MapaAdminScreen,
-  DisputasAdminScreen,
-  AuditoriaAdminScreen,
   PagosAdminScreen,
-  LiquidacionesAdminScreen,
-  ReportesAdminScreen,
-  NotificacionesAdminScreen,
-  ModeracionChatAdminScreen,
   ConfiguracionAdminScreen,
   SoporteAdminScreen,
   PenalizacionesAdminScreen,
@@ -143,8 +143,7 @@ export function seccionesAdmin(): Seccion[] {
     ['Administración', ['catalogo', 'soporte', 'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']],
     ['Mi cuenta', ['perfil']],
   ];
-  const pendientes = new Set(['mapa', 'disputas', 'pagos', 'liquidaciones', 'reportes', 'soporte',
-    'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']);
+  const pendientes = new Set(['pagos', 'soporte', 'penalizaciones', 'configuracion']);
   return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({
     ...secciones.find(s => s.clave === clave)!, grupo, pendiente: pendientes.has(clave),
   })));

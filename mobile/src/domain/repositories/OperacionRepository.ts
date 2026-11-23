@@ -7,6 +7,8 @@ export interface OperacionRepository {
   detalle(id: number): Promise<DetalleTecnico>;
   disponibilidad(disponible: boolean): Promise<void>;
   aceptar(id: number): Promise<void>;
+  aceptarOferta(oferta: number): Promise<void>;
+  rechazarOferta(oferta: number): Promise<void>;
   avanzar(id: number, accion: 'llegada' | 'reparacion' | 'finalizar'): Promise<void>;
   cancelar(id: number, motivo: string): Promise<void>;
   cotizaciones(id: number, tecnico: boolean): Promise<Cotizacion[]>;

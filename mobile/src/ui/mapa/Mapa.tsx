@@ -9,8 +9,8 @@ export function Mapa(props: PropsMapa) {
   const html = useMemo(() => ({ html: htmlLeaflet() }), []);
   const actualizar = () => frame.current?.injectJavaScript(`window.actualizar && window.actualizar(${datosMapa(props)});true;`);
   useEffect(actualizar, [props.destino.latitud, props.destino.longitud, props.tecnico?.latitud, props.tecnico?.longitud,
-    props.onSeleccionar, props.areas, props.etiquetaPunto]);
-  return <View style={{ height: 360 }}><WebView<{}> ref={frame} source={html} originWhitelist={['about:blank']}
+    props.onSeleccionar, props.areas, props.etiquetaPunto, props.marcadores]);
+  return <View style={{ height: props.alto ?? 360 }}><WebView<{}> ref={frame} source={html} originWhitelist={['about:blank']}
     style={{ flex: 1 }} javaScriptEnabled domStorageEnabled={false}
     onShouldStartLoadWithRequest={r => r.url === 'about:blank'}
     onLoadEnd={actualizar}

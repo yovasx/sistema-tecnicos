@@ -33,6 +33,11 @@ public class SolicitudesController {
     public ResponseEntity<java.util.List<Categoria>> categorias() {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(solicitudes.categorias());
     }
+    @GetMapping("/facturacion")
+    public ResponseEntity<Facturacion> facturacion() {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+            .body(solicitudes.facturacion(usuario().id()));
+    }
     @GetMapping
     public ResponseEntity<Pagina<Fila>> propias(@RequestParam(defaultValue="0") int pagina,
             @RequestParam(defaultValue="20") int tamano) {
