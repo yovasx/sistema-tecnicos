@@ -2,7 +2,11 @@
 
 Plataforma para solicitar servicios técnicos a domicilio: los clientes publican una orden, los técnicos reciben ofertas, y el administrador valida cuentas y gestiona el catálogo. Incluye base geoespacial, chat, cotizaciones versionadas, pagos, liquidaciones y reputación.
 
+<<<<<<< HEAD
 > **Versión estable local:** autenticación, recuperación, catálogo, usuarios y gestión/revisión de técnicos. Órdenes, pagos y liquidaciones siguen pendientes en la aplicación. El arranque completo está dockerizado; es un entorno de desarrollo/demo, no un despliegue público de producción.
+=======
+> **Estado:** autenticación, recuperación, catálogo, usuarios, gestión/revisión de técnicos y consulta administrativa de órdenes. El flujo operativo de solicitudes/asignación, pagos y liquidaciones sigue pendiente. Arranque completo dockerizado para desarrollo/demo local, no un despliegue público de producción.
+>>>>>>> main
 
 ## Stack
 
@@ -358,6 +362,12 @@ docker compose exec postgres psql -U tecnicos_user -d tecnicos_db `
 | GET | `/api/admin/tecnicos` | ✅ directorio paginado; filtros de cuenta, expediente, disponibilidad y especialidad |
 | GET | `/api/admin/tecnicos/{id}` | ✅ ficha privada: cuenta, expediente, especialidades y cobertura |
 | GET | `/api/admin/tecnicos/{id}/revisiones` | ✅ historial paginado de decisiones documentales |
+<<<<<<< HEAD
+=======
+| GET | `/api/admin/ordenes` | ✅ consulta paginada; búsqueda por ID/nombres, estado, categoría, asignación y fechas |
+| GET | `/api/admin/ordenes/{id}` | ✅ ficha privada del servicio, personas, ubicación y fechas |
+| GET | `/api/admin/ordenes/{id}/historial` | ✅ transiciones registradas paginadas; sin reconstrucción de eventos |
+>>>>>>> main
 
 El resto de la API exige `Authorization: Bearer <token>`. Sin token (o con uno inválido) responde **401 `NO_AUTENTICADO`**. Son públicas GET `/api/ping` y `/api/publico/**`, POST `/api/auth/login`, `/api/auth/registro`, `/api/tecnicos/registro`, `/api/auth/recuperacion/*`, `/api/auth/google`, `/api/auth/google/desafio` y `/api/auth/invitaciones/aceptar`. **Vincular Google exige sesión**.
 
@@ -407,6 +417,44 @@ revierte la operación y no crea cuenta. El remitente debe seguir siendo un
 administrador activo al aceptar. No se fusionan cuentas existentes por email.
 Mailpit no entrega a casillas externas; producción requiere SMTP real.
 
+<<<<<<< HEAD
+=======
+### Órdenes administrativas (W46/W47)
+
+En **Operación → Órdenes**, listado y ficha de **solo lectura**. No crea
+solicitudes, asigna técnicos, fuerza estados ni cancela órdenes. No inventa
+importes, SLA, métricas ni posiciones en vivo. Si no hay solicitudes, muestra
+un estado vacío real; no agrega órdenes de ejemplo a la base del usuario.
+
+- **Filtros:** ID exacto o nombre de cliente/técnico, estado, categoría
+  (incluidas las inactivas), con/sin técnico y fechas. Completalos y pulsá
+  **Aplicar filtros** o Enter en la búsqueda. **Actualizar órdenes** vuelve a
+  consultar los criterios ya aplicados. Páginas de 20, orden por creación e ID.
+- **Fechas:** `desde`/`hasta` son días ISO `AAAA-MM-DD` en `America/La_Paz`;
+  ambos días incluidos. API compara inicio inclusivo y comienzo del día
+  posterior a `hasta` exclusivo. El detalle/historial también usa hora boliviana.
+- **Ficha:** descripción, referencia, contactos actuales, técnico o «Sin
+  asignar», ubicación del servicio, fechas y cancelación si está registrada.
+  No se abren referencias arbitrarias de evidencia. OpenStreetMap se abre solo
+  al pulsar el botón, en otra pestaña sin referrer; comparte únicamente el punto.
+- **Historial:** fecha, estados, actor y observación reales. Un actor ausente es
+  «Actor no registrado», no una actividad del sistema inventada. Una orden sin
+  transiciones no genera eventos al consultarla.
+- **Privacidad:** solo administradores activos y sesión vigente. Listado sin
+  contactos, dirección exacta, coordenadas ni URLs. Todas las respuestas usan
+  `no-store`. Cuentas inactivas no ocultan órdenes históricas; identidades
+  eliminadas se muestran sin nombre original, ID de cuenta ni contacto.
+
+`#admin/ordenes?orden=ID` restaura la ficha tras F5. Volver desde la ficha
+conserva filtros y página de la pantalla; no se guardan datos personales en la
+URL. Los enlaces `?usuario=ID` de Usuarios y Técnicos siguen funcionando.
+Web menor de 1024 px y nativo conservan el aviso de backoffice web.
+
+La fase reutiliza el esquema actual, sin migración nueva ni cambios a la
+máquina de estados. La reparación continúa requiriendo cotización aceptada y
+la asignación debe pasar por el flujo de ofertas cuando se implemente.
+
+>>>>>>> main
 ### Gestión de técnicos (W61) y revisión documental (W49)
 
 En **Personas → Técnicos**, el directorio incluye cuentas activas/inactivas,
@@ -600,7 +648,7 @@ Se usa **GitHub Flow / trunk-based**, sin rama `develop`:
 - [ ] Login mobile, almacenamiento de token e interceptor
 - [ ] Pantallas de administración en la app
 - [ ] CI (tests backend + typecheck mobile)
-- [ ] Perfil Docker opcional para el build web
+- [x] Web exportada con TypeScript y servida por Nginx dentro de Docker
 
 ## Troubleshooting
 

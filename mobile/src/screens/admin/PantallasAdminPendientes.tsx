@@ -5,6 +5,7 @@ import { PantallaPendiente } from '../../ui/PantallaPendiente';
  * Cada una lleva el banner ámbar y la pantalla de Stitch que la va a implementar.
  */
 
+<<<<<<< HEAD
 export function OrdenesAdminScreen() {
   return (
     <PantallaPendiente
@@ -16,6 +17,8 @@ export function OrdenesAdminScreen() {
   );
 }
 
+=======
+>>>>>>> main
 export function MapaAdminScreen() {
   return (
     <PantallaPendiente
