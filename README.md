@@ -91,7 +91,7 @@ sin IDs OAuth válidos.
 
 ### Configuración opcional y actualización
 
-Podés copiar `.env.example` a `.env` para cambiar puertos, SMTP o Google.
+Puedes copiar `.env.example` a `.env` para cambiar puertos, SMTP o Google.
 No se copia ningún `.env` al construir imágenes. El ID público de Google web se
 inyecta como argumento de compilación; los secretos permanecen en el backend.
 
@@ -103,8 +103,8 @@ no los borra. **No usar `down -v` con datos que quieras conservar.**
 Al arrancar, el backend adapta los permisos del volumen de documentos de las
 imágenes antiguas y luego ejecuta Java como usuario sin privilegios.
 
-Si antes ejecutabas Metro en 9081, detenelo o configurá `WEB_PORT` diferente.
-Si tenés una base creada con otra contraseña, conservá su `.env`: cambiar una
+Si antes ejecutabas Metro en 9081, detén ese proceso o configura `WEB_PORT` diferente.
+Si tienes una base creada con otra contraseña, conserva su `.env`: cambiar una
 variable no cambia la contraseña guardada dentro del volumen existente.
 
 ### Verificación reproducible (sin Gradle local)
@@ -181,7 +181,7 @@ Compose espera a que esté saludable antes de iniciar el backend.
 |---|---|
 | `EXPO_PUBLIC_API_URL` | URL base de la API; no tiene fallback |
 
-Las variables `EXPO_PUBLIC_*` se inyectan al compilar el bundle: si las cambiás, reiniciá Metro.
+Las variables `EXPO_PUBLIC_*` se inyectan al compilar el bundle: si las cambias, reinicia Metro.
 
 ### 4. Teléfono físico: red local y firewall
 
@@ -403,7 +403,7 @@ para consumidores existentes. Las cuentas eliminadas no se muestran.
 
 #### Crear una cuenta por invitación
 
-1. Como admin, elegí **Invitar usuario**, completá datos y rol y confirmá
+1. Como admin, elige **Invitar usuario**, completa los datos y el rol y confirma
    con tu contraseña actual. Invitar a otro administrador requiere además una
    confirmación explícita en la interfaz.
 2. El servidor envía un permiso aleatorio por SMTP. En desarrollo se lee en
@@ -565,7 +565,7 @@ Esta fase usa el esquema existente: no requiere una migración nueva.
 
 ### Catálogo administrativo (W52)
 
-En Expo web a partir de 1024 px, entrá como administrador y elegí **Catálogo**.
+En Expo web a partir de 1024 px, entra como administrador y elige **Catálogo**.
 Permite buscar, filtrar por estado, crear y editar categorías y previsualizar
 la visita con recargo de urgencia. No publica la comisión interna ni simula pagos.
 En ventanas más angostas y en nativo se conserva el aviso de backoffice web.
@@ -589,18 +589,18 @@ En ventanas más angostas y en nativo se conserva el aviso de backoffice web.
 
 1. `docker compose up -d --build backend mailpit` desde la raíz; Expo web en `http://localhost:9081`.
 2. “Soy técnico” → crear cuenta → completar expediente. **No hay OTP obligatorio**.
-3. Completá CI/fecha de nacimiento, frente/dorso, al menos un certificado técnico, especialidades y cobertura. JPG/PNG/PDF hasta 8 MB; máximo 5 certificados. La geolocalización pide permiso; también podés ingresar coordenadas manualmente.
-4. Enviá a revisión. El expediente no se puede editar mientras está en revisión ni después de aprobar/rechazar.
-5. En otra sesión de navegador, entrá como admin (`admin@fixly.bo` / `Fixly2026!`, solo desarrollo) → “Validar técnicos”. Descargá documentos para revisarlos y observá campos concretos o confirmá aprobación/rechazo.
+3. Completa CI/fecha de nacimiento, frente/dorso, al menos un certificado técnico, especialidades y cobertura. JPG/PNG/PDF hasta 8 MB; máximo 5 certificados. La geolocalización pide permiso; también puedes ingresar coordenadas manualmente.
+4. Envía a revisión. El expediente no se puede editar mientras está en revisión ni después de aprobar/rechazar.
+5. En otra sesión del navegador, entra como admin (`admin@fixly.bo` / `Fixly2026!`, solo desarrollo) → “Validar técnicos”. Descarga documentos para revisarlos y observa campos concretos o confirma aprobación/rechazo.
 6. El técnico toca “Actualizar estado”, corrige solo lo observado y reenvía. Al aprobar, accede al panel técnico. Cada decisión queda en `identity.revisiones_tecnico`.
 
 Modo mixto: completitud automática y revisión humana de identidad y certificados. **No hay OCR, biometría ni comprobación automática de autenticidad documental.** Sin REJAP, SMS ni datos de cobro. El nivel 2 indica expediente completo; solo el aprobado (nivel 3) puede aceptar ofertas. V8 elimina el email como requisito sin inventar verificaciones; las aprobaciones e historial existentes se conservan.
 
 ### Recuperar contraseña con Mailpit
 
-1. En login tocá **¿Olvidaste tu contraseña?** e ingresá el correo de una cuenta con contraseña.
+1. En login toca **¿Olvidaste tu contraseña?** e ingresa el correo de una cuenta con contraseña.
 2. Abrí **http://localhost:8025** y leé el mensaje de recuperación. Mailpit captura correos: no los entrega a Gmail ni a otras casillas externas.
-3. Ingresá el código de seis dígitos, elegí una nueva contraseña e iniciá sesión nuevamente.
+3. Ingresa el código de seis dígitos, elige una nueva contraseña e inicia sesión nuevamente.
 
 El código nunca se devuelve ni se registra en logs: vence en 10 minutos, admite 5 intentos, 60 segundos entre envíos y 5 envíos/hora por email. Confirmarlo emite una autorización aleatoria de 32 bytes con vigencia de 10 minutos; se guarda solo su hash y se consume al cambiar contraseña. Los fallos HTTP 400 no revierten el contador. Solicitar otro código invalida el anterior. Cambiar la clave incrementa `version_sesion`: todos los JWT anteriores dejan de entrar, incluso antes de su vencimiento.
 
@@ -612,21 +612,21 @@ Tests: `.\gradlew.bat test --tests "*RecuperacionControllerTest"` desde `backend
 
 La integración está preparada, pero **no se habilita ni se afirma probada con Google real sin los IDs de Google Cloud**. Login con Google y SMTP a Gmail son integraciones independientes.
 
-1. Creá/configurá la pantalla de consentimiento de Google Cloud y un cliente OAuth de tipo **Web**. Registrá `http://localhost:9081` como origen JavaScript para desarrollo y tu dominio HTTPS en producción. No hace falta un client secret en la app.
-2. En desarrollo con Metro, definí `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` en
+1. Crea y configura la pantalla de consentimiento de Google Cloud y un cliente OAuth de tipo **Web**. Registra `http://localhost:9081` como origen JavaScript para desarrollo y tu dominio HTTPS en producción. No hace falta un client secret en la app.
+2. En desarrollo con Metro, define `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` en
    `mobile/.env.local`. Para la **web Docker**, definilo también en el `.env`
-   de la raíz: ese build no lee `mobile/.env.local`. Agregá el mismo ID a
+   de la raíz: ese build no lee `mobile/.env.local`. Agrega el mismo ID a
    `GOOGLE_CLIENT_IDS` de la raíz (separados por coma si hay varios) y autorizá
-   el origen web en Google Cloud. Para Docker ejecutá
+   el origen web en Google Cloud. Para Docker ejecuta
    `docker compose up -d --build web backend`; para Metro, reinicialo.
    Sin ID público, el botón se oculta; si falla Google con ID configurado, se
    muestra un error con reintento, no una autenticación ficticia.
 3. Web usa el botón oficial de Google Identity Services, callback en memoria y nonce emitido por el backend.
-4. Nativo usa `react-native-nitro-google-signin` y requiere **development build, no Expo Go**. Configurá los clientes Android/iOS reales en Google Cloud, SHA-1 de los certificados de Android, package/bundle IDs y URL scheme invertido de iOS. Completá `ANDROID_PACKAGE`, `IOS_BUNDLE_IDENTIFIER`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME` y luego `EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED=true`. `app.config.ts` agrega el plugin con Web ID + scheme; reconstruí el binario según la [guía de Expo](https://docs.expo.dev/guides/google-authentication/). No se generan ni editan carpetas nativas a mano.
+4. Nativo usa `react-native-nitro-google-signin` y requiere **development build, no Expo Go**. Configura los clientes Android/iOS reales en Google Cloud, SHA-1 de los certificados de Android, package/bundle IDs y URL scheme invertido de iOS. Completa `ANDROID_PACKAGE`, `IOS_BUNDLE_IDENTIFIER`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME` y luego `EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED=true`. `app.config.ts` agrega el plugin con Web ID + scheme; reconstruye el binario según la [guía de Expo](https://docs.expo.dev/guides/google-authentication/). No se generan ni editan carpetas nativas a mano.
 
 Sin IDs, Google queda oculto. El backend valida firma RS256 contra claves de Google, emisor, audiencia permitida, vencimiento, email verificado y nonce de un solo uso. Solo crea clientes persona; no otorga roles de técnico/admin. Si faltan nombres, se piden sin inventarlos. Las cuentas Google no tienen contraseña ficticia.
 
-Si ya existe una cuenta con el mismo correo, el acceso se rechaza sin fusionar. Entrá con tu contraseña → **Perfil → Vincular mi cuenta con Google**, confirmá la contraseña actual y elegí Google con el mismo email. La vinculación es explícita y requiere sesión válida.
+Si ya existe una cuenta con el mismo correo, el acceso se rechaza sin fusionar. Entra con tu contraseña → **Perfil → Vincular mi cuenta con Google**, confirma la contraseña actual y elige Google con el mismo email. La vinculación es explícita y requiere una sesión válida.
 
 Tests sin conexión a Google: `VerificadorGoogleTest` comprueba firmas RSA reales generadas para test y claims inválidos; `GoogleControllerTest` usa verificador simulado para comprobar políticas, consumo del nonce y vinculación. No sustituyen el ensayo real de OAuth ni la validación en dispositivos.
 
@@ -733,12 +733,12 @@ Se usa **GitHub Flow / trunk-based**, sin rama `develop`:
 ## Troubleshooting
 
 - **Configuración local:** `.env` es opcional; Compose tiene defaults. Si ya existe, revisá que corresponda a las credenciales del volumen de Postgres.
-- **Error de autenticación de Postgres en `bootRun`:** `POSTGRES_PASSWORD` no coincide con `application.yml`; exportá `SPRING_DATASOURCE_PASSWORD` o alineá los valores.
-- **Flyway checksum mismatch:** editaste una migración aplicada. En desarrollo, recreá la base con `docker compose down -v`; en producción, nunca edites una migración.
+- **Error de autenticación de Postgres en `bootRun`:** `POSTGRES_PASSWORD` no coincide con `application.yml`; exporta `SPRING_DATASOURCE_PASSWORD` o alinea los valores.
+- **Flyway checksum mismatch:** editaste una migración aplicada. En desarrollo, recrea la base con `docker compose down -v`; en producción, nunca edites una migración.
 - **Android no conecta a la API:** usá `http://10.0.2.2:9080`, no `localhost`.
 - **Teléfono físico no conecta:** usá la IP LAN de la PC y permití `9080`/`9081` en el firewall.
-- **Puerto ocupado:** cambiá `WEB_PORT`, `BACKEND_PORT` o el puerto correspondiente en `.env`. Metro y la web Docker no pueden ocupar 9081 a la vez.
-- **Expo Go no abre el proyecto:** la versión de Expo Go debe soportar SDK 58; si no, generá un development build.
+- **Puerto ocupado:** cambia `WEB_PORT`, `BACKEND_PORT` o el puerto correspondiente en `.env`. Metro y la web Docker no pueden ocupar 9081 a la vez.
+- **Expo Go no abre el proyecto:** la versión de Expo Go debe soportar SDK 58; si no, genera un development build.
 - **TypeScript:** no hay lint ni tests en mobile; el chequeo mínimo es `npx tsc --noEmit`.
 
 ## Documentación

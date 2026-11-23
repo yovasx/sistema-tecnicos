@@ -22,7 +22,7 @@ docker compose up -d --build     # desde la raíz; backend publicado en :9080
 
 - `test` levanta el contexto Spring y corre Flyway: **requiere Postgres ya arriba**. No hay Testcontainers ni H2; sin base, los tests fallan.
 - Spring **no** lee el `.env` de la raíz (solo docker-compose). `application.yml` usa `SPRING_DATASOURCE_*` con defaults locales (`localhost:5432/tecnicos_db`, `tecnicos_user`/`password`); docker-compose inyecta esas variables.
-- Si cambiás `POSTGRES_PASSWORD` en `.env`, exportá `SPRING_DATASOURCE_PASSWORD` antes de `bootRun` para que coincida.
+- Si cambias `POSTGRES_PASSWORD` en `.env`, exporta `SPRING_DATASOURCE_PASSWORD` antes de `bootRun` para que coincida.
 - No hay lint, formatter ni análisis estático configurados. `HELP.md` está generado e ignorado por git.
 - El Dockerfile compila con `bootJar -x test`: la imagen no valida los tests.
 
@@ -32,7 +32,7 @@ docker compose up -d --build     # desde la raíz; backend publicado en :9080
 - La v2 es la migración base: `V1__plataforma_tecnicos_v2.sql` (squash de las antiguas V1..V7). No la edites una vez aplicada; los cambios futuros van en `V2__...sql`.
 - Esquemas existentes: `identity`, `orders`, `geo`, `billing`, `chat`, `reputation`, `admin_svc`, `notification`. Desde la v2 los IDs son `BIGINT`/`INT IDENTITY` (no UUID); tablas y columnas en español, reglas de negocio en constraints y triggers.
 - Los enums son tipos nativos de Postgres y están en minúsculas (`cliente`, `tecnico`, `administrador`). En Java mapearlos con `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` o un converter; no asumir mayúsculas.
-- La v2 implementa en la base la máquina de estados, matching, cotizaciones, pagos y reputación. Para esos flujos llamá a las funciones (`orders.aceptar_oferta`, `billing.responder_cotizacion`, etc.) en vez de duplicar las reglas en Java.
+- La v2 implementa en la base la máquina de estados, matching, cotizaciones, pagos y reputación. Para esos flujos llama a las funciones (`orders.aceptar_oferta`, `billing.responder_cotizacion`, etc.) en vez de duplicar las reglas en Java.
 - La auditoría de triggers lee `app.usuario_id` vía `orders.usuario_actual()`; hay que setearlo dentro de la transacción (`set_config('app.usuario_id', ..., true)`), no en un filtro fuera de ella.
 - Para recrear la base de desarrollo: `docker compose down -v` y volver a levantar. **Borra todos los datos.**
 - Backend implementado: `/api/ping`, autenticación JWT/registro clientes, catálogo público, administración del catálogo, onboarding técnico, consulta administrativa de órdenes, solicitud de servicio del cliente con seguimiento propio, operación técnica V20/V21 y cobertura revisable V22. Pagos/retiros, push real y moderación pública siguen pendientes.
@@ -68,7 +68,7 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 ```
 
 - No es Expo Router: el entrypoint es `index.ts` → `App.tsx` con `registerRootComponent`; no existe `src/app/` ni la dependencia `expo-router`.
-- `EXPO_PUBLIC_API_URL` es obligatorio y no tiene fallback (`src/infrastructure/http/apiClient.ts`). Copiá `mobile/.env.example` a `mobile/.env.local`. Web/iOS: `http://localhost:9080`; emulador Android: `http://10.0.2.2:9080`; dispositivo físico: IP LAN de la máquina.
+- `EXPO_PUBLIC_API_URL` es obligatorio y no tiene fallback (`src/infrastructure/http/apiClient.ts`). Copia `mobile/.env.example` a `mobile/.env.local`. Web/iOS: `http://localhost:9080`; emulador Android: `http://10.0.2.2:9080`; dispositivo físico: IP LAN de la máquina.
 - Capas: `src/domain/` (puertos/interfaces, modelos y repositorios), `src/session/` (estado global de sesión con `SesionProvider` + `useSesion`), `src/infrastructure/` (adaptadores), `src/infrastructure/di.ts` (composition root manual que elige SecureStore o localStorage según `Platform.OS`).
 - Navegación real con `@react-navigation/native` + `native-stack` + `bottom-tabs`: `src/navigation/RootNavigator.tsx` elige las tabs por `rol` y por `tipoCliente` (`persona` | `empresa`). El admin entra pero ve aviso de que el panel es el backoffice web.
 - `src/ui/` tiene los componentes del design system (BotonPrimario, CampoTexto, Tarjeta, Chip, Texto, Aviso, ContenedorApp, PantallaPendiente). En web ≥1024 se usa shell desktop; por debajo, columna de 420 px ampliada a 640 en tablet. Formularios públicos fluidos con un solo nivel de margen; login/recuperación comparten `MarcoAuth`, tarjeta central solo en escritorio. `CampoTexto` reemplaza el outline web por borde/anillo azul accesible.
@@ -81,7 +81,7 @@ npx expo install <pkg>    # no uses npm install para dependencias nativas
 
 ## Git
 
-- `main` es la rama estable y protegida. No commitees directo: creá `feature/*`, `fix/*` o `chore/*` desde `main`, abrí PR y mergeá con squash.
+- `main` es la rama estable y protegida. No hagas commits directamente: crea `feature/*`, `fix/*` o `chore/*` desde `main`, abre un PR y haz merge con squash.
 - No hay rama `develop`. `hotfix/*` solo para corregir producción. Las versiones estables se etiquetan como `vX.Y.Z` sobre `main`.
 - Commits con Conventional Commits (`feat(auth): ...`, `fix(orders): ...`, `chore(db): ...`).
 

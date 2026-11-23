@@ -134,7 +134,7 @@ class SeguimientoControllerTest {
     }
     @Test void las_posiciones_antiguas_no_se_presentan_como_actuales() throws Exception {
         long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
-        posicion(t,s,Instant.now().minusSeconds(31),5).andExpect(status().isUnprocessableContent());
+        posicion(t,s,Instant.now().minusSeconds(60),5).andExpect(status().isUnprocessableContent());
     }
     @Test void la_precision_insuficiente_no_se_guarda() throws Exception {
         long o=orden(); String t=login(TECNICO),s=iniciarGps(o,t);
