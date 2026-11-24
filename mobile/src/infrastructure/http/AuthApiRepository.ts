@@ -2,6 +2,7 @@ import { DatosRegistroCliente } from '../../domain/models/Registro';
 import { DatosRegistroTecnico } from '../../domain/models/Expediente';
 import { SesionIniciada, UsuarioSesion } from '../../domain/models/Sesion';
 import { AuthRepository } from '../../domain/repositories/AuthRepository';
+import { PropositoGoogle } from '../../domain/models/Google';
 import { apiClient } from './apiClient';
 import { traducirError } from './errores';
 
@@ -11,8 +12,8 @@ export class AuthApiRepository implements AuthRepository {
     try { await apiClient.post('/api/auth/google/vincular', { idToken, nonce, password }); }
     catch (e) { throw traducirError(e); }
   }
-  async desafioGoogle(): Promise<{ nonce: string }> {
-    try { return (await apiClient.post<{ nonce: string }>('/api/auth/google/desafio')).data; }
+  async desafioGoogle(proposito: PropositoGoogle = 'acceso'): Promise<{ nonce: string }> {
+    try { return (await apiClient.post<{ nonce: string }>('/api/auth/google/desafio', { proposito })).data; }
     catch (e) { throw traducirError(e); }
   }
   async google(idToken: string, nonce: string, nombre?: string, apellido?: string): Promise<SesionIniciada> {

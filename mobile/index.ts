@@ -1,4 +1,5 @@
 import { registerRootComponent } from 'expo';
+import './src/infrastructure/ubicacion/gpsSegundoPlano';
 
 import App from './App';
 

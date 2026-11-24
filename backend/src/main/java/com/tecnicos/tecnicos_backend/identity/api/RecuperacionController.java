@@ -22,7 +22,7 @@ public class RecuperacionController {
     public ResponseEntity<Solicitado> solicitar(@Valid @RequestBody Solicitud r) {
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(
             new Solicitado(servicio.solicitar(r.email()),
-                "Si existe una cuenta con contraseña para ese email y no alcanzaste el límite, recibirás un código. Revisá tu bandeja."));
+                "Si existe una cuenta con contraseña para ese correo y no alcanzaste el límite, recibirás un código. Revisa tu bandeja."));
     }
     @PostMapping("/confirmar")
     public ResponseEntity<Confirmado> confirmar(@Valid @RequestBody Confirmacion r) {

@@ -13,6 +13,7 @@ export interface BienvenidaMovilScreenProps {
   onEntrar: () => void;
   /** Los técnicos existentes entran por login; el alta completa es posterior. */
   onSoyTecnico: () => void;
+  onActivarCuenta: () => void;
 }
 
 /**
@@ -26,6 +27,7 @@ export function BienvenidaMovilScreen({
   onCrearCuenta,
   onEntrar,
   onSoyTecnico,
+  onActivarCuenta,
 }: BienvenidaMovilScreenProps) {
   const { categorias, cargando, error, recargar } = useCategoriasPublicas();
 
@@ -61,7 +63,7 @@ export function BienvenidaMovilScreen({
           </Texto>
           <Texto style={estilos.titular}>Un técnico verificado para tu hogar</Texto>
           <Texto variante="cuerpo" color={colores.secundario}>
-            Encontrá servicios técnicos y conocé las tarifas base, sin vueltas.
+            Encuentra servicios técnicos y consulta las tarifas base de forma sencilla.
           </Texto>
         </View>
 
@@ -88,7 +90,7 @@ export function BienvenidaMovilScreen({
               >
                 <Ionicons name="cloud-offline-outline" size={18} color={colores.advertencia} />
                 <Texto variante="caption" color={colores.advertencia} style={estilos.errorTexto}>
-                  {error} Tocá para reintentar.
+                  {error} Selecciona para reintentar.
                 </Texto>
               </Pressable>
             ) : null}
@@ -128,6 +130,10 @@ export function BienvenidaMovilScreen({
             style={estilos.soyTecnico}
           >
             Soy técnico
+          </Texto>
+          <Texto variante="caption" color={colores.secundario} centrado
+            accessibilityRole="button" onPress={onActivarCuenta} style={estilos.soyTecnico}>
+            Activar cuenta invitada
           </Texto>
         </View>
       </ScrollView>

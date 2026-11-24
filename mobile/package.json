@@ -12,11 +12,15 @@
     "@react-navigation/native-stack": "^7.21.0",
     "axios": "^1.21.0",
     "expo": "~58.0.19",
+    "expo-crypto": "~58.0.8",
     "expo-document-picker": "~58.0.5",
+    "expo-file-system": "~58.0.14",
     "expo-font": "~58.0.12",
     "expo-location": "~58.0.22",
     "expo-secure-store": "~58.0.2",
+    "expo-sharing": "~58.0.23",
     "expo-status-bar": "~58.0.4",
+    "expo-task-manager": "~58.0.14",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
@@ -24,13 +28,16 @@
     "react-native-nitro-modules": "^0.37.2",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",
-    "react-native-web": "^0.21.4"
+    "react-native-web": "^0.21.4",
+    "react-native-webview": "14.0.1"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "verificar:gps": "node --test ../scripts/gps-runtime.test.cjs",
+    "verificar:lenguaje": "node --test ../scripts/verificar-lenguaje.test.cjs && node ../scripts/verificar-lenguaje.cjs",
     "start": "expo start --port 9081",
     "android": "expo start --android",
     "ios": "expo start --ios",

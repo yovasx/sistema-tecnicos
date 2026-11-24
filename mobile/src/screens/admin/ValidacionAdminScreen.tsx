@@ -55,7 +55,7 @@ export function ValidacionAdminScreen() {
     setSeleccionado(null); setDetalle(null); void cargar();
   }
   return <View style={{ gap: 24 }}>
-    <Encabezado titulo="Revisión de técnicos" subtitulo="Revisá los expedientes enviados. La aprobación documental no sustituye la activación de la cuenta." />
+    <Encabezado titulo="Revisión de técnicos" subtitulo="Revisa los expedientes enviados. La aprobación documental no sustituye la activación de la cuenta." />
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
       <FiltroAdmin etiqueta="Estado del expediente" valor={estado} deshabilitado={bloqueado}
         opciones={['en_revision', 'observado', 'aprobado', 'rechazado'].map(v => [v, estadosExpediente[v]] as const)}
@@ -89,8 +89,8 @@ export function ValidacionAdminScreen() {
           <Texto variante="caption">Cobertura: {detalle.zonas.map(z => z.nombre).join(', ') || 'Sin registrar'}</Texto>
           <ExpedienteTecnicoAdmin key={seleccionado.tecnicoId} id={seleccionado.tecnicoId} expediente={detalle}
             cuentaActiva={cuentaActiva} onCambio={completado} onInteraccion={definirInteraccion} />
-        </Tarjeta> : <Tarjeta style={{ gap: 12 }}><Texto variante="subtitulo">Seleccioná un expediente</Texto>
-          <Texto color={colores.secundario}>Consultá los documentos privados y registrá una decisión con sus observaciones.</Texto></Tarjeta>}
+        </Tarjeta> : <Tarjeta style={{ gap: 12 }}><Texto variante="subtitulo">Selecciona un expediente</Texto>
+          <Texto color={colores.secundario}>Consulta los documentos privados y registra una decisión con sus observaciones.</Texto></Tarjeta>}
       </View>
     </View>
   </View>;

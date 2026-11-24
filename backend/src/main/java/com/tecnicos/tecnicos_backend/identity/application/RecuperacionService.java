@@ -55,6 +55,6 @@ public class RecuperacionService {
     }
     private ApiException invalido() {
         return new ApiException(HttpStatus.BAD_REQUEST,"RECUPERACION_INVALIDA",
-            "El código o la autorización no es válido, venció o ya fue usado. Solicitá un código nuevo.");
+            "El código o la autorización no es válido, venció o ya fue usado. Solicita un código nuevo.");
     }
 }

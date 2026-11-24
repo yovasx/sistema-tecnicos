@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { colores, espacio, radio, sombraTarjeta } from '../theme/tokens';
 
 export interface TarjetaProps {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   relleno?: number;
 }
 

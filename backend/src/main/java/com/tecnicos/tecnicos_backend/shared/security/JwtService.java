@@ -35,7 +35,7 @@ public class JwtService {
 
     public TokenGenerado generar(Long usuarioId, RolUsuario rol, TipoCliente tipoCliente,
                                  String nombre, String email) {
-        // El claim NumericDate del JWT tiene precisión de segundos: se trunca acá
+        // El claim NumericDate del JWT tiene precisión de segundos: se trunca aquí
         // para que el vencimiento devuelto sea idéntico al que se lee del token.
         Instant emitidoEn = Instant.now().truncatedTo(ChronoUnit.SECONDS);
         Instant expiraEn = emitidoEn.plus(Duration.ofMinutes(propiedades.ttlMinutes()));

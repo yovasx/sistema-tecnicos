@@ -14,6 +14,7 @@ import { BotonPrimario } from '../../ui/BotonPrimario';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { useResponsive } from '../../theme/responsive';
 import { colores, radio } from '../../theme/tokens';
+import { SeguridadTecnicoPendiente } from './SeguridadTecnicoPendiente';
 
 const PASOS = ['Tus datos', 'Documentos', 'Especialidades', 'Cobertura', 'Revisión'];
 const CAMPOS: Record<string, string> = {
@@ -49,6 +50,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [coordenadas, setCoordenadas] = useState(false);
+  const [seguridad, setSeguridad] = useState(false);
   const bloqueo = useRef(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const tamano = esDesktop ? 'escritorio' as const : 'movil' as const;
@@ -56,7 +58,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   useEffect(() => {
     let vigente = true;
     repo.categorias().then((c) => { if (vigente) setCategorias(c); })
-      .catch(() => { if (vigente) setError('No pudimos cargar las especialidades. Usá Actualizar estado.'); });
+      .catch(() => { if (vigente) setError('No pudimos cargar las especialidades. Usa Actualizar estado.'); });
     return () => { vigente = false; };
   }, []);
   useEffect(() => {
@@ -69,7 +71,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
     setError(''); setMensaje(''); setPaso(p); scroll.current?.scrollTo({ y: 0, animated: true });
   }
   async function accion(operacion: () => Promise<void>, avanzar = false,
-                         aviso = 'Guardado. Podés continuar más tarde sin perder tu avance.') {
+                         aviso = 'Guardado. Puedes continuar más tarde sin perder tu avance.') {
     if (bloqueo.current) return;
     bloqueo.current = true; setOcupado(true); setError(''); setMensaje('');
     try {
@@ -90,18 +92,19 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
       });
       if (resultado.canceled) return;
       if (resultado.assets.length > 5 || resultado.assets.some((a) => (a.size ?? 0) > 8 * 1024 * 1024)) {
-        setError('Elegí hasta 5 certificados. Cada archivo puede pesar hasta 8 MB.'); return;
+        setError('Selecciona hasta 5 certificados. Cada archivo puede pesar hasta 8 MB.'); return;
       }
       const lista = resultado.assets.map((a) => ({
         nombre: a.name, uri: a.uri, tipo: a.mimeType ?? 'application/octet-stream', tamano: a.size, contenidoWeb: a.file,
       }));
       setArchivos((previos) => ({ ...previos, [tipo]: tipo === 'certificados' ? lista : lista[0] }));
       setError('');
-    } catch { setError('No pudimos abrir el selector de archivos. Intentá de nuevo.'); }
+    } catch { setError('No pudimos abrir el selector de archivos. Intenta de nuevo.'); }
   }
   const terminados = completos(e);
   const editable = e.estadoExpediente === 'borrador' || e.estadoExpediente === 'observado';
   const todos = terminados.every(Boolean) && Object.keys(e.observaciones).length === 0;
+  if (seguridad) return <SeguridadTecnicoPendiente onVolver={() => setSeguridad(false)} />;
 
   return (
     <MarcoPublico>
@@ -111,9 +114,11 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
             <View style={[s.caja, esDesktop && s.cajaDesktop]}>
               <View style={s.cabecera}>
                 <Texto variante="etiqueta" color={colores.marca}>Fixly · Alta de técnico</Texto>
-                <Texto accessibilityRole="button" onPress={() => void cerrarSesion()} color={colores.secundario} variante="etiqueta">Cerrar sesión</Texto>
+                <Texto accessibilityRole="button" onPress={ocupado ? undefined : () => void cerrarSesion()} color={colores.secundario} variante="etiqueta">Cerrar sesión</Texto>
               </View>
-              <Texto variante="titulo">{editable ? 'Prepará tu perfil profesional' : 'Estado de tu expediente'}</Texto>
+              <BotonPrimario titulo="Mi cuenta · Acceso y seguridad" variante="secundario"
+                deshabilitado={ocupado} onPress={() => setSeguridad(true)} />
+              <Texto variante="titulo">{editable ? 'Prepara tu perfil profesional' : 'Estado de tu expediente'}</Texto>
               <Texto variante="caption">Tu avance se guarda en tu cuenta. No recibirás servicios hasta que aprobemos tu expediente.</Texto>
               {Object.entries(e.observaciones).map(([campo, motivo]) => (
                 <Aviso key={campo} tono="peligro" titulo={CAMPOS[campo] ?? 'Resultado de la revisión'}>{motivo}</Aviso>
@@ -134,7 +139,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                 </ScrollView>
                 <View style={s.formulario}>
                 <Texto variante="subtitulo">Paso {paso + 1} de 5 · {PASOS[paso]}</Texto>
-                {error ? <Aviso tono="peligro" titulo="Revisá este paso">{error}</Aviso> : null}
+                {error ? <Aviso tono="peligro" titulo="Revisa este paso">{error}</Aviso> : null}
                 {mensaje ? <Aviso tono="info">{mensaje}</Aviso> : null}
 
                 {paso === 0 ? <>
@@ -142,14 +147,14 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                     onChangeText={setCi} maxLength={20} placeholder="1234567-1A" autoCapitalize="characters" />
                   <CampoTexto etiqueta="Fecha de nacimiento (AAAA-MM-DD)" accessibilityLabel="Fecha de nacimiento"
                     value={fecha} onChangeText={setFecha} placeholder="1990-01-25" maxLength={10} />
-                  <Texto variante="caption">Debés tener entre 18 y 100 años. El CI debe coincidir con tus documentos.</Texto>
+                  <Texto variante="caption">Debes tener entre 18 y 100 años. El CI debe coincidir con tus documentos.</Texto>
                   <BotonPrimario titulo="Guardar y continuar" tamano={tamano} cargando={ocupado} onPress={() => {
-                    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !ci.trim()) { setError('Completá el CI y una fecha con formato AAAA-MM-DD.'); return; }
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !ci.trim()) { setError('Completa el CI y una fecha con formato AAAA-MM-DD.'); return; }
                     void accion(() => repo.guardarDatos(ci.trim(), fecha), true);
                   }} />
                 </> : null}
                 {paso === 1 ? <>
-                  <Texto color={colores.secundario}>Subí documentos legibles, sin recortar los bordes. Solo vos y el equipo autorizado pueden acceder.</Texto>
+                  <Texto color={colores.secundario}>Sube documentos legibles, sin recortar los bordes. Solo tú y el equipo autorizado pueden acceder.</Texto>
                   <Texto variante="caption">JPG, PNG o PDF · Hasta 8 MB por archivo · Hasta 5 certificados técnicos.</Texto>
                   <Documento titulo="CI frente" nombre={archivos.frente?.nombre} cargado={!!e.ciFrenteUrl} ocupado={ocupado} onElegir={() => void elegir('frente')} />
                   <Documento titulo="CI dorso" nombre={archivos.dorso?.nombre} cargado={!!e.ciDorsoUrl} ocupado={ocupado} onElegir={() => void elegir('dorso')} />
@@ -165,7 +170,7 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                   }} />
                 </> : null}
                 {paso === 2 ? <>
-                  <Texto variante="caption">Elegí los servicios que podés acreditar con tus certificados.</Texto>
+                  <Texto variante="caption">Selecciona los servicios que puedes acreditar con tus certificados.</Texto>
                   {categorias.map((c) => (
                     <Pressable key={c.id} accessibilityRole="checkbox" accessibilityState={{ checked: seleccion.includes(c.id) }}
                       onPress={() => setSeleccion((v) => v.includes(c.id) ? v.filter((id) => id !== c.id) : [...v, c.id])}
@@ -178,14 +183,14 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                     onPress={() => void accion(() => repo.especialidades(seleccion), true)} />
                 </> : null}
                 {paso === 3 ? <>
-                  <Texto variante="caption">Definí el centro y el radio de tu cobertura. Usá tu ubicación actual o ingresá las coordenadas de la zona donde querés trabajar. No rastreamos tu ubicación.</Texto>
+                  <Texto variante="caption">Define el centro y el radio de tu cobertura. Usa tu ubicación actual o ingresa las coordenadas de la zona donde quieres trabajar. No rastreamos tu ubicación.</Texto>
                   <CampoTexto etiqueta="Nombre de la zona" accessibilityLabel="Nombre de la zona" value={zona} onChangeText={setZona} placeholder="Sopocachi" />
                   <BotonPrimario titulo="Usar mi ubicación como centro" variante="secundario" tamano={tamano}
                     cargando={ocupado} onPress={() => {
                       if (ocupado) return;
                       setOcupado(true); setError('');
                       void ubicacionActual().then((p) => { setLat(p.lat.toFixed(6)); setLng(p.lng.toFixed(6)); })
-                        .catch((ex) => setError(ex instanceof Error ? ex.message : 'Ubicación no disponible. Ingresá las coordenadas.'))
+                        .catch((ex) => setError(ex instanceof Error ? ex.message : 'Ubicación no disponible. Ingresa las coordenadas.'))
                         .finally(() => setOcupado(false));
                     }} />
                   <Texto color={colores.marca} variante="etiqueta" accessibilityRole="button"
@@ -204,13 +209,13 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                   <BotonPrimario titulo="Guardar cobertura" tamano={tamano} cargando={ocupado} onPress={() => {
                     const numeros = [lat, lng, radioMetros].map((n) => Number(n.replace(',', '.')));
                     if (!zona.trim() || [lat, lng, radioMetros].some((v) => !v.trim()) || numeros.some((v) => !Number.isFinite(v))) {
-                      setError('Completá la zona, las coordenadas y el radio.'); return;
+                      setError('Completa la zona, las coordenadas y el radio.'); return;
                     }
                     void accion(() => repo.zona(zona.trim(), numeros[0], numeros[1], numeros[2]), true);
                   }} />
                 </> : null}
                 {paso === 4 ? <>
-                  <Texto variante="caption">Revisá los pasos antes de enviar. El equipo revisará tus documentos; subirlos no significa estar aprobado.</Texto>
+                  <Texto variante="caption">Revisa los pasos antes de enviar. El equipo revisará tus documentos; subirlos no significa estar aprobado.</Texto>
                   {PASOS.slice(0, 4).map((nombre, i) => (
                     <Pressable key={nombre} accessibilityRole="button" onPress={() => ir(i)} style={s.opcion}>
                       <Ionicons name={terminados[i] ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={terminados[i] ? colores.exito : colores.terciario} />
@@ -225,8 +230,8 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
               </View> : (
                 <Aviso tono={e.estadoExpediente === 'rechazado' ? 'peligro' : 'info'}
                   titulo={e.estadoExpediente === 'rechazado' ? 'Tu expediente fue rechazado' : 'Expediente en revisión'}>
-                  {e.estadoExpediente === 'rechazado' ? 'Leé el motivo indicado. Si creés que es un error, contactá a soporte@fixly.bo.' :
-                    'Recibimos tus datos y documentos. El equipo está revisando el CI y tus certificados. Podés volver más tarde y actualizar el estado.'}
+                  {e.estadoExpediente === 'rechazado' ? 'Lee el motivo indicado. Si crees que es un error, contacta a soporte@fixly.bo.' :
+                    'Recibimos tus datos y documentos. El equipo está revisando el CI y tus certificados. Puedes volver más tarde y actualizar el estado.'}
                 </Aviso>
               )}
               <BotonPrimario titulo="Actualizar estado" variante="secundario" tamano={tamano} deshabilitado={ocupado} onPress={() => void onActualizar()} />
@@ -265,7 +270,7 @@ function Documento({ titulo, nombre, cargado, ocupado, onElegir }: {
         onPress={() => { if (!ocupado) onElegir(); }} style={{ paddingVertical: 8 }}>
         {nombre || cargado ? 'Reemplazar archivo' : 'Elegir archivo'}
       </Texto>
-      {nombre ? <Texto variante="caption" color={colores.info}>Seleccionado · guardá para subirlo</Texto> : null}
+      {nombre ? <Texto variante="caption" color={colores.info}>Seleccionado · guarda para subirlo</Texto> : null}
     </View>
   </View>;
 }

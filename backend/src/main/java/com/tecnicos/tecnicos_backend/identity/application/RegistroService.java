@@ -24,7 +24,7 @@ import java.util.Locale;
  * Alta pública de clientes.
  *
  * <p>La regla de negocio (rol fijo, perfil válido, datos de empresa completos)
- * vive en {@code identity.registrar_cliente}; acá solo se normalizan los datos,
+ * vive en {@code identity.registrar_cliente}; aquí solo se normalizan los datos,
  * se adelantan los duplicados con un mensaje útil y se emite la sesión para que
  * la persona entre directo después de registrarse.</p>
  */
@@ -56,7 +56,7 @@ public class RegistroService {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
         if (usuarios.existsByEmailIgnoreCase(email)) {
             throw new ApiException(HttpStatus.CONFLICT, "EMAIL_YA_REGISTRADO",
-                    "Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
+                    "Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.");
         }
 
         String razonSocial = null;
@@ -70,7 +70,7 @@ public class RegistroService {
             }
             if (usuarios.existsByNit(nit)) {
                 throw new ApiException(HttpStatus.CONFLICT, "NIT_YA_REGISTRADO",
-                        "Ya existe una cuenta con ese NIT. Iniciá sesión o contactá a soporte.");
+                        "Ya existe una cuenta con ese NIT. Inicia sesión o contacta a soporte.");
             }
         }
 

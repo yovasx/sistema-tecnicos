@@ -69,7 +69,7 @@ public class AuthService {
         // Recién con la contraseña correcta se puede contar el estado de la cuenta.
         if (!usuario.isActivo() || usuario.isEliminado()) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "CUENTA_INACTIVA",
-                    "Tu cuenta está inactiva. Contactá a soporte para reactivarla.");
+                    "Tu cuenta está inactiva. Contacta a soporte para reactivarla.");
         }
 
         TokenGenerado token = jwtService.generar(
@@ -93,11 +93,11 @@ public class AuthService {
     public UsuarioResumen sesion(Long usuarioId) {
         Usuario usuario = usuarios.findById(usuarioId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "NO_AUTENTICADO",
-                        "Necesitás iniciar sesión."));
+                        "Necesitas iniciar sesión."));
 
         if (!usuario.isActivo() || usuario.isEliminado()) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "CUENTA_INACTIVA",
-                    "Tu cuenta está inactiva. Contactá a soporte para reactivarla.");
+                    "Tu cuenta está inactiva. Contacta a soporte para reactivarla.");
         }
 
         return UsuarioResumen.de(usuario);

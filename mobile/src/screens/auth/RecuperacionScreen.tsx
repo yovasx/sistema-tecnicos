@@ -43,13 +43,13 @@ export function RecuperacionScreen({ onEntrar }: { onEntrar: () => void }) {
     finally { bloqueo.current = false; setOcupado(false); }
   }
   async function enviar() {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Ingresá un correo válido.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Ingresa un correo válido.'); return; }
     await accion(async () => {
       const r = await repo.solicitar(email.trim());
       setSolicitud(r.solicitudId); setMensaje(r.mensaje); setCodigo(''); setEspera(60); setPaso(1);
     });
   }
-  const titulos = ['Recuperá tu acceso', 'Revisá tu correo', 'Elegí una nueva contraseña', 'Contraseña actualizada'];
+  const titulos = ['Recupera tu acceso', 'Revisa tu correo', 'Selecciona una nueva contraseña', 'Contraseña actualizada'];
   return <MarcoAuth onVolver={() => { if (!ocupado) onEntrar(); }}>
     <Ionicons name={paso === 3 ? 'checkmark-circle-outline' : 'lock-open-outline'} size={32} color={colores.marca} />
     <Texto variante="titulo">{titulos[paso]}</Texto>
@@ -65,13 +65,13 @@ export function RecuperacionScreen({ onEntrar }: { onEntrar: () => void }) {
       <CampoTexto etiqueta="Correo electrónico" value={email} onChangeText={setEmail} editable={!ocupado}
         keyboardType="email-address" autoComplete="email" autoCapitalize="none" onSubmitEditing={() => void enviar()} />
       <BotonPrimario titulo="Enviar código" tamano={tamano} cargando={ocupado} onPress={() => void enviar()} />
-      <Texto variante="caption">Si ingresás solo con Google, usá “Continuar con Google”. Fixly no cambia tu contraseña de Google.</Texto>
+      <Texto variante="caption">Si ingresas solo con Google, usa “Continuar con Google”. Fixly no cambia tu contraseña de Google.</Texto>
     </> : null}
     {paso === 1 ? <>
       <Aviso titulo={email}>{mensaje}</Aviso>
       <CampoTexto etiqueta="Código de 6 dígitos" value={codigo} onChangeText={(v) => setCodigo(v.replace(/\D/g, ''))}
         keyboardType="number-pad" maxLength={6} autoComplete="one-time-code" editable={!ocupado} />
-      <Texto variante="caption">Vence en 10 minutos. Tenés hasta 5 intentos. Revisá también spam.</Texto>
+      <Texto variante="caption">Vence en 10 minutos. Tienes hasta 5 intentos. Revisa también la carpeta de correo no deseado.</Texto>
       <BotonPrimario titulo="Verificar código" tamano={tamano} cargando={ocupado} deshabilitado={!/^\d{6}$/.test(codigo)}
         onPress={() => void accion(async () => {
           const r = await repo.confirmar(solicitud, codigo); setPermiso(r.permiso); setCodigo(''); setMensaje(''); setPaso(2);
@@ -84,12 +84,12 @@ export function RecuperacionScreen({ onEntrar }: { onEntrar: () => void }) {
     {paso === 2 ? <>
       <CampoTexto etiqueta="Nueva contraseña" value={password} onChangeText={setPassword} esPassword
         autoComplete="new-password" editable={!ocupado} />
-      <CampoTexto etiqueta="Repetí la contraseña" value={repetida} onChangeText={setRepetida} esPassword
+      <CampoTexto etiqueta="Repite la contraseña" value={repetida} onChangeText={setRepetida} esPassword
         autoComplete="new-password" editable={!ocupado} />
       <Texto variante="caption">Entre 8 y 72 caracteres. Las sesiones anteriores se cerrarán.</Texto>
       <BotonPrimario titulo="Guardar contraseña" tamano={tamano} cargando={ocupado} onPress={() => {
         if (password.length < 8 || password.length > 72 || password !== repetida) {
-          setError('Usá entre 8 y 72 caracteres y repetí la misma contraseña.'); return;
+          setError('Usa entre 8 y 72 caracteres y repite la misma contraseña.'); return;
         }
         void accion(async () => {
           await repo.restablecer(solicitud, permiso, password);
@@ -98,7 +98,7 @@ export function RecuperacionScreen({ onEntrar }: { onEntrar: () => void }) {
       }} />
     </> : null}
     {paso === 3 ? <>
-      <Texto color={colores.secundario}>Tu acceso ya está actualizado. Iniciá sesión con tu nueva contraseña.</Texto>
+      <Texto color={colores.secundario}>Tu acceso ya está actualizado. Inicia sesión con tu nueva contraseña.</Texto>
       <BotonPrimario titulo="Volver a iniciar sesión" tamano={tamano} onPress={onEntrar} />
     </> : null}
   </MarcoAuth>;

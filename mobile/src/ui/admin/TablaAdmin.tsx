@@ -24,7 +24,7 @@ export function TablaAdmin<T>({ columnas, filas, clave, pagina, tamano, total, o
             style={[s.celda, c.ancho ? { width: c.ancho } : { flex: 1, minWidth: 220 }]}>{c.render(f)}</View>)}
         </View>)}
         {!filas.length ? <View style={s.vacio}><Texto variante="subtitulo">Sin resultados</Texto>
-          <Texto color={colores.secundario}>Probá con otra búsqueda o quitá los filtros.</Texto></View> : null}
+          <Texto color={colores.secundario}>Intenta con otra búsqueda o quita los filtros.</Texto></View> : null}
       </View>
     </ScrollView>
     <View style={s.pie}>

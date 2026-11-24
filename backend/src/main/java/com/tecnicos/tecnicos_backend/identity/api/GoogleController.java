@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 public class GoogleController {
     private final GoogleService servicio;
     public GoogleController(GoogleService servicio) { this.servicio=servicio; }
+    public enum Proposito { acceso, cliente, tecnico, vinculacion }
+    public record SolicitudDesafio(Proposito proposito) {}
     public record Desafio(String nonce) {}
     public record Acceso(@NotBlank @Size(max=16000) String idToken,
                          @NotBlank @Pattern(regexp="[a-f0-9]{64}") String nonce,
@@ -19,8 +21,9 @@ public class GoogleController {
     public record Vinculacion(@NotBlank @Size(max=16000) String idToken,
         @NotBlank @Pattern(regexp="[a-f0-9]{64}") String nonce,@NotBlank @Size(max=72) String password) {}
     @PostMapping("/desafio")
-    public ResponseEntity<Desafio> desafio() {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(new Desafio(servicio.desafio()));
+    public ResponseEntity<Desafio> desafio(@Valid @RequestBody(required=false) SolicitudDesafio r) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+            .body(new Desafio(servicio.desafio(r==null || r.proposito()==null?Proposito.acceso:r.proposito())));
     }
     @PostMapping
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody Acceso r) {

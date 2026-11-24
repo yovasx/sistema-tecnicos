@@ -1,7 +1,7 @@
 import {
   CategoriaAdmin,
   GuardarCategoriaInput,
-  ResumenAdmin,
+  ResumenAdmin, EditarPerfilAdmin, DashboardAdmin,
   TecnicoPendiente,
   UsuarioAdmin,
   FiltrosUsuarios, PaginaUsuarios, DetalleUsuarioAdmin, EditarUsuarioAdmin, EstadoUsuarioAdmin, CambioUsuarioAdmin, InvitacionUsuarioAdmin,
@@ -9,6 +9,9 @@ import {
 
 /** Puerto del backoffice: lecturas y escritura administrada del catálogo. */
 export interface AdminRepository {
+  dashboard(dias: 7 | 30): Promise<DashboardAdmin>;
+  perfil(): Promise<DetalleUsuarioAdmin>;
+  editarPerfil(datos: EditarPerfilAdmin): Promise<DetalleUsuarioAdmin>;
   resumen(): Promise<ResumenAdmin>;
   usuarios(): Promise<UsuarioAdmin[]>;
   paginaUsuarios(filtros: FiltrosUsuarios): Promise<PaginaUsuarios>;

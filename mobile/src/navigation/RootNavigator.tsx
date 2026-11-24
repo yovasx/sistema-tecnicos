@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSesion } from '../session/SesionProvider';
+import { SolicitudServicioProvider } from '../session/SolicitudServicioProvider';
 import { esClienteEmpresa } from '../domain/models/Sesion';
 import { useResponsive } from '../theme/responsive';
 import { DesktopShell } from '../layouts/DesktopShell';
@@ -15,6 +16,7 @@ import {
 import { PublicoFlujo } from '../screens/publico/PublicoFlujo';
 import { InicioCliente } from '../screens/cliente/InicioCliente';
 import { MisServicios } from '../screens/cliente/MisServicios';
+import { SolicitudServicioWizard } from '../screens/cliente/SolicitudServicioWizard';
 import { NotificacionesCliente } from '../screens/cliente/NotificacionesCliente';
 import { PerfilCliente } from '../screens/cliente/PerfilCliente';
 import { InicioEmpresa } from '../screens/empresa/InicioEmpresa';
@@ -25,10 +27,12 @@ import { PanelTecnico } from '../screens/tecnico/PanelTecnico';
 import { ServiciosTecnico } from '../screens/tecnico/ServiciosTecnico';
 import { BilleteraTecnico } from '../screens/tecnico/BilleteraTecnico';
 import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
+import { CoberturaTecnico } from '../screens/tecnico/CoberturaTecnico';
 import { AdminScreen } from '../screens/admin/AdminScreen';
 import { Texto } from '../ui/Texto';
 import { colores } from '../theme/tokens';
 import { AccesoTecnico } from '../screens/tecnico/AccesoTecnico';
+import { SeguimientoGpsProvider } from '../session/SeguimientoGpsProvider';
 
 const Tab = createBottomTabNavigator();
 
@@ -41,6 +45,7 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Facturacion: 'card',
   Panel: 'speedometer',
   Billetera: 'wallet',
+  Cobertura: 'map',
   Admin: 'settings',
 };
 
@@ -71,7 +76,7 @@ export function RootNavigator() {
 
   if (estado === 'autenticado') {
     const contenido = esDesktop ? (
-      <ShellAutenticado />
+      <ShellAutenticado key={usuario?.id} />
     ) : (
       <NavigationContainer>
         <View style={estilos.raiz}>
@@ -79,7 +84,15 @@ export function RootNavigator() {
         </View>
       </NavigationContainer>
     );
-    return usuario?.rol === 'tecnico' ? <AccesoTecnico>{contenido}</AccesoTecnico> : contenido;
+    if (usuario?.rol === 'cliente') {
+      return (
+        <SolicitudServicioProvider key={usuario.id}>
+          {contenido}
+          <SolicitudServicioWizard />
+        </SolicitudServicioProvider>
+      );
+    }
+    return usuario?.rol === 'tecnico' ? <AccesoTecnico><SeguimientoGpsProvider key={usuario.id}>{contenido}</SeguimientoGpsProvider></AccesoTecnico> : contenido;
   }
 
   return (
@@ -156,7 +169,9 @@ function TabsTecnico() {
     <Tab.Navigator screenOptions={opcionesTabs}>
       <Tab.Screen name="Panel" component={PanelTecnico} options={{ title: 'Panel' }} />
       <Tab.Screen name="Servicios" component={ServiciosTecnico} options={{ title: 'Servicios' }} />
+      <Tab.Screen name="Cobertura" component={CoberturaTecnico} options={{ title: 'Cobertura' }} />
       <Tab.Screen name="Billetera" component={BilleteraTecnico} options={{ title: 'Billetera' }} />
+      <Tab.Screen name="Notificaciones" component={NotificacionesCliente} options={{ title: 'Notif.' }} />
       <Tab.Screen name="Perfil" component={PerfilTecnico} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );

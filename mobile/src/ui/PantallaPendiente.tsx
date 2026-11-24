@@ -22,7 +22,7 @@ export interface PantallaPendienteProps {
  *
  * No se inventan datos ni columnas: se muestra el banner ámbar "pendiente de V2"
  * y la pantalla de Stitch que la va a implementar. El diseño completo queda
- * documentado en Stitch, acá solo se reserva el lugar en la navegación.
+ * documentado en Stitch, aquí solo se reserva el lugar en la navegación.
  */
 export function PantallaPendiente({
   titulo,

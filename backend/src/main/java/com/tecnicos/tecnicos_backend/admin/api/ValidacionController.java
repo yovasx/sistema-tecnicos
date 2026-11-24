@@ -20,7 +20,7 @@ import java.util.List;
  * Cola de validación de expedientes técnicos (backoffice web).
  *
  * <p>Solo administrador. La aprobación final es humana por el tramo documental;
- * lo verificable por reglas ya lo hizo la base antes de llegar acá.</p>
+ * lo verificable por reglas ya lo hizo la base antes de llegar aquí.</p>
  */
 @RestController
 @RequestMapping("/api/admin/tecnicos/expedientes")

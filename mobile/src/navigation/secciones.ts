@@ -12,21 +12,24 @@ import { PanelTecnico } from '../screens/tecnico/PanelTecnico';
 import { ServiciosTecnico } from '../screens/tecnico/ServiciosTecnico';
 import { BilleteraTecnico } from '../screens/tecnico/BilleteraTecnico';
 import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
+import { CoberturaTecnico } from '../screens/tecnico/CoberturaTecnico';
+import { CoberturasAdminScreen } from '../screens/admin/CoberturasAdminScreen';
 import { DashboardAdminScreen } from '../screens/admin/DashboardAdminScreen';
 import { UsuariosAdminScreen } from '../screens/admin/UsuariosAdminScreen';
 import { CatalogoAdminScreen } from '../screens/admin/CatalogoAdminScreen';
 import { ValidacionAdminScreen } from '../screens/admin/ValidacionAdminScreen';
 import { TecnicosAdminScreen } from '../screens/admin/TecnicosAdminScreen';
 import { OrdenesAdminScreen } from '../screens/admin/OrdenesAdminScreen';
+import { MiPerfilAdminScreen } from '../screens/admin/MiPerfilAdminScreen';
+import { DisputasAdminScreen } from '../screens/admin/DisputasAdminScreen';
+import { AuditoriaAdminScreen } from '../screens/admin/AuditoriaAdminScreen';
+import { ModeracionChatAdminScreen } from '../screens/admin/ModeracionChatAdminScreen';
+import { NotificacionesAdminScreen } from '../screens/admin/NotificacionesAdminScreen';
+import { LiquidacionesAdminScreen } from '../screens/admin/LiquidacionesAdminScreen';
+import { MapaAdminScreen } from '../screens/admin/MapaAdminScreen';
+import { ReportesAdminScreen } from '../screens/admin/ReportesAdminScreen';
 import {
-  MapaAdminScreen,
-  DisputasAdminScreen,
-  AuditoriaAdminScreen,
   PagosAdminScreen,
-  LiquidacionesAdminScreen,
-  ReportesAdminScreen,
-  NotificacionesAdminScreen,
-  ModeracionChatAdminScreen,
   ConfiguracionAdminScreen,
   SoporteAdminScreen,
   PenalizacionesAdminScreen,
@@ -38,6 +41,7 @@ export interface Seccion {
   icono: keyof typeof Ionicons.glyphMap;
   pantalla: ComponentType;
   grupo?: string;
+  pendiente?: boolean;
 }
 
 /**
@@ -71,7 +75,9 @@ export function seccionesTecnico(): Seccion[] {
   return [
     { clave: 'panel', titulo: 'Panel', icono: 'speedometer', pantalla: PanelTecnico },
     { clave: 'servicios', titulo: 'Servicios', icono: 'construct', pantalla: ServiciosTecnico },
+    { clave: 'cobertura', titulo: 'Mi cobertura', icono: 'map', pantalla: CoberturaTecnico },
     { clave: 'billetera', titulo: 'Billetera', icono: 'wallet', pantalla: BilleteraTecnico },
+    { clave: 'notificaciones', titulo: 'Notificaciones', icono: 'notifications', pantalla: NotificacionesCliente },
     { clave: 'perfil', titulo: 'Perfil', icono: 'person', pantalla: PerfilTecnico },
   ];
 }
@@ -80,10 +86,12 @@ export function seccionesTecnico(): Seccion[] {
 export function seccionesAdmin(): Seccion[] {
   const secciones: Seccion[] = [
     { clave: 'dashboard', titulo: 'Dashboard', icono: 'grid', pantalla: DashboardAdminScreen },
+    { clave: 'perfil', titulo: 'Mi perfil', icono: 'person-circle', pantalla: MiPerfilAdminScreen },
     { clave: 'ordenes', titulo: 'Órdenes', icono: 'receipt', pantalla: OrdenesAdminScreen },
     { clave: 'mapa', titulo: 'Mapa en vivo', icono: 'map', pantalla: MapaAdminScreen },
     { clave: 'usuarios', titulo: 'Usuarios', icono: 'people', pantalla: UsuariosAdminScreen },
     { clave: 'tecnicos', titulo: 'Técnicos', icono: 'construct', pantalla: TecnicosAdminScreen },
+    { clave: 'coberturas', titulo: 'Revisar coberturas', icono: 'map', pantalla: CoberturasAdminScreen },
     {
       clave: 'validacion',
       titulo: 'Validar técnicos',
@@ -129,10 +137,14 @@ export function seccionesAdmin(): Seccion[] {
   ];
   const grupos: [string, string[]][] = [
     ['Inicio', ['dashboard']],
-    ['Personas', ['usuarios', 'tecnicos', 'validacion']],
+    ['Personas', ['usuarios', 'tecnicos', 'validacion', 'coberturas']],
     ['Operación', ['ordenes', 'mapa', 'disputas']],
     ['Finanzas', ['pagos', 'liquidaciones', 'reportes']],
     ['Administración', ['catalogo', 'soporte', 'notificaciones', 'moderacion', 'penalizaciones', 'auditoria', 'configuracion']],
+    ['Mi cuenta', ['perfil']],
   ];
-  return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({ ...secciones.find(s => s.clave === clave)!, grupo })));
+  const pendientes = new Set(['pagos', 'soporte', 'penalizaciones', 'configuracion']);
+  return grupos.flatMap(([grupo, claves]) => claves.map(clave => ({
+    ...secciones.find(s => s.clave === clave)!, grupo, pendiente: pendientes.has(clave),
+  })));
 }

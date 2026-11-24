@@ -33,7 +33,7 @@ export function InvitarUsuarioAdmin({ onVolver, rolFijo }: { onVolver: () => voi
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || form.nombre.trim().length < 2 ||
         form.apellido.trim().length < 2 || !form.passwordAdmin ||
         (form.tipoCliente === 'empresa' && (form.razonSocial.trim().length < 2 || !/^\d{5,20}$/.test(form.nit)))) {
-      setError('Completá nombre, apellido, correo válido y tu contraseña. Para empresas, ingresá razón social y NIT válido.'); return;
+      setError('Completa nombre, apellido, correo válido y tu contraseña. Para empresas, ingresa razón social y NIT válido.'); return;
     }
     if (form.rol === 'administrador' && !confirmacion) { setConfirmacion(true); return; }
     bloqueo.current = true; setOcupado(true); setError('');
@@ -44,7 +44,7 @@ export function InvitarUsuarioAdmin({ onVolver, rolFijo }: { onVolver: () => voi
   return <View style={{ gap: 24, maxWidth: 860, width: '100%', alignSelf: 'center' }}>
     <BotonPrimario titulo={rolFijo ? 'Volver a Técnicos' : 'Volver a Usuarios'} variante="secundario" tamano="escritorio" deshabilitado={ocupado}
       onPress={() => sucio ? setSalir(true) : onVolver()} />
-    {salir ? <><Aviso tono="advertencia">Tenés datos sin enviar. ¿Querés descartar la invitación?</Aviso>
+    {salir ? <><Aviso tono="advertencia">Tienes datos sin enviar. ¿Quieres descartar la invitación?</Aviso>
       <BotonPrimario titulo="Descartar invitación" variante="secundario" tamano="escritorio" onPress={onVolver} />
       <BotonPrimario titulo="Continuar con la invitación" tamano="escritorio" onPress={() => setSalir(false)} /></> : null}
     <View style={{ gap: 8 }}><Texto variante="titulo">{rolFijo ? 'Invitar técnico' : 'Invitar usuario'}</Texto>
@@ -60,7 +60,7 @@ export function InvitarUsuarioAdmin({ onVolver, rolFijo }: { onVolver: () => voi
       {form.rol === 'cliente' ? <FiltroAdmin etiqueta="Tipo de cliente" valor={form.tipoCliente} deshabilitado={ocupado}
         opciones={[['persona', 'Persona'], ['empresa', 'Empresa']]} onChange={v => cambiar('tipoCliente', v)} /> : null}
       {form.rol === 'tecnico' ? <Aviso>El técnico deberá completar su expediente y obtener aprobación. La invitación no lo habilita para aceptar servicios.</Aviso> : null}
-      {form.rol === 'administrador' ? <Aviso tono="advertencia">Esta cuenta tendrá acceso al backoffice y a sus acciones administrativas. Verificá el correo antes de continuar.</Aviso> : null}
+      {form.rol === 'administrador' ? <Aviso tono="advertencia">Esta cuenta tendrá acceso al panel administrativo y a sus acciones. Verifica el correo antes de continuar.</Aviso> : null}
       <Texto variante="subtitulo">Datos del destinatario</Texto>
       <CampoTexto etiqueta="Nombre del invitado" value={form.nombre} onChangeText={v => cambiar('nombre', v)} maxLength={100} editable={!ocupado} />
       <CampoTexto etiqueta="Apellido del invitado" value={form.apellido} onChangeText={v => cambiar('apellido', v)} maxLength={100} editable={!ocupado} />
@@ -71,11 +71,11 @@ export function InvitarUsuarioAdmin({ onVolver, rolFijo }: { onVolver: () => voi
         <CampoTexto etiqueta="Razón social" value={form.razonSocial} onChangeText={v => cambiar('razonSocial', v)} maxLength={150} editable={!ocupado} />
         <CampoTexto etiqueta="NIT" value={form.nit} onChangeText={v => cambiar('nit', v)} maxLength={20} editable={!ocupado} />
       </> : null}
-      <Texto variante="subtitulo">Confirmá tu identidad</Texto>
+      <Texto variante="subtitulo">Confirma tu identidad</Texto>
       <CampoTexto etiqueta="Tu contraseña de administrador" value={form.passwordAdmin} onChangeText={v => cambiar('passwordAdmin', v)}
         esPassword autoComplete="current-password" maxLength={72} editable={!ocupado} />
       <Texto variante="caption">No es la contraseña del invitado. Se usa únicamente para autorizar esta acción y no se guarda en el historial.</Texto>
-      {confirmacion ? <Aviso tono="advertencia" titulo="Confirmá el acceso administrativo">
+      {confirmacion ? <Aviso tono="advertencia" titulo="Confirma el acceso administrativo">
         Vas a invitar a {form.email} como administrador. Tendrá los mismos permisos administrativos que tu cuenta.
       </Aviso> : null}
       <BotonPrimario titulo={confirmacion ? 'Confirmar invitación de administrador' : 'Enviar invitación'}

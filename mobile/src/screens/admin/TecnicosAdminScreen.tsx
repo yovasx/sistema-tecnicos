@@ -19,6 +19,8 @@ import { TablaAdmin } from '../../ui/admin/TablaAdmin';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import { ExpedienteTecnicoAdmin, estadosDisponibilidad, estadosExpediente, camposExpediente } from './ExpedienteTecnicoAdmin';
 import { InvitarUsuarioAdmin } from './InvitarUsuarioAdmin';
+import { FormularioCuentaAdmin } from './FormularioCuentaAdmin';
+import { FichaCoberturaAdmin } from './CoberturasAdminScreen';
 
 const inicial: FiltrosTecnicos = { busqueda: '', cuenta: 'todos', expediente: 'todos', disponibilidad: 'todos', pagina: 0, tamano: 20 };
 const errorTexto = (e: unknown) => e instanceof Error ? e.message : 'No pudimos completar la consulta.';
@@ -87,7 +89,7 @@ export function TecnicosAdminScreen() {
           opciones={[['todos', 'Todas'], ...categorias.map(c => [String(c.id), `${c.nombre}${c.activa ? '' : ' (inactiva)'}`] as const)]}
           onChange={v => setFiltros(f => ({ ...f, categoria: v === 'todos' ? undefined : Number(v), pagina: 0 }))} /> : null}
       </View>
-      {errorCategorias ? <Aviso tono="peligro" titulo="Especialidades no disponibles">{errorCategorias} Podés reintentar con Actualizar técnicos.</Aviso> : null}
+      {errorCategorias ? <Aviso tono="peligro" titulo="Especialidades no disponibles">{errorCategorias} Puedes reintentar con Actualizar técnicos.</Aviso> : null}
       <View style={s.entre}><Texto variante="caption">Más recientes primero. Los borradores también aparecen en este directorio.</Texto>
         <BotonPrimario titulo="Limpiar filtros" tamano="escritorio" variante="secundario"
           onPress={() => { setBusqueda(''); setFiltros(inicial); }} /></View>
@@ -122,6 +124,7 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
   const [mensaje, setMensaje] = useState('');
   const [interaccion, setInteraccion] = useState({ sucio: false, ocupado: false });
   const [descartar, setDescartar] = useState(false);
+  const [editandoDatos, setEditandoDatos] = useState(false);
   const definirInteraccion = useCallback((sucio: boolean, ocupado: boolean) => setInteraccion({ sucio, ocupado }), []);
   useCambiosSinGuardar(interaccion.sucio, interaccion.ocupado);
   const cargar = useCallback(async () => {
@@ -139,14 +142,14 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
     <View style={s.entre}><BotonPrimario titulo="Volver a Técnicos" variante="secundario" tamano="escritorio" deshabilitado={ocupado}
       onPress={() => interaccion.sucio ? setDescartar(true) : onVolver()} />
       <Texto variante="caption">Personas / Técnicos / Ficha #{id}</Texto></View>
-    {descartar ? <><Aviso tono="advertencia" titulo="Hay cambios sin guardar">Descartá el borrador para volver o continuá con la revisión.</Aviso>
+    {descartar ? <><Aviso tono="advertencia" titulo="Hay cambios sin guardar">Descarta el borrador para volver o continúa con la revisión.</Aviso>
       <View style={s.fila}><BotonPrimario titulo="Seguir en la ficha" tamano="escritorio" onPress={() => setDescartar(false)} />
         <BotonPrimario titulo="Descartar y volver" variante="secundario" tamano="escritorio" onPress={onVolver} /></View></> : null}
     {error ? <Aviso tono="peligro" titulo="No pudimos actualizar la ficha">{error} No se muestran cambios que no hayan sido confirmados por el servidor.</Aviso> : null}
     {mensaje ? <Aviso tono="exito">{mensaje}</Aviso> : null}
     {cargando ? <ActivityIndicator color={colores.marca} /> : null}
     <View style={s.fila}><BotonPrimario titulo={d ? 'Actualizar ficha' : 'Reintentar ficha'} variante="secundario" tamano="escritorio"
-      deshabilitado={ocupado || interaccion.sucio} onPress={() => void cargar()} /></View>
+      deshabilitado={ocupado || interaccion.sucio || editandoDatos} onPress={() => void cargar()} /></View>
     {d && !cargando && !error ? <>
       <View style={s.cabecera}>
         <View style={s.avatar}><Ionicons name="construct-outline" size={28} color={colores.marca} /></View>
@@ -160,18 +163,29 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
       {!d.expedienteRequerido ? <Aviso titulo="Aprobación anterior conservada">
         Este técnico fue aprobado antes del expediente actual. La ausencia de documentos nuevos no revoca esa aprobación ni supone verificaciones que nunca se realizaron.
       </Aviso> : null}
-      <FiltroAdmin etiqueta="Ficha del técnico" valor={vista} deshabilitado={interaccion.sucio || ocupado}
-        opciones={[['perfil', 'Perfil y cobertura'], ['documentos', 'Documentos y revisión'], ['historial', 'Historial']]} onChange={setVista} />
+      <FiltroAdmin etiqueta="Ficha del técnico" valor={vista} deshabilitado={editandoDatos || interaccion.sucio || ocupado}
+        opciones={[['perfil', 'Perfil y cobertura'], ['cobertura', 'Revisión de cobertura'], ['documentos', 'Documentos y revisión'], ['historial', 'Historial']]} onChange={setVista} />
       {vista === 'perfil' ? <View style={{ flexDirection: ancho >= 1360 ? 'row' : 'column', gap: 24 }}>
         <View style={{ flex: 2, minWidth: 0, gap: 24 }}>
-          <Tarjeta style={{ gap: 20 }}><Texto variante="subtitulo">Perfil profesional</Texto>
+          <Tarjeta style={{ gap: 20 }}>
+            {editandoDatos ? <FormularioCuentaAdmin key={d.cuenta.revision} cuenta={d.cuenta}
+              onInteraccion={definirInteraccion} onCancelar={() => setEditandoDatos(false)}
+              onGuardado={(cuenta, texto) => {
+                setDetalle(p => p ? { ...p, cuenta } : p);
+                setEditandoDatos(false); setMensaje(texto); onCambio();
+              }} /> : <>
+            <Texto variante="subtitulo">Datos generales</Texto>
             <Dato etiqueta="Teléfono" valor={d.cuenta.telefono} />
             <Dato etiqueta="Registro de la cuenta" valor={fecha(d.cuenta.creadoEn)} />
             <Dato etiqueta="Enviado a revisión" valor={d.expediente.enviadoEn ? fecha(d.expediente.enviadoEn) : 'Sin envío registrado'} />
             <Dato etiqueta="Aprobación técnica" valor={d.cuenta.estadoValidacion === 'aprobado' ? 'Aprobado' : 'No aprobado'} />
-            <Texto variante="caption">Los datos de contacto se administran desde Usuarios. Especialidades y cobertura se consultan aquí y conservan el flujo del expediente.</Texto>
+            <Texto variante="caption">Edita los datos permitidos sin salir de esta ficha. La identidad aprobada conserva su protección documental.</Texto>
+            <BotonPrimario titulo="Editar datos del técnico" tamano="escritorio" variante="secundario"
+              deshabilitado={ocupado || interaccion.sucio}
+              onPress={() => { setEditandoDatos(true); setMensaje(''); }} />
             {d.aprobadoEn ? <Dato etiqueta="Fecha de validación registrada" valor={fecha(d.aprobadoEn)} /> : null}
             {d.aprobadoPor ? <Dato etiqueta="Responsable de la validación" valor={d.aprobadoPor} /> : null}
+            </>}
           </Tarjeta>
           <Tarjeta style={{ gap: 16 }}><Texto variante="subtitulo">Especialidades</Texto>
             <View style={s.fila}>{d.expediente.especialidades.length ? d.expediente.especialidades.map(e => <Chip key={e.id} texto={e.nombre} tono="marca" />) :
@@ -198,10 +212,11 @@ function FichaTecnicoAdmin({ id, onVolver, onCambio }: { id: number; onVolver: (
               'Tener una cuenta activa no habilita al técnico sin aprobación.' :
               'La cuenta está activa y el técnico conserva su aprobación. La recepción de ofertas también depende de disponibilidad, especialidad y cobertura.'}</Aviso>
           </Tarjeta>
-          <EstadoCuentaTecnico key={d.cuenta.revision} detalle={d} onInteraccion={definirInteraccion}
-            onGuardado={cuenta => { setDetalle(p => p ? { ...p, cuenta } : p); setMensaje('Estado de cuenta actualizado y auditado.'); onCambio(); }} />
+          {!editandoDatos ? <EstadoCuentaTecnico key={d.cuenta.revision} detalle={d} onInteraccion={definirInteraccion}
+             onGuardado={cuenta => { setDetalle(p => p ? { ...p, cuenta } : p); setMensaje('Estado de cuenta actualizado y auditado.'); onCambio(); }} />
+            : null}
         </View>
-      </View> : vista === 'documentos' ? <Tarjeta>
+      </View> : vista === 'cobertura' ? <FichaCoberturaAdmin id={id} onInteraccion={definirInteraccion} /> : vista === 'documentos' ? <Tarjeta>
         <ExpedienteTecnicoAdmin id={id} expediente={d.expediente} cuentaActiva={d.cuenta.activo}
           onCambio={revisionCompletada} onInteraccion={definirInteraccion} />
       </Tarjeta> : <HistorialTecnico id={id} revision={d.cuenta.revision} />}
@@ -224,7 +239,7 @@ function EstadoCuentaTecnico({ detalle: d, onGuardado, onInteraccion }: {
   }, [motivo, ocupado, onInteraccion]);
   async function guardar() {
     if (bloqueo.current) return;
-    if (motivo.trim().length < 5) { setError('Escribí un motivo de al menos 5 caracteres.'); return; }
+    if (motivo.trim().length < 5) { setError('Escribe un motivo de al menos 5 caracteres.'); return; }
     bloqueo.current = true; setOcupado(true); setError('');
     try {
       const cuenta = await adminRepository.estadoUsuario(d.cuenta.id,
@@ -240,7 +255,7 @@ function EstadoCuentaTecnico({ detalle: d, onGuardado, onInteraccion }: {
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}
     {!confirmar ? <BotonPrimario titulo={d.cuenta.activo ? 'Desactivar cuenta técnica' : 'Reactivar cuenta técnica'} variante="secundario"
       tamano="escritorio" onPress={() => setConfirmar(true)} /> : <>
-      <Aviso tono="advertencia" titulo="Confirmá el cambio">{d.cuenta.activo ?
+      <Aviso tono="advertencia" titulo="Confirma el cambio">{d.cuenta.activo ?
         'El técnico dejará de acceder a Fixly. Si tiene órdenes en curso, primero deberás resolverlas.' :
         'El técnico podrá volver a iniciar sesión; su aprobación y disponibilidad no cambian.'}</Aviso>
       <CampoTexto etiqueta="Motivo del estado técnico" value={motivo} onChangeText={setMotivo} maxLength={500} editable={!ocupado} multiline autoFocus />

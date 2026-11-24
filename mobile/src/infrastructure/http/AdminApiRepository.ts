@@ -1,7 +1,7 @@
 import {
   CategoriaAdmin,
   GuardarCategoriaInput,
-  ResumenAdmin,
+  ResumenAdmin, EditarPerfilAdmin, DashboardAdmin,
   TecnicoPendiente,
   UsuarioAdmin,
   FiltrosUsuarios, PaginaUsuarios, DetalleUsuarioAdmin, EditarUsuarioAdmin, EstadoUsuarioAdmin, CambioUsuarioAdmin, InvitacionUsuarioAdmin,
@@ -12,6 +12,18 @@ import { traducirError } from './errores';
 
 /** Adaptador HTTP del puerto admin. Todos los endpoints exigen rol administrador. */
 export class AdminApiRepository implements AdminRepository {
+  async dashboard(dias: 7 | 30): Promise<DashboardAdmin> {
+    try { return (await apiClient.get<DashboardAdmin>('/api/admin/dashboard', { params: { dias } })).data; }
+    catch (error) { throw traducirError(error); }
+  }
+  async perfil(): Promise<DetalleUsuarioAdmin> {
+    try { return (await apiClient.get<DetalleUsuarioAdmin>('/api/admin/perfil')).data; }
+    catch (error) { throw traducirError(error); }
+  }
+  async editarPerfil(datos: EditarPerfilAdmin): Promise<DetalleUsuarioAdmin> {
+    try { return (await apiClient.put<DetalleUsuarioAdmin>('/api/admin/perfil', datos)).data; }
+    catch (error) { throw traducirError(error); }
+  }
   async invitarUsuario(datos: InvitacionUsuarioAdmin): Promise<void> {
     try { await apiClient.post('/api/admin/usuarios/invitaciones', datos); }
     catch (error) { throw traducirError(error); }

@@ -7,8 +7,12 @@ RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY . .
 # Solo configuración pública. Nunca copiar .env.local ni secretos al bundle.
 ARG EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=""
+ARG EXPO_PUBLIC_MAPA_TILES_URL=""
+ARG EXPO_PUBLIC_MAPA_ATRIBUCION=""
 ENV EXPO_PUBLIC_API_URL=/ \
     EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID} \
+    EXPO_PUBLIC_MAPA_TILES_URL=${EXPO_PUBLIC_MAPA_TILES_URL} \
+    EXPO_PUBLIC_MAPA_ATRIBUCION=${EXPO_PUBLIC_MAPA_ATRIBUCION} \
     EXPO_PUBLIC_GOOGLE_NATIVE_ENABLED=false
 RUN npx tsc --noEmit && npx expo export --platform web
 

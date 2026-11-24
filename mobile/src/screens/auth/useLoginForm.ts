@@ -16,7 +16,7 @@ export function useLoginForm() {
 
   const manejarSubmit = async () => {
     if (bloqueo.current) return;
-    if (!email.trim() || !password) { setErrorLogin('Completá el correo y la contraseña.'); return; }
+    if (!email.trim() || !password) { setErrorLogin('Completa el correo y la contraseña.'); return; }
     bloqueo.current = true; setOcupado(true);
     setErrorLogin(null);
     try {
@@ -26,7 +26,7 @@ export function useLoginForm() {
       if (error.codigo === 'CREDENCIALES_INVALIDAS' || error.codigo === 'CUENTA_INACTIVA') {
         setErrorLogin(error.message);
       } else if (error.sinConexion) {
-        setErrorLogin('Sin conexión: revisá IP, puerto y firewall');
+        setErrorLogin('Sin conexión: revisa IP, puerto y firewall');
       } else {
         setErrorLogin(error.message);
       }
