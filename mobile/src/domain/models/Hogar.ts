@@ -20,7 +20,17 @@ export interface Seguimiento {
   estado: string;
   tecnico: string | null;
   posicion: { latitud: number; longitud: number; precision: number | null; actualizadoEn: string } | null;
+  posicionCliente: { latitud: number; longitud: number; precision: number | null; actualizadoEn: string } | null;
+  clienteCompartiendo: boolean;
+  clienteVigente: boolean;
   etaMinutos: number | null;
   vigente: boolean;
   fichaTecnico: { nombre: string; fotoUrl: string | null; promedio: number | null; totalCalificaciones: number } | null;
+}
+export interface SesionGpsCliente { sesion: string; orden: number; expiraEn: string }
+export interface MuestraGpsCliente {
+  latitud: number;
+  longitud: number;
+  precision: number;
+  capturadoEn: string;
 }

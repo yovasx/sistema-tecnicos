@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { Direccion, GuardarDireccion, Reputacion, Seguimiento } from '../../domain/models/Hogar';
+import { Direccion, GuardarDireccion, MuestraGpsCliente, Reputacion, Seguimiento, SesionGpsCliente } from '../../domain/models/Hogar';
 import { PerfilPropio } from '../../domain/models/Perfil';
 import { EvidenciaServicio } from '../../domain/models/SolicitudServicio';
 import { HogarRepository } from '../../domain/repositories/HogarRepository';
@@ -52,6 +52,18 @@ export class HogarApiRepository implements HogarRepository {
   }
   async seguimiento(orden: number) {
     try { return (await apiClient.get<Seguimiento>(`/api/ordenes/${orden}/seguimiento`)).data; }
+    catch (e) { throw traducirError(e); }
+  }
+  async iniciarGpsCliente(orden: number, plataforma: string) {
+    try { return (await apiClient.post<SesionGpsCliente>(`/api/ordenes/${orden}/seguimiento/gps`, { plataforma })).data; }
+    catch (e) { throw traducirError(e); }
+  }
+  async enviarGpsCliente(sesion: string, muestra: MuestraGpsCliente) {
+    try { await apiClient.post('/api/ordenes/seguimiento/ubicacion', { sesion, ...muestra }); }
+    catch (e) { throw traducirError(e); }
+  }
+  async detenerGpsCliente(sesion: string) {
+    try { await apiClient.delete(`/api/ordenes/seguimiento/gps/${sesion}`); }
     catch (e) { throw traducirError(e); }
   }
   conectar(orden: number, recibir: (dato: Seguimiento) => void, estado: (texto: string) => void) {

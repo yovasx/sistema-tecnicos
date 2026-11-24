@@ -19,7 +19,7 @@ export function Mapa(props: PropsMapa) {
   useEffect(() => {
     frame.current?.contentWindow?.postMessage(JSON.parse(datosMapa(props)), '*');
   }, [props.destino.latitud, props.destino.longitud, props.tecnico?.latitud, props.tecnico?.longitud,
-    props.onSeleccionar, props.areas, props.etiquetaPunto, props.marcadores]);
+    props.cliente?.latitud, props.cliente?.longitud, props.onSeleccionar, props.areas, props.etiquetaPunto, props.marcadores]);
   return <iframe ref={frame} title="Mapa del servicio con Leaflet" srcDoc={html}
     onLoad={() => frame.current?.contentWindow?.postMessage(JSON.parse(datosMapa(actuales.current)), '*')}
     sandbox="allow-scripts" referrerPolicy="no-referrer"

@@ -15,13 +15,13 @@ import * as DocumentPicker from 'expo-document-picker';
 import { CategoriaSolicitud } from '../../domain/models/SolicitudServicio';
 import { solicitudesRepository, operacionRepository } from '../../infrastructure/di';
 import { ErrorApi } from '../../infrastructure/http/errores';
-import { abrirMapaServicio } from '../../infrastructure/navigation/abrirMapaServicio';
 import { ubicacionActual } from '../../infrastructure/ubicacion/ubicacionActual';
 import { useSolicitudServicio } from '../../session/SolicitudServicioProvider';
 import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { Chip } from '../../ui/Chip';
+import { Mapa } from '../../ui/mapa/Mapa';
 import { Texto } from '../../ui/Texto';
 import { useAvisoSalida } from '../../ui/admin/useAvisoSalida';
 import { bolivianos } from '../../ui/formato';
@@ -86,6 +86,7 @@ export function SolicitudServicioWizard() {
   const [confirmarCierre, setConfirmarCierre] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState('');
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
+  const [mapaAbierto, setMapaAbierto] = useState(false);
   const [errorEvidencia, setErrorEvidencia] = useState('');
 
   const sucio =
@@ -97,6 +98,10 @@ export function SolicitudServicioWizard() {
       borrador.referencia.trim() !== '' ||
       borrador.urgencia ||
       Boolean(borrador.evidencia));
+
+  useEffect(() => {
+    if (!abierta || paso !== 2) setMapaAbierto(false);
+  }, [abierta, paso]);
 
   useAvisoSalida(abierta && sucio);
 
@@ -229,16 +234,6 @@ export function SolicitudServicioWizard() {
       setErrorEvidencia('');
     } catch {
       setErrorEvidencia('No pudimos abrir el selector de archivos. Intenta de nuevo.');
-    }
-  }
-
-  async function verEnMapa() {
-    if (lat === null || lng === null) return;
-    setErrorUbicacion('');
-    try {
-      await abrirMapaServicio(lat, lng);
-    } catch {
-      setErrorUbicacion('No pudimos abrir el mapa. Puedes continuar con las coordenadas manuales.');
     }
   }
 
@@ -560,16 +555,22 @@ export function SolicitudServicioWizard() {
                       </View>
                       {lat !== null && lng !== null ? (
                         <Pressable
-                          accessibilityRole="link"
-                          onPress={verEnMapa}
+                          accessibilityRole="button"
+                          onPress={() => setMapaAbierto(v => !v)}
                           style={estilos.enlace}
                         >
                           <Ionicons name="map-outline" size={16} color={colores.marca} />
                           <Texto variante="etiqueta" color={colores.marca}>
-                            Ver el punto en OpenStreetMap
+                            {mapaAbierto ? 'Ocultar mapa' : 'Ver ubicación con Leaflet'}
                           </Texto>
                         </Pressable>
                       ) : null}
+                      {mapaAbierto && lat !== null && lng !== null ? <>
+                        <Mapa destino={{ latitud: lat, longitud: lng }} alto={260} />
+                        <Texto variante="caption" color={colores.terciario}>
+                          Leaflet y el proveedor de mosaicos se consultan mientras se muestra el mapa.
+                        </Texto>
+                      </> : null}
                       <CampoTexto
                         etiqueta="Dirección o referencia"
                         placeholder="Calle, número, color de la puerta, entre calles…"

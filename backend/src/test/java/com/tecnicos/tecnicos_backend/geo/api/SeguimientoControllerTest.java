@@ -149,4 +149,71 @@ class SeguimientoControllerTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.posicion").isEmpty());
         posicion(login(TECNICO),s,Instant.now(),5).andExpect(status().isConflict());
     }
+    String iniciarGpsCliente(long orden,String token) throws Exception {
+        var r=mvc.perform(post("/api/ordenes/"+orden+"/seguimiento/gps").header("Authorization","Bearer "+token)
+            .contentType("application/json").content("{\"plataforma\":\"web\"}"))
+            .andExpect(status().isOk()).andReturn();
+        return JsonPath.read(r.getResponse().getContentAsString(StandardCharsets.UTF_8),"$.sesion");
+    }
+    org.springframework.test.web.servlet.ResultActions posicionCliente(String token,String sesion,Instant fecha) throws Exception {
+        return mvc.perform(post("/api/ordenes/seguimiento/ubicacion").header("Authorization","Bearer "+token)
+            .contentType("application/json").content("""
+                {"sesion":"%s","latitud":-16.502,"longitud":-68.132,"precision":14,"capturadoEn":"%s"}
+                """.formatted(sesion,fecha)));
+    }
+    @Test void la_ubicacion_del_cliente_es_opcional_efimera_y_solo_la_ve_su_tecnico() throws Exception {
+        long o=orden(); String cliente=login(CLIENTE),tecnico=login(TECNICO);
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.posicionCliente").isEmpty());
+        mvc.perform(post("/api/ordenes/"+o+"/seguimiento/ticket").header("Authorization","Bearer "+tecnico))
+            .andExpect(status().isOk());
+
+        String s=iniciarGpsCliente(o,cliente);
+        posicionCliente(cliente,s,Instant.now()).andExpect(status().isNoContent());
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.posicionCliente").isEmpty());
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+tecnico))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.clienteCompartiendo").value(true))
+            .andExpect(jsonPath("$.clienteVigente").value(true))
+            .andExpect(jsonPath("$.posicionCliente.latitud").value(-16.502));
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+login("lucia.fernandez@ejemplo.bo")))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(delete("/api/ordenes/seguimiento/gps/"+s).header("Authorization","Bearer "+cliente))
+            .andExpect(status().isNoContent());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_cliente_actual WHERE orden_id=?",Long.class,o)).isZero();
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+tecnico))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.clienteCompartiendo").value(false))
+            .andExpect(jsonPath("$.posicionCliente").isEmpty());
+        posicionCliente(cliente,s,Instant.now()).andExpect(status().isConflict());
+    }
+    @Test void el_cambio_de_estado_cierra_y_borra_la_ubicacion_del_cliente() throws Exception {
+        long o=orden(); String cliente=login(CLIENTE),s=iniciarGpsCliente(o,cliente);
+        posicionCliente(cliente,s,Instant.now()).andExpect(status().isNoContent());
+        jdbc.update("UPDATE orders.ordenes_servicio SET estado='en_diagnostico' WHERE id=?",o);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_cliente_actual WHERE orden_id=?",Long.class,o)).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.sesiones_gps_cliente WHERE id=? AND cerrada_en IS NOT NULL",Long.class,
+            java.util.UUID.fromString(s))).isEqualTo(1);
+        posicionCliente(login(CLIENTE),s,Instant.now()).andExpect(status().isConflict());
+    }
+    @Test void una_sesion_cliente_sin_heartbeat_deja_de_ser_visible() throws Exception {
+        long o=orden(); String cliente=login(CLIENTE),tecnico=login(TECNICO);
+        String s=iniciarGpsCliente(o,cliente);
+        posicionCliente(cliente,s,Instant.now()).andExpect(status().isNoContent());
+        jdbc.update("UPDATE geo.sesiones_gps_cliente SET expira_en=clock_timestamp()-interval '1 second' WHERE id=?",
+            java.util.UUID.fromString(s));
+        mvc.perform(get("/api/ordenes/"+o+"/seguimiento").header("Authorization","Bearer "+tecnico))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.clienteCompartiendo").value(false))
+            .andExpect(jsonPath("$.posicionCliente").isEmpty());
+    }
+    @Test void un_tecnico_no_puede_iniciar_gps_de_cliente() throws Exception {
+        long o=orden();
+        mvc.perform(post("/api/ordenes/"+o+"/seguimiento/gps").header("Authorization","Bearer "+login(TECNICO))
+            .contentType("application/json").content("{\"plataforma\":\"web\"}")).andExpect(status().isForbidden());
+    }
+    @Test void otro_cliente_no_puede_iniciar_gps_de_una_orden_ajena() throws Exception {
+        long o=orden();
+        mvc.perform(post("/api/ordenes/"+o+"/seguimiento/gps").header("Authorization","Bearer "+login("jorge.mamani@ejemplo.bo"))
+            .contentType("application/json").content("{\"plataforma\":\"web\"}")).andExpect(status().isNotFound());
+    }
 }

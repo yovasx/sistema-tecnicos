@@ -10,6 +10,7 @@ export interface AreaMapa {
 export interface PropsMapa {
   destino: PuntoMapa;
   tecnico?: PuntoMapa | null;
+  cliente?: PuntoMapa | null;
   onSeleccionar?: (punto: PuntoMapa) => void;
   areas?: AreaMapa[];
   etiquetaPunto?: string;
@@ -28,7 +29,7 @@ export function puntoValido(p: unknown): p is PuntoMapa {
     && typeof p.longitud === 'number' && Number.isFinite(p.longitud) && Math.abs(p.longitud) <= 180;
 }
 export function datosMapa(p: PropsMapa) {
-  return JSON.stringify({ destino: p.destino, tecnico: p.tecnico ?? null, editable: !!p.onSeleccionar,
+  return JSON.stringify({ destino: p.destino, tecnico: p.tecnico ?? null, cliente: p.cliente ?? null, editable: !!p.onSeleccionar,
     areas: p.areas ?? [], etiquetaPunto: p.etiquetaPunto ?? 'Destino',
     marcadores: p.marcadores ?? [] }).replace(/</g, '\\u003c');
 }

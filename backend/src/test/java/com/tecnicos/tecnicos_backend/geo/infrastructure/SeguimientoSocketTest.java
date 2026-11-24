@@ -36,7 +36,8 @@ class SeguimientoSocketTest {
     @Test void cada_snapshot_revalida_usuario_orden_y_version() throws Exception {
         var acceso=new SeguimientoService.Acceso(2,42,7,java.time.Instant.now().plusSeconds(60));
         when(servicio.consumir("permiso")).thenReturn(acceso);
-        when(servicio.consultar(acceso)).thenReturn(new SeguimientoService.Vista(42,"en_camino","Técnico",null,null,false,null));
+        when(servicio.consultar(acceso)).thenReturn(new SeguimientoService.Vista(42,"en_camino","Técnico",
+            null,null,false,null,null,false,false));
         socket.handleTextMessage(sesion,new TextMessage("{\"ticket\":\"permiso\"}"));
         socket.publicar();
         verify(servicio).consultar(acceso);
@@ -49,7 +50,8 @@ class SeguimientoSocketTest {
     @Test void al_terminar_el_trayecto_envia_estado_y_cierra() throws Exception {
         var acceso=new SeguimientoService.Acceso(2,42,0,java.time.Instant.now().plusSeconds(60));
         when(servicio.consumir("permiso")).thenReturn(acceso);
-        when(servicio.consultar(acceso)).thenReturn(new SeguimientoService.Vista(42,"en_diagnostico","Técnico",null,null,false,null));
+        when(servicio.consultar(acceso)).thenReturn(new SeguimientoService.Vista(42,"en_diagnostico","Técnico",
+            null,null,false,null,null,false,false));
         socket.handleTextMessage(sesion,new TextMessage("{\"ticket\":\"permiso\"}"));
         socket.publicar();
         verify(sesion).sendMessage(any(TextMessage.class));
