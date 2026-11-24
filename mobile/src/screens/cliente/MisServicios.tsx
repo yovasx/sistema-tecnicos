@@ -18,7 +18,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { DetalleServicio, FilaServicio } from '../../domain/models/SolicitudServicio';
 import { solicitudesRepository } from '../../infrastructure/di';
 import { ErrorApi } from '../../infrastructure/http/errores';
-import { abrirMapaServicio } from '../../infrastructure/navigation/abrirMapaServicio';
 import { useSolicitudServicio } from '../../session/SolicitudServicioProvider';
 import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
@@ -28,6 +27,8 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
 import { fechaHoraBolivia } from '../../ui/formato';
+import { Mapa } from '../../ui/mapa/Mapa';
+import { puntoValido } from '../../ui/mapa/contrato';
 import { useResponsive } from '../../theme/responsive';
 import { colores, espacio } from '../../theme/tokens';
 import { iconoCategoria } from '../publico/categorias';
@@ -77,7 +78,6 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
   const [intentoDetalle, setIntentoDetalle] = useState(0);
   const [descargando, setDescargando] = useState(false);
   const [errorEvidencia, setErrorEvidencia] = useState('');
-  const [errorMapa, setErrorMapa] = useState('');
   const [interaccionDetalle, setInteraccionDetalle] = useState(false);
 
   const cargar = useCallback(
@@ -133,7 +133,6 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
     setCargandoDetalle(true);
     setErrorDetalle('');
     setErrorEvidencia('');
-    setErrorMapa('');
     solicitudesRepository
       .detalle(detalleId)
       .then((d) => {
@@ -173,15 +172,6 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
     }
   }
 
-  async function verEnMapa(d: DetalleServicio) {
-    setErrorMapa('');
-    try {
-      await abrirMapaServicio(d.latitud, d.longitud);
-    } catch {
-      setErrorMapa('No pudimos abrir el mapa. Las coordenadas siguen disponibles en el detalle.');
-    }
-  }
-
   if (detalleId !== null) {
     return (
       <ContenedorApp>
@@ -214,14 +204,13 @@ export function MisServicios({ titulo = 'Mis servicios' }: MisServiciosProps) {
                 />
               </>
             ) : null}
-            {errorMapa ? <Aviso tono="advertencia">{errorMapa}</Aviso> : null}
             {detalle && !cargandoDetalle && !errorDetalle ? (
               <DetalleServicioVista
+                key={`detalle-${detalle.id}`}
                 detalle={detalle}
                 descargando={descargando}
                 errorEvidencia={errorEvidencia}
                 onDescargar={() => void descargarEvidencia(detalle)}
-                onVerMapa={() => verEnMapa(detalle)}
                 onActualizar={() => setIntentoDetalle((n) => n + 1)}
                 onInteraccion={setInteraccionDetalle}
               />
@@ -354,7 +343,6 @@ function DetalleServicioVista({
   descargando,
   errorEvidencia,
   onDescargar,
-  onVerMapa,
   onActualizar,
   onInteraccion,
 }: {
@@ -362,7 +350,6 @@ function DetalleServicioVista({
   descargando: boolean;
   errorEvidencia: string;
   onDescargar: () => void;
-  onVerMapa: () => void;
   onActualizar: () => void;
   onInteraccion: (activa: boolean) => void;
 }) {
@@ -370,9 +357,19 @@ function DetalleServicioVista({
   const [editandoOperacion, setEditandoOperacion] = useState(false);
   const [editandoCalificacion, setEditandoCalificacion] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [mapaAbierto, setMapaAbierto] = useState(false);
+  const [errorMapa, setErrorMapa] = useState('');
   const interaccion = editandoOperacion || editandoCalificacion || cancelando;
   useCambiosSinGuardar(interaccion);
   useEffect(() => { onInteraccion(interaccion); return () => onInteraccion(false); }, [interaccion, onInteraccion]);
+  function alternarMapa() {
+    setErrorMapa('');
+    if (!mapaAbierto && !puntoValido({ latitud: detalle.latitud, longitud: detalle.longitud })) {
+      setErrorMapa('Las coordenadas registradas no son válidas.');
+      return;
+    }
+    setMapaAbierto(v => !v);
+  }
   return (
     <>
       <Encabezado
@@ -418,12 +415,14 @@ function DetalleServicioVista({
           etiqueta="Coordenadas"
           valor={`${detalle.latitud.toFixed(6)}, ${detalle.longitud.toFixed(6)}`}
         />
-        <Pressable accessibilityRole="link" onPress={onVerMapa} style={estilos.enlace}>
+        <Pressable accessibilityRole="button" onPress={alternarMapa} style={estilos.enlace}>
           <Ionicons name="map-outline" size={16} color={colores.marca} />
           <Texto variante="etiqueta" color={colores.marca}>
-            Ver el punto en OpenStreetMap
+            {mapaAbierto ? 'Ocultar mapa' : 'Ver ubicación con Leaflet'}
           </Texto>
         </Pressable>
+        {errorMapa ? <Aviso tono="advertencia">{errorMapa}</Aviso> : null}
+        {mapaAbierto ? <Mapa destino={{ latitud: detalle.latitud, longitud: detalle.longitud }} alto={300} /> : null}
       </Tarjeta>
 
       <Tarjeta>

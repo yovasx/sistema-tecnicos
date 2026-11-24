@@ -3,13 +3,14 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ContactoOrden, DetalleOrdenAdmin } from '../../../domain/models/OrdenAdmin';
 import { ordenesAdminRepository as repo } from '../../../infrastructure/di';
-import { abrirMapaOrden } from '../../../infrastructure/navigation/abrirMapaOrden';
 import { useResponsive } from '../../../theme/responsive';
 import { colores } from '../../../theme/tokens';
 import { Aviso } from '../../../ui/Aviso';
 import { BotonPrimario } from '../../../ui/BotonPrimario';
 import { Chip } from '../../../ui/Chip';
 import { Encabezado } from '../../../ui/Encabezado';
+import { Mapa } from '../../../ui/mapa/Mapa';
+import { puntoValido } from '../../../ui/mapa/contrato';
 import { Tarjeta } from '../../../ui/Tarjeta';
 import { Texto } from '../../../ui/Texto';
 import { FiltroAdmin } from '../../../ui/admin/FiltroAdmin';
@@ -22,11 +23,12 @@ export function FichaOrdenAdmin({ id, onVolver }: { id: number; onVolver: () => 
   const [vista, setVista] = useState('resumen');
   const [error, setError] = useState('');
   const [errorMapa, setErrorMapa] = useState('');
+  const [mapaAbierto, setMapaAbierto] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [recarga, setRecarga] = useState(0);
   const consulta = useRef(0);
   useEffect(() => {
-    const actual = ++consulta.current; setCargando(true); setError(''); setErrorMapa('');
+    const actual = ++consulta.current; setCargando(true); setError(''); setErrorMapa(''); setMapaAbierto(false);
     repo.detalle(id).then(datos => { if (actual === consulta.current) setDetalle(datos); })
       .catch(e => { if (actual === consulta.current) { setDetalle(null); setError(errorOrden(e)); } })
       .finally(() => { if (actual === consulta.current) setCargando(false); });
@@ -35,8 +37,11 @@ export function FichaOrdenAdmin({ id, onVolver }: { id: number; onVolver: () => 
   function mapa() {
     if (!d) return;
     setErrorMapa('');
-    try { abrirMapaOrden(d.ubicacion.latitud, d.ubicacion.longitud); }
-    catch (e) { setErrorMapa(errorOrden(e)); }
+    if (!mapaAbierto && !puntoValido(d.ubicacion)) {
+      setErrorMapa('Las coordenadas registradas no son válidas.');
+      return;
+    }
+    setMapaAbierto(v => !v);
   }
   return <View style={s.raiz}>
     <View style={s.entre}><BotonPrimario titulo="Volver a Órdenes" variante="secundario" tamano="escritorio" onPress={onVolver} />
@@ -71,9 +76,10 @@ export function FichaOrdenAdmin({ id, onVolver }: { id: number; onVolver: () => 
             <View style={s.fila}><DatoOrden etiqueta="Latitud" valor={String(d.ubicacion.latitud)} />
               <DatoOrden etiqueta="Longitud" valor={String(d.ubicacion.longitud)} /></View>
             <Aviso>Es el punto registrado para el servicio, no la posición actual del técnico. No hay seguimiento en vivo en esta vista.</Aviso>
-            <Texto variante="caption">Al abrir OpenStreetMap se compartirán únicamente estas coordenadas con ese sitio externo.</Texto>
-            <BotonPrimario titulo="Abrir ubicación en OpenStreetMap" variante="secundario" tamano="escritorio" onPress={mapa} />
+            <Texto variante="caption">El mapa Leaflet se muestra aquí al solicitarlo; en ese momento se consultan el mapa y sus mosaicos externos.</Texto>
+            <BotonPrimario titulo={mapaAbierto ? 'Ocultar mapa' : 'Mostrar ubicación en el mapa'} variante="secundario" tamano="escritorio" onPress={mapa} />
             {errorMapa ? <Aviso tono="peligro">{errorMapa}</Aviso> : null}
+            {mapaAbierto ? <Mapa destino={d.ubicacion} alto={320} /> : null}
           </Tarjeta>
           {d.cancelacion ? <Tarjeta style={{ gap: 16 }}><Texto variante="subtitulo">Cancelación registrada</Texto>
             <DatoOrden etiqueta="Motivo de cancelación" valor={d.cancelacion.motivo} />
