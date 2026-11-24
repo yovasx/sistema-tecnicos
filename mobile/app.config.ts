@@ -13,7 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-sharing',
       ['expo-location', {
         locationWhenInUsePermission: 'Permite usar tu ubicación cuando eliges compartirla en un servicio.',
-        locationAlwaysAndWhenInUsePermission: 'Comparte tu ubicación con tu cliente solo durante el trayecto que actives.',
+        locationAlwaysAndWhenInUsePermission: 'Comparte tu ubicación solo con la contraparte asignada durante el servicio.',
         isIosBackgroundLocationEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',
         isAndroidBackgroundLocationEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',
         isAndroidForegroundServiceEnabled: process.env.EXPO_PUBLIC_GPS_SEGUNDO_PLANO === 'true',

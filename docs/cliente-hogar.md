@@ -1,10 +1,11 @@
-# Cliente hogar: V18 y V19
+# Cliente hogar: V18, V19 y V25
 
 ## Alcance
 
 - **V18**: foto de perfil normalizada, direcciones con baja lógica y auditoría,
   índices de reputación del cliente y calificaciones privadas.
-- **V19**: ubicación por orden, tickets WebSocket de un uso y funciones de retención.
+- **V19**: ubicación del técnico por orden, tickets WebSocket de un uso y funciones de retención.
+- **V25**: ubicación opcional del cliente para el técnico asignado, solo con consentimiento y sin historial.
 - Las migraciones aplicadas no se reescriben. No recrear la base ni borrar volúmenes.
 - `Mi cuenta` permite agregar/quitar foto, administrar hasta 10 direcciones y
   consultar el resumen de servicios y las últimas 20 valoraciones recibidas.
@@ -36,7 +37,11 @@ Todas las rutas propias exigen JWT activo y usan `Cache-Control: no-store`.
 | `POST /api/tecnicos/ordenes/{id}/calificacion` | Técnico califica a su cliente |
 | `GET /api/ordenes/{id}/seguimiento` | Snapshot autorizado; también disponible como consulta puntual si falla el socket |
 | `POST /api/ordenes/{id}/seguimiento/ticket` | Ticket efímero para la orden propia en `en_camino` |
-| `POST /api/tecnicos/ubicacion` | `{orden, latitud, longitud, precision?}` del técnico aprobado y asignado, solo `en_camino` |
+| `POST /api/ordenes/{id}/seguimiento/gps` | Cliente inicia compartir ubicación para su orden `en_camino`, con `{plataforma}` |
+| `POST /api/ordenes/seguimiento/ubicacion` | Cliente envía `{sesion, latitud, longitud, precision, capturadoEn}` durante una sesión consentida |
+| `DELETE /api/ordenes/seguimiento/gps/{sesion}` | Cliente detiene su sesión; elimina inmediatamente su posición actual |
+| `POST /api/tecnicos/servicios/{id}/gps` | Técnico aprobado inicia sesión GPS para la orden `en_camino` |
+| `POST /api/tecnicos/ubicacion` | Técnico envía `{sesion, latitud, longitud, precision, capturadoEn}` durante su sesión |
 
 Guardar dirección recibe `{etiqueta, referencia, latitud, longitud, predeterminada}`.
 Calificar recibe `{puntaje, comentario}`. Dueño y destinatario nunca se eligen
@@ -74,7 +79,7 @@ Los reportes se aceptan como máximo cada 3 s. Se crea la partición mensual del
 historial bajo un lock, y se conservan posiciones históricas durante 30 días.
 Cada minuto se purgan tickets vencidos y posiciones ligadas a órdenes que ya
 no están en camino; nunca se sirven esas posiciones durante esa espera.
-Las posiciones antiguas sin `orden_id` no se eliminan con esta limpieza.
+Las posiciones antiguas sin `orden_id` no se eliminan con esta limpieza. La ubicación del cliente no crea historial: se elimina al detener el consentimiento o al salir la orden de `en_camino`. La sesión del cliente usa un lease renovado con cada reporte y vence en 30 segundos si deja de enviar; la posición vencida no se entrega aunque el proceso de limpieza todavía no haya corrido.
 
 La ETA solo se muestra para una posición reciente (≤30 s): distancia geodésica
 ×1,35 a 20 km/h. **No es una ruta vial, ni considera tráfico**, ni confirma llegada.
@@ -85,6 +90,16 @@ La tarjeta distingue última posición, datos ausentes y pérdida de señal.
 Mapa web en iframe aislado; nativo en WebView. Ambos usan Leaflet 1.9.4 fijado
 con SRI y el mismo HTML sin credenciales. Solo se carga al abrirlo explícitamente.
 Elegir un punto tiene alternativa manual/GPS puntual.
+
+Durante `en_camino`, el cliente puede autorizar explícitamente el envío de su
+ubicación precisa en primer plano. Se detiene al cerrar el mapa, cambiar de
+sección, ocultar/minimizar la app o terminar el trayecto. Solo el técnico
+asignado puede recibirla por el WebSocket de esa orden. El cliente no recibe su
+propia coordenada desde la API; su marcador local solo se dibuja mientras la
+señal sigue reciente. El técnico también puede consultar el mapa en vivo y ve
+ese marcador únicamente mientras el consentimiento esté vigente. El GPS del
+cliente no se ejecuta en segundo plano ni se registra en historial, URL, logs o
+storage.
 
 - `EXPO_PUBLIC_MAPA_TILES_URL`: plantilla pública del proveedor.
 - `EXPO_PUBLIC_MAPA_ATRIBUCION`: atribución del proveedor.

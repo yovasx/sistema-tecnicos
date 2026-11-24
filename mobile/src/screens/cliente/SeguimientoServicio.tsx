@@ -10,6 +10,7 @@ import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { Mapa } from '../../ui/mapa/Mapa';
 import { fechaHoraBolivia } from '../../ui/formato';
+import { useCompartirUbicacion } from './useCompartirUbicacion';
 
 export function SeguimientoServicio({ orden, latitud, longitud, estadoOrden }: {
   orden: number; latitud: number; longitud: number; estadoOrden: string;
@@ -23,6 +24,9 @@ export function SeguimientoServicio({ orden, latitud, longitud, estadoOrden }: {
   const [simular, setSimular] = useState(false);
   const [paso, setPaso] = useState(0);
   const [consultando, setConsultando] = useState(false);
+  const [confirmarGpsCliente, setConfirmarGpsCliente] = useState(false);
+  const enCamino = estadoOrden === 'en_camino' && (!datos || datos.estado === 'en_camino');
+  const gpsCliente = useCompartirUbicacion(orden, abierto && visible && foco && !simular && enCamino);
   async function actualizar() {
     if (consultando) return;
     setConsultando(true);
@@ -62,14 +66,31 @@ export function SeguimientoServicio({ orden, latitud, longitud, estadoOrden }: {
     latitud: latitud + (40 - paso) * 0.0002,
     longitud: longitud + (40 - paso) * 0.00015,
   } : datos?.posicion;
-  const enCamino = estadoOrden === 'en_camino' && (!datos || datos.estado === 'en_camino');
   return <Tarjeta style={{ gap: 12 }}>
     <Texto variante="subtitulo">Seguimiento del técnico</Texto>
     {!enCamino ? <Texto>El seguimiento se habilita cuando un técnico asignado está en camino.</Texto> : null}
-    <Texto variante="caption">Al abrir el mapa se consultan Leaflet y el proveedor de mapas. No se activa el GPS del cliente.</Texto>
+    <Texto variante="caption">Al abrir el mapa se consultan Leaflet y el proveedor de mapas. El GPS del cliente solo se activa con su autorización.</Texto>
     {(enCamino || __DEV__) ? <BotonPrimario titulo={abierto ? 'Cerrar seguimiento' : 'Abrir mapa de seguimiento'}
-      variante="secundario" onPress={() => { setAbierto(v => !v); setSimular(false); setDatos(null); }} /> : null}
+      variante="secundario" onPress={() => { setAbierto(v => !v); setSimular(false); setDatos(null); setConfirmarGpsCliente(false); }} /> : null}
     {abierto ? <>
+      {!simular && enCamino ? <>
+        <Texto variante="caption">Compartir tu ubicación es opcional, solo con el técnico asignado y mientras esta pantalla esté visible.</Texto>
+        {gpsCliente.mensaje ? <Texto>{gpsCliente.mensaje}</Texto> : null}
+        {gpsCliente.compartiendo
+          ? <BotonPrimario titulo="Dejar de compartir mi ubicación" variante="secundario"
+            deshabilitado={gpsCliente.ocupado} onPress={() => void gpsCliente.detener()} />
+          : <BotonPrimario titulo="Compartir mi ubicación con el técnico" variante="secundario"
+            deshabilitado={gpsCliente.ocupado || confirmarGpsCliente}
+            onPress={() => setConfirmarGpsCliente(true)} />}
+        {confirmarGpsCliente ? <>
+          <Aviso tono="advertencia">Tu ubicación precisa se enviará solo al técnico asignado mientras estés en esta pantalla.
+            No se guardará un recorrido y puedes detener el envío en cualquier momento.</Aviso>
+          <BotonPrimario titulo="Confirmar y solicitar permiso GPS" cargando={gpsCliente.ocupado}
+            onPress={() => { setConfirmarGpsCliente(false); void gpsCliente.iniciar(); }} />
+          <BotonPrimario titulo="No compartir" variante="secundario" deshabilitado={gpsCliente.ocupado}
+            onPress={() => setConfirmarGpsCliente(false)} />
+        </> : null}
+      </> : null}
       {__DEV__ ? <BotonPrimario titulo={simular ? 'Detener simulación' : 'Probar ruta simulada (desarrollo)'}
         variante="secundario" onPress={() => { setSimular(v => !v); setPaso(0); setDatos(null); }} /> : null}
       {simular ? <Aviso tono="advertencia">SIMULACIÓN LOCAL: no hay un técnico real ni una ruta vial.</Aviso>
@@ -87,7 +108,8 @@ export function SeguimientoServicio({ orden, latitud, longitud, estadoOrden }: {
       </Texto> : null}
       {datos?.etaMinutos && datos.vigente && !simular
         ? <Texto>Aproximadamente {datos.etaMinutos} min. Estimación por distancia, sin tráfico ni ruta vial.</Texto> : null}
-      {abierto && visible && foco ? <Mapa destino={{ latitud, longitud }} tecnico={enCamino || simular ? posicion : null} /> : null}
+      {abierto && visible && foco ? <Mapa destino={{ latitud, longitud }}
+        tecnico={enCamino || simular ? posicion : null} cliente={gpsCliente.posicion} /> : null}
       {!posicion ? <Texto>No hay una ubicación disponible. No se muestra un técnico ficticio.</Texto> : null}
       {!simular ? <BotonPrimario titulo="Actualizar posición" variante="secundario" cargando={consultando}
         onPress={() => void actualizar()} /> : null}

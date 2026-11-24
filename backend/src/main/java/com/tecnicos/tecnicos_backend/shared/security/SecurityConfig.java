@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/perfil/direcciones/**", "/api/perfil/preferencias").hasRole("CLIENTE")
                         .requestMatchers("/api/perfil/foto").hasAnyRole("CLIENTE","TECNICO")
                         .requestMatchers("/api/servicios/**").hasAnyRole("CLIENTE","TECNICO")
+                        .requestMatchers("/api/ordenes/*/seguimiento", "/api/ordenes/*/seguimiento/**",
+                                "/api/ordenes/seguimiento/**").hasAnyRole("CLIENTE","TECNICO")
                         // Disputas: las abre cualquiera de los dos participantes.
                         .requestMatchers("/api/disputas/**").hasAnyRole("CLIENTE","TECNICO")
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()

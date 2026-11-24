@@ -1,4 +1,4 @@
-# Operación técnica: V20, V21 y V22
+# Operación del servicio: V20, V21, V22 y V25
 
 ## Alcance
 
@@ -9,6 +9,8 @@
   chat privado, notificaciones y liquidaciones de solo lectura.
 - **V22**: cobertura revisable por administración, zonas circulares declaradas y
   comprobación puntual de pertenencia.
+- **V25**: ubicación opcional del cliente para el técnico asignado durante el
+  trayecto, con sesión de consentimiento en primer plano y sin historial.
 - Las migraciones aplicadas no se reescriben. Los cambios posteriores van en una
   migración nueva.
 
@@ -20,6 +22,7 @@
 | Cobertura | `geo.zonas_cobertura` vigentes | Dónde puede aceptar |
 | Ubicación puntual | Consulta del técnico, sin persistir | Solo informa dentro/fuera |
 | Seguimiento GPS | `geo.sesiones_seguimiento` + `geo.ubicacion_actual` | Comparte el trayecto con el cliente de esa orden |
+| Ubicación cliente | `geo.sesiones_gps_cliente` + `geo.ubicacion_cliente_actual` | Opcional; visible solo al técnico asignado mientras está vigente |
 
 Estar dentro de la cobertura **no** vuelve disponible al técnico, no aprueba su
 expediente y no inicia el GPS. Estar fuera tampoco cancela un servicio asignado.
@@ -120,8 +123,13 @@ fijas ni saldos.
   de hasta 30 s y precisión de hasta 200 m.
 - Detener el GPS, revocar la sesión, salir de `en_camino` o iniciar otra sesión
   retira la posición anterior.
-- El WebSocket sigue el contrato de V19: ticket de un uso en el primer mensaje,
-  nunca JWT en la URL.
+- El cliente solo comparte ubicación tras confirmación explícita. Se detiene al
+  cerrar el mapa, perder visibilidad o cambiar de sección; no funciona en segundo
+  plano. No crea historial y el lease vence a los 30 s sin heartbeat.
+- La posición del cliente no se devuelve a su propia API ni a otros técnicos.
+  Solo se dibuja en el mapa Leaflet del técnico asignado mientras la muestra sea
+  reciente.
+- El WebSocket usa ticket de un uso en el primer mensaje, nunca JWT en la URL.
 - Las propuestas de cobertura no exponen datos de clientes y no publican zonas en
   el mapa del cliente.
 

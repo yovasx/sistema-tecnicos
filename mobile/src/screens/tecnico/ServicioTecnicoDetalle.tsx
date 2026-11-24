@@ -9,13 +9,13 @@ import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
 import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
-import { Mapa } from '../../ui/mapa/Mapa';
 import { fechaHoraBolivia } from '../../ui/formato';
 import { OperacionDelServicio } from '../servicios/OperacionDelServicio';
 import { CalificarServicio } from '../cliente/CalificarServicio';
 import { EstadoServicio } from '../../domain/models/SolicitudServicio';
 import { estadoServicio } from '../cliente/estadosServicio';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
+import { SeguimientoClienteTecnico } from './SeguimientoClienteTecnico';
 
 export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver: () => void }) {
   const c = useConsulta(async () => {
@@ -23,7 +23,6 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
     return { detalle, cotizaciones };
   }, [id]);
   const gps = useSeguimientoGps();
-  const [mapa, setMapa] = useState(false);
   const [confirmarGps, setConfirmarGps] = useState<'visible' | 'segundo' | null>(null);
   const [accion, setAccion] = useState<'llegada' | 'reparacion' | 'finalizar' | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -58,11 +57,8 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
         <Texto variante="subtitulo">{d.cliente || 'Cliente no disponible'}</Texto>
         <Texto>{d.descripcion}</Texto><Texto>{d.referencia}</Texto>
         <Texto variante="caption">Información privada del servicio asignado.</Texto>
-        <BotonPrimario titulo={mapa ? 'Cerrar mapa del destino' : 'Ver destino en el mapa'} variante="secundario"
-          deshabilitado={bloqueado} onPress={() => setMapa(v => !v)} />
-        {mapa ? <><Texto variante="caption">Al abrir el mapa consultas un proveedor externo. Azul: destino.</Texto>
-          <Mapa destino={{ latitud: d.latitud, longitud: d.longitud }} /></> : null}
       </Tarjeta>
+      <SeguimientoClienteTecnico orden={id} latitud={d.latitud} longitud={d.longitud} estadoOrden={d.estado} />
       {d.estado === 'en_camino' ? <Tarjeta style={{ gap: 12 }}>
         <Texto variante="subtitulo">Compartir mi ubicación con el cliente</Texto>
         <Texto>{gps.mensaje || 'El GPS está desactivado. Se requiere tu autorización para este trayecto.'}</Texto>

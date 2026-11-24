@@ -26,7 +26,8 @@ public class SeguimientoService {
     public record Punto(double latitud, double longitud, Float precision, OffsetDateTime actualizadoEn) {}
     public record FichaTecnico(String nombre, String fotoUrl, Double promedio, long totalCalificaciones) {}
     public record Vista(long orden, String estado, String tecnico, Punto posicion,
-                        Integer etaMinutos, boolean vigente, FichaTecnico fichaTecnico) {}
+                        Integer etaMinutos, boolean vigente, FichaTecnico fichaTecnico,
+                        Punto posicionCliente, boolean clienteCompartiendo, boolean clienteVigente) {}
     public record Ticket(String ticket) {
         @Override public String toString() { return "Ticket[protegido]"; }
     }
@@ -47,6 +48,10 @@ public class SeguimientoService {
               rep.promedio,rep.total,
               ST_Y(g.punto::geometry) latitud,ST_X(g.punto::geometry) longitud,
               g.precision_m,g.capturado_en AS actualizado_en,
+              ST_Y(gc.punto::geometry) cliente_latitud,ST_X(gc.punto::geometry) cliente_longitud,
+              gc.precision_m AS cliente_precision_m,gc.capturado_en AS cliente_actualizado_en,
+              (sc.id IS NOT NULL) AS cliente_compartiendo,
+              (gc.capturado_en>clock_timestamp()-interval '30 seconds') AS cliente_vigente,
               CASE WHEN g.capturado_en>clock_timestamp()-interval '30 seconds'
                 THEN LEAST(32767, GREATEST(1,ceil(ST_Distance(g.punto,o.ubicacion_cliente)*1.35/333.33)))::int END eta
             FROM orders.ordenes_servicio o
@@ -61,17 +66,34 @@ public class SeguimientoService {
                AND EXISTS(SELECT 1 FROM identity.perfiles_tecnico pt WHERE pt.usuario_id=t.id AND pt.estado_validacion='aprobado')
               AND EXISTS(SELECT 1 FROM geo.sesiones_seguimiento s WHERE s.tecnico_id=t.id AND s.orden_id=o.id
                 AND s.cerrada_en IS NULL AND s.expira_en>clock_timestamp() AND s.version_sesion=t.version_sesion)
+            LEFT JOIN LATERAL (
+              SELECT s.id
+              FROM geo.sesiones_gps_cliente s
+              JOIN identity.usuarios c ON c.id=s.cliente_id AND c.activo AND c.eliminado_en IS NULL
+                AND c.version_sesion=s.version_sesion
+              WHERE s.orden_id=o.id AND s.cliente_id=o.cliente_id
+                AND s.cerrada_en IS NULL AND s.expira_en>clock_timestamp()
+              LIMIT 1
+            ) sc ON u.id=o.tecnico_id AND o.estado='en_camino'
+              AND EXISTS(SELECT 1 FROM identity.perfiles_tecnico pt
+                WHERE pt.usuario_id=u.id AND pt.estado_validacion='aprobado')
+            LEFT JOIN geo.ubicacion_cliente_actual gc ON gc.orden_id=o.id AND gc.sesion_id=sc.id
+              AND gc.capturado_en>clock_timestamp()-interval '30 seconds'
             WHERE o.id=? AND (o.cliente_id=u.id OR o.tecnico_id=u.id)
             """,(r,n)-> {
                 if (version!=null && version!=r.getLong("version_sesion")) throw noDisponible();
                 var fecha=r.getObject("actualizado_en",OffsetDateTime.class);
+                var fechaCliente=r.getObject("cliente_actualizado_en",OffsetDateTime.class);
                 boolean vigente=fecha!=null && fecha.isAfter(OffsetDateTime.now().minusSeconds(30));
                 return new Vista(r.getLong("id"),r.getString("estado"),r.getString("tecnico"),
                     fecha==null?null:new Punto(r.getDouble("latitud"),r.getDouble("longitud"),
                         r.getObject("precision_m",Float.class),fecha),
                     r.getObject("eta",Integer.class),vigente,
                     r.getString("tecnico")==null?null:new FichaTecnico(r.getString("tecnico"),
-                        avatar(r.getString("foto")),r.getObject("promedio",Double.class),r.getLong("total")));
+                        avatar(r.getString("foto")),r.getObject("promedio",Double.class),r.getLong("total")),
+                    fechaCliente==null?null:new Punto(r.getDouble("cliente_latitud"),r.getDouble("cliente_longitud"),
+                        r.getObject("cliente_precision_m",Float.class),fechaCliente),
+                    r.getBoolean("cliente_compartiendo"),r.getBoolean("cliente_vigente"));
             },usuario,orden);
         if(filas.isEmpty()) throw noDisponible();
         return filas.getFirst();
@@ -125,12 +147,20 @@ public class SeguimientoService {
         return acceso;
     }
     public record SesionGps(String sesion,long orden,boolean segundoPlano,Instant expiraEn) {}
+    public record SesionGpsCliente(String sesion,long orden,Instant expiraEn) {}
     @Transactional
     public SesionGps iniciarGps(long orden,String plataforma,boolean segundo,long version,Instant expira) {
         auditoria.aplicarEnTransaccion();
         var id=jdbc.queryForObject("SELECT geo.iniciar_sesion_gps(?,?,?,?,?)",java.util.UUID.class,
             orden,plataforma,segundo,version,expira==null?null:OffsetDateTime.ofInstant(expira,java.time.ZoneOffset.UTC));
         return new SesionGps(id.toString(),orden,segundo,expira);
+    }
+    @Transactional
+    public SesionGpsCliente iniciarGpsCliente(long orden,String plataforma,long version,Instant expira) {
+        auditoria.aplicarEnTransaccion();
+        var id=jdbc.queryForObject("SELECT geo.iniciar_sesion_gps_cliente(?,?,?,?)",java.util.UUID.class,
+            orden,plataforma,version,expira==null?null:OffsetDateTime.ofInstant(expira,java.time.ZoneOffset.UTC));
+        return new SesionGpsCliente(id.toString(),orden,expira);
     }
     @Transactional
     public void detenerGps(java.util.UUID sesion) {
@@ -140,11 +170,26 @@ public class SeguimientoService {
     @Transactional
     public void reportarGps(java.util.UUID sesion,double lat,double lng,Float precision,OffsetDateTime capturado) {
         auditoria.aplicarEnTransaccion();
+        validarMuestra(lat,lng,precision);
+        jdbc.queryForObject("SELECT geo.reportar_posicion_sesion(?::uuid,?,?,?::real,?)",Boolean.class,
+            sesion.toString(),lat,lng,precision,capturado);
+    }
+    @Transactional
+    public void detenerGpsCliente(java.util.UUID sesion) {
+        auditoria.aplicarEnTransaccion();
+        jdbc.queryForObject("SELECT geo.detener_sesion_gps_cliente(?::uuid)",(r,n)->null,sesion.toString());
+    }
+    @Transactional
+    public void reportarGpsCliente(java.util.UUID sesion,double lat,double lng,Float precision,OffsetDateTime capturado) {
+        auditoria.aplicarEnTransaccion();
+        validarMuestra(lat,lng,precision);
+        jdbc.queryForObject("SELECT geo.reportar_posicion_sesion_cliente(?::uuid,?,?,?::real,?)",Boolean.class,
+            sesion.toString(),lat,lng,precision,capturado);
+    }
+    private static void validarMuestra(double lat,double lng,Float precision) {
         if(!Double.isFinite(lat)||Math.abs(lat)>90 || !Double.isFinite(lng)||Math.abs(lng)>180
             || precision==null || !Float.isFinite(precision)||precision<0||precision>200)
             throw new ApiException(HttpStatus.BAD_REQUEST,"UBICACION_INVALIDA","Revisa las coordenadas y su precisión.");
-        jdbc.queryForObject("SELECT geo.reportar_posicion_sesion(?::uuid,?,?,?::real,?)",Boolean.class,
-            sesion.toString(),lat,lng,precision,capturado);
     }
     static String hash(String valor) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
