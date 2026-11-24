@@ -78,6 +78,38 @@ class OperacionControllerTest {
         enviar("/api/tecnicos/servicios/"+o+"/llegada",t,"{}").andExpect(status().isNoContent());
         enviar("/api/tecnicos/servicios/"+o+"/reparacion",t,"{}").andExpect(status().isConflict());
     }
+    @Test void reintento_ofrece_a_otro_tecnico_tras_rechazo() {
+        long diego=tecnico(), raul=id("raul.choque@ejemplo.bo");
+        jdbc.update("""
+            UPDATE geo.zonas_cobertura
+            SET poligono=ST_GeomFromText(
+                'POLYGON((-68.3 -16.3,-68.3 -16.7,-67.9 -16.7,-67.9 -16.3,-68.3 -16.3))',4326)::geography
+            WHERE tecnico_id IN (?,?)
+            """,diego,raul);
+        long orden=jdbc.queryForObject("""
+            INSERT INTO orders.ordenes_servicio(cliente_id,categoria_id,descripcion_falla,ubicacion_cliente,direccion_referencia)
+            VALUES(?,(SELECT id FROM orders.categorias_servicio WHERE nombre='Plomería'),
+                'Solicitud para probar reintento',
+                ST_SetSRID(ST_MakePoint(-68.13,-16.51),4326)::geography,'Referencia de prueba')
+            RETURNING id
+            """,Long.class,id("maria.quispe@ejemplo.bo"));
+
+        assertThat(jdbc.queryForObject("SELECT orders.generar_ofertas(?,1,2)",Integer.class,orden)).isEqualTo(1);
+        long primero=jdbc.queryForObject("SELECT tecnico_id FROM orders.ofertas_orden WHERE orden_id=?",Long.class,orden);
+        jdbc.update("""
+            UPDATE orders.ofertas_orden SET estado='rechazada',motivo_rechazo='No disponible',
+                respondida_en=clock_timestamp() WHERE orden_id=? AND tecnico_id=?
+            """,orden,primero);
+
+        assertThat(jdbc.queryForObject("SELECT orders.generar_ofertas(?,1,2)",Integer.class,orden)).isEqualTo(1);
+        long segundo=jdbc.queryForObject("""
+            SELECT tecnico_id FROM orders.ofertas_orden
+            WHERE orden_id=? AND tecnico_id<>?
+            """,Long.class,orden,primero);
+        assertThat(segundo).isNotEqualTo(primero);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM orders.ofertas_orden WHERE orden_id=?",Integer.class,orden))
+            .isEqualTo(2);
+    }
     @Test void solo_cliente_duenio_cancela_antes_de_asignar() throws Exception {
         long o=solicitud(); String c=token("maria.quispe@ejemplo.bo");
         enviar("/api/ordenes/"+o+"/cancelar",c,"{\"motivo\":\"Ya no necesito el servicio\"}").andExpect(status().isNoContent());

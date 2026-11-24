@@ -18,6 +18,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Módulos operativos del backoffice que ya tienen fuente real: auditoría
@@ -27,6 +28,7 @@ import java.util.Set;
 @Service
 public class BackofficeService {
     private static final ZoneId BOLIVIA = ZoneId.of("America/La_Paz");
+    private static final Pattern PREFIJO_FORMULA_CSV = Pattern.compile("^[\\p{Cc}\\p{Zs}]*[=+\\-@]");
     private static final Set<String> TIPOS = Set.of("oferta_orden", "cambio_estado", "cotizacion_enviada",
         "cotizacion_respondida", "tarifa_urgencia", "mensaje_chat", "pago", "disputa", "sistema");
     private final JdbcTemplate jdbc;
@@ -252,7 +254,8 @@ public class BackofficeService {
 
     private static String csv(String valor) {
         if (valor == null) return "";
-        String limpio = valor.replace("\"", "\"\"");
+        String seguro = PREFIJO_FORMULA_CSV.matcher(valor).find() ? "'" + valor : valor;
+        String limpio = seguro.replace("\"", "\"\"");
         return "\"" + limpio + "\"";
     }
 
