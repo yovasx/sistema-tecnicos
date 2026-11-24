@@ -13,7 +13,7 @@ import { Aviso } from '../../ui/Aviso';
 import { BotonPrimario } from '../../ui/BotonPrimario';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { Mapa } from '../../ui/mapa/Mapa';
-import { puntoValido } from '../../ui/mapa/contrato';
+import { PuntoMapa, puntoValido } from '../../ui/mapa/contrato';
 import { useResponsive } from '../../theme/responsive';
 import { colores, radio } from '../../theme/tokens';
 import { SeguridadTecnicoPendiente } from './SeguridadTecnicoPendiente';
@@ -52,19 +52,17 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [coordenadas, setCoordenadas] = useState(false);
-  const [mapaAbierto, setMapaAbierto] = useState(false);
   const [seguridad, setSeguridad] = useState(false);
   const bloqueo = useRef(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const tamano = esDesktop ? 'escritorio' as const : 'movil' as const;
-  const puntoMapa = { latitud: Number(lat), longitud: Number(lng) };
-  const puntoMapaValido = !!lat.trim() && !!lng.trim() && puntoValido(puntoMapa);
+  const puntoIngresado = { latitud: Number(lat), longitud: Number(lng) };
+  const ubicacionElegida = !!lat.trim() && !!lng.trim() && puntoValido(puntoIngresado);
+  const puntoMapa: PuntoMapa = ubicacionElegida
+    ? puntoIngresado
+    : { latitud: -16.5, longitud: -68.13 };
   const radioMapa = Number(radioMetros.replace(',', '.'));
   const radioMapaValido = Number.isFinite(radioMapa) && radioMapa >= 100 && radioMapa <= 20000;
-
-  useEffect(() => {
-    if (paso !== 3) setMapaAbierto(false);
-  }, [paso]);
 
   useEffect(() => {
     let vigente = true;
@@ -80,6 +78,11 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
   function ir(p: number) {
     if (ocupado) return;
     setError(''); setMensaje(''); setPaso(p); scroll.current?.scrollTo({ y: 0, animated: true });
+  }
+  function seleccionarCentro(punto: PuntoMapa) {
+    setLat(punto.latitud.toFixed(6));
+    setLng(punto.longitud.toFixed(6));
+    setError('');
   }
   async function accion(operacion: () => Promise<void>, avanzar = false,
                          aviso = 'Guardado. Puedes continuar más tarde sin perder tu avance.') {
@@ -210,15 +213,16 @@ export function OnboardingTecnicoScreen({ expediente: e, onCambiar, onActualizar
                     <CampoTexto etiqueta="Latitud" value={lat} onChangeText={setLat} placeholder="-16.51" keyboardType="numbers-and-punctuation" />
                     <CampoTexto etiqueta="Longitud" value={lng} onChangeText={setLng} placeholder="-68.12" keyboardType="numbers-and-punctuation" />
                   </> : null}
-                  {puntoMapaValido ? <>
-                    <BotonPrimario titulo={mapaAbierto ? 'Ocultar mapa de cobertura' : 'Ver centro en el mapa'}
-                      variante="secundario" tamano={tamano} onPress={() => setMapaAbierto(v => !v)} />
-                    {mapaAbierto ? <Mapa destino={puntoMapa} etiquetaPunto="Centro de cobertura"
-                      areas={radioMapaValido ? [{
-                        nombre: zona.trim() || 'Cobertura propuesta', centro: puntoMapa,
-                        radioMetros: radioMapa, propuesta: true,
-                      }] : []} alto={280} /> : null}
-                  </> : null}
+                  <Texto variante="caption">Toca el mapa o mueve el pin para marcar el centro de tu cobertura.</Texto>
+                  <Mapa destino={puntoMapa} onSeleccionar={seleccionarCentro}
+                    etiquetaPunto={ubicacionElegida ? 'Centro de cobertura' : 'Selecciona el centro'}
+                    areas={ubicacionElegida && radioMapaValido ? [{
+                      nombre: zona.trim() || 'Cobertura propuesta', centro: puntoMapa,
+                      radioMetros: radioMapa, propuesta: true,
+                    }] : []} alto={320} />
+                  {ubicacionElegida ? <Texto variante="caption">
+                    Centro marcado: {puntoMapa.latitud.toFixed(6)}, {puntoMapa.longitud.toFixed(6)}.
+                  </Texto> : <Aviso tono="info">El marcador inicial solo centra el mapa; mueve el pin o toca tu zona para elegirla.</Aviso>}
                   <CampoTexto etiqueta="Radio en metros (100–20000)" accessibilityLabel="Radio en metros" value={radioMetros} onChangeText={setRadio} keyboardType="number-pad" />
                   <BotonPrimario titulo="Guardar cobertura" tamano={tamano} cargando={ocupado} onPress={() => {
                     const numeros = [lat, lng, radioMetros].map((n) => Number(n.replace(',', '.')));

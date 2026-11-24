@@ -22,6 +22,7 @@ import { BotonPrimario } from '../../ui/BotonPrimario';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { Chip } from '../../ui/Chip';
 import { Mapa } from '../../ui/mapa/Mapa';
+import { PuntoMapa } from '../../ui/mapa/contrato';
 import { Texto } from '../../ui/Texto';
 import { useAvisoSalida } from '../../ui/admin/useAvisoSalida';
 import { bolivianos } from '../../ui/formato';
@@ -86,7 +87,7 @@ export function SolicitudServicioWizard() {
   const [confirmarCierre, setConfirmarCierre] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState('');
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
-  const [mapaAbierto, setMapaAbierto] = useState(false);
+  const [coordenadasManuales, setCoordenadasManuales] = useState(false);
   const [errorEvidencia, setErrorEvidencia] = useState('');
 
   const sucio =
@@ -100,8 +101,8 @@ export function SolicitudServicioWizard() {
       Boolean(borrador.evidencia));
 
   useEffect(() => {
-    if (!abierta || paso !== 2) setMapaAbierto(false);
-  }, [abierta, paso]);
+    if (!abierta) setCoordenadasManuales(false);
+  }, [abierta]);
 
   useAvisoSalida(abierta && sucio);
 
@@ -148,9 +149,17 @@ export function SolicitudServicioWizard() {
   const errorRef = errorReferencia(borrador.referencia);
   const lat = coordenada(borrador.latitud, 90);
   const lng = coordenada(borrador.longitud, 180);
-  const errorLat = borrador.latitud.trim() === '' ? 'Ingresa la latitud.' : lat === null ? 'Entre -90 y 90.' : '';
+  const ubicacionElegida = lat !== null && lng !== null;
+  const puntoMapa: PuntoMapa = ubicacionElegida
+    ? { latitud: lat, longitud: lng }
+    : { latitud: -16.5, longitud: -68.13 };
+  const errorLat = borrador.latitud.trim() === ''
+    ? 'Ingresa la latitud o selecciona un punto en el mapa.'
+    : lat === null ? 'Entre -90 y 90.' : '';
   const errorLng =
-    borrador.longitud.trim() === '' ? 'Ingresa la longitud.' : lng === null ? 'Entre -180 y 180.' : '';
+    borrador.longitud.trim() === ''
+      ? 'Ingresa la longitud o selecciona un punto en el mapa.'
+      : lng === null ? 'Entre -180 y 180.' : '';
 
   const puedeAvanzar =
     paso === 0
@@ -190,7 +199,7 @@ export function SolicitudServicioWizard() {
     setErrorUbicacion('');
     try {
       if (!(await operacionRepository.preferencias()).permitirGps)
-        throw new Error('El GPS puntual está desactivado en Configuración y privacidad. Puedes ingresar las coordenadas manualmente.');
+        throw new Error('El GPS puntual está desactivado en Configuración y privacidad. Puedes elegir el punto en el mapa.');
       const punto = await ubicacionActual();
       cambiar((b) => ({
         ...b,
@@ -204,6 +213,15 @@ export function SolicitudServicioWizard() {
     } finally {
       setBuscandoUbicacion(false);
     }
+  }
+
+  function seleccionarUbicacion(punto: PuntoMapa) {
+    setErrorUbicacion('');
+    cambiar((b) => ({
+      ...b,
+      latitud: punto.latitud.toFixed(6),
+      longitud: punto.longitud.toFixed(6),
+    }));
   }
 
   async function elegirEvidencia() {
@@ -505,72 +523,54 @@ export function SolicitudServicioWizard() {
                   {paso === 2 ? (
                     <>
                       <ElegirDireccionGuardada bloqueado={ocupado || incierto || buscandoUbicacion}
-                        onElegir={d => cambiar(b => ({ ...b, latitud: String(d.latitud),
-                          longitud: String(d.longitud), referencia: d.referencia }))} />
+                        onElegir={d => {
+                          setErrorUbicacion('');
+                          setCoordenadasManuales(false);
+                          cambiar(b => ({ ...b, latitud: String(d.latitud),
+                            longitud: String(d.longitud), referencia: d.referencia }));
+                        }} />
                       <Aviso tono="info" titulo="Tu ubicación">
-                        La usamos solo para esta solicitud. Puedes compartirla desde el GPS o
-                        escribir las coordenadas a mano.
+                        Toca el mapa o mueve el pin hasta el lugar del servicio. También puedes usar el GPS
+                        o elegir una dirección guardada. El punto inicial solo centra el mapa; no se guarda
+                        hasta que lo selecciones.
                       </Aviso>
+                      {abierta ? <Mapa destino={puntoMapa} onSeleccionar={seleccionarUbicacion}
+                        etiquetaPunto={ubicacionElegida ? 'Ubicación del servicio' : 'Selecciona el lugar del servicio'}
+                        alto={320} /> : null}
+                      {ubicacionElegida ? <Texto variante="caption">
+                        Ubicación marcada: {lat.toFixed(6)}, {lng.toFixed(6)}.
+                      </Texto> : null}
+                      {intentado && !ubicacionElegida ? <Aviso tono="advertencia">
+                        Marca el punto del servicio en el mapa o usa tu ubicación actual para continuar.
+                      </Aviso> : null}
                       <BotonPrimario
                         titulo={buscandoUbicacion ? 'Buscando ubicación…' : 'Usar mi ubicación'}
                         variante="secundario"
                         onPress={() => void usarUbicacion()}
                         cargando={buscandoUbicacion}
-                        deshabilitado={ocupado || incierto}
+                        deshabilitado={ocupado || incierto || buscandoUbicacion}
                       />
                       {errorUbicacion ? (
                         <Aviso tono="advertencia">{errorUbicacion}</Aviso>
                       ) : null}
-                      <View style={[estilos.fila, esDesktop && estilos.filaDesktop]}>
+                      <Texto color={colores.marca} variante="etiqueta" accessibilityRole="button"
+                        onPress={() => setCoordenadasManuales(v => !v)}>
+                        {coordenadasManuales ? 'Ocultar coordenadas manuales' : 'Ingresar coordenadas manualmente'}
+                      </Texto>
+                      {coordenadasManuales ? <View style={[estilos.fila, esDesktop && estilos.filaDesktop]}>
                         <View style={estilos.mitad}>
-                          <CampoTexto
-                            etiqueta="Latitud"
-                            placeholder="-16.500000"
-                            value={borrador.latitud}
-                            onChangeText={(v) =>
-                              cambiar((b) => ({ ...b, latitud: v.replace(',', '.') }))
-                            }
-                            keyboardType="decimal-pad"
-                            inputMode="decimal"
-                            maxLength={20}
-                            editable={!ocupado && !incierto}
-                            error={intentado && errorLat ? errorLat : undefined}
-                          />
+                          <CampoTexto etiqueta="Latitud" placeholder="-16.500000" value={borrador.latitud}
+                            onChangeText={(v) => cambiar((b) => ({ ...b, latitud: v.replace(',', '.') }))}
+                            keyboardType="decimal-pad" inputMode="decimal" maxLength={20} editable={!ocupado && !incierto}
+                            error={intentado && errorLat ? errorLat : undefined} />
                         </View>
                         <View style={estilos.mitad}>
-                          <CampoTexto
-                            etiqueta="Longitud"
-                            placeholder="-68.150000"
-                            value={borrador.longitud}
-                            onChangeText={(v) =>
-                              cambiar((b) => ({ ...b, longitud: v.replace(',', '.') }))
-                            }
-                            keyboardType="decimal-pad"
-                            inputMode="decimal"
-                            maxLength={20}
-                            editable={!ocupado && !incierto}
-                            error={intentado && errorLng ? errorLng : undefined}
-                          />
+                          <CampoTexto etiqueta="Longitud" placeholder="-68.150000" value={borrador.longitud}
+                            onChangeText={(v) => cambiar((b) => ({ ...b, longitud: v.replace(',', '.') }))}
+                            keyboardType="decimal-pad" inputMode="decimal" maxLength={20} editable={!ocupado && !incierto}
+                            error={intentado && errorLng ? errorLng : undefined} />
                         </View>
-                      </View>
-                      {lat !== null && lng !== null ? (
-                        <Pressable
-                          accessibilityRole="button"
-                          onPress={() => setMapaAbierto(v => !v)}
-                          style={estilos.enlace}
-                        >
-                          <Ionicons name="map-outline" size={16} color={colores.marca} />
-                          <Texto variante="etiqueta" color={colores.marca}>
-                            {mapaAbierto ? 'Ocultar mapa' : 'Ver ubicación con Leaflet'}
-                          </Texto>
-                        </Pressable>
-                      ) : null}
-                      {mapaAbierto && lat !== null && lng !== null ? <>
-                        <Mapa destino={{ latitud: lat, longitud: lng }} alto={260} />
-                        <Texto variante="caption" color={colores.terciario}>
-                          Leaflet y el proveedor de mosaicos se consultan mientras se muestra el mapa.
-                        </Texto>
-                      </> : null}
+                      </View> : null}
                       <CampoTexto
                         etiqueta="Dirección o referencia"
                         placeholder="Calle, número, color de la puerta, entre calles…"

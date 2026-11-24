@@ -88,8 +88,11 @@ La tarjeta distingue última posición, datos ausentes y pérdida de señal.
 ## Leaflet y simulador
 
 Mapa web en iframe aislado; nativo en WebView. Ambos usan Leaflet 1.9.4 fijado
-con SRI y el mismo HTML sin credenciales. Solo se carga al abrirlo explícitamente.
-Elegir un punto tiene alternativa manual/GPS puntual.
+con SRI. En la solicitud y cobertura se muestra un selector interactivo: tocar el
+mapa o mover el pin fija el punto; GPS puntual y coordenadas manuales son
+alternativas, no requisitos. La web debe conservar un `Referer` de origen para
+los mosaicos OSM; la app nativa identifica sus solicitudes con un `User-Agent`
+estable. No usar `no-referrer`: OSM bloquea esos mosaicos.
 
 Durante `en_camino`, el cliente puede autorizar explícitamente el envío de su
 ubicación precisa en primer plano. Se detiene al cerrar el mapa, cambiar de

@@ -22,6 +22,6 @@ export function Mapa(props: PropsMapa) {
     props.cliente?.latitud, props.cliente?.longitud, props.onSeleccionar, props.areas, props.etiquetaPunto, props.marcadores]);
   return <iframe ref={frame} title="Mapa del servicio con Leaflet" srcDoc={html}
     onLoad={() => frame.current?.contentWindow?.postMessage(JSON.parse(datosMapa(actuales.current)), '*')}
-    sandbox="allow-scripts" referrerPolicy="no-referrer"
+    sandbox="allow-scripts"
     style={{ width: '100%', height: props.alto ?? 360, border: 0, borderRadius: 16 }} />;
 }
