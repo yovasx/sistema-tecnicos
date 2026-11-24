@@ -9,7 +9,7 @@ export interface OfertaTecnico {
 }
 export interface PanelTecnicoDatos {
   disponibilidad: 'disponible' | 'ocupado' | 'fuera_servicio';
-  finalizados: number; activos: number; ofertas: OfertaTecnico[]; solicitudes: ServicioTecnico[];
+  finalizados: number; activos: number; ofertas?: OfertaTecnico[]; solicitudes: ServicioTecnico[];
 }
 export interface DetalleTecnico {
   id: number; categoria: string; estado: string; descripcion: string; referencia: string;

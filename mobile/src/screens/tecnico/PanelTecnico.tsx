@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { OfertaTecnico } from '../../domain/models/Operacion';
+import { OfertaTecnico, ServicioTecnico } from '../../domain/models/Operacion';
 import { operacionRepository } from '../../infrastructure/di';
 import { useConsulta } from '../useConsulta';
 import { MarcoContenido } from '../../ui/MarcoContenido';
@@ -54,7 +54,11 @@ export function PanelTecnico() {
 
   const etiquetas = { disponible: 'Disponible', ocupado: 'Ocupado', fuera_servicio: 'Fuera de servicio' };
   const datos = c.datos;
-  const sinTrabajo = datos && !datos.ofertas.length && !datos.solicitudes.length && !c.cargando;
+  const ofertas: OfertaTecnico[] = datos && Array.isArray(datos.ofertas) ? datos.ofertas : [];
+  const solicitudes: ServicioTecnico[] = datos && Array.isArray(datos.solicitudes) ? datos.solicitudes : [];
+  const ofertasNoIncluidas = Boolean(datos && !Array.isArray(datos.ofertas));
+  const solicitudesNoIncluidas = Boolean(datos && !Array.isArray(datos.solicitudes));
+  const sinTrabajo = datos && !ofertas.length && !solicitudes.length && !c.cargando;
 
   return <MarcoContenido>
     <Encabezado titulo="Solicitudes cerca de ti"
@@ -62,6 +66,8 @@ export function PanelTecnico() {
     {c.error || error ? <Aviso tono="peligro">{c.error || error}</Aviso> : null}
     <BotonPrimario titulo="Actualizar solicitudes" variante="secundario"
       deshabilitado={ocupado || c.cargando} onPress={c.actualizar} />
+    {ofertasNoIncluidas ? <Aviso tono="advertencia">El servidor no incluye ofertas asignadas. Las solicitudes compatibles siguen disponibles.</Aviso> : null}
+    {solicitudesNoIncluidas ? <Aviso tono="advertencia">El servidor no devolvió las solicitudes compatibles.</Aviso> : null}
     {c.cargando ? <ActivityIndicator color={colores.marca} /> : null}
     {datos ? <>
       <Tarjeta style={{ gap: 12 }}>
@@ -79,10 +85,10 @@ export function PanelTecnico() {
           <Texto variante="caption">Mientras estés fuera de servicio no recibirás nuevas ofertas.</Texto> : null}
       </Tarjeta>
 
-      {datos.ofertas.length ? <>
+      {ofertas.length ? <>
         <Texto variante="subtitulo">Ofertas para ti</Texto>
         <Texto variante="caption">Tienes poco tiempo para responder. Si rechazas o expira, el pedido se ofrece a otro técnico.</Texto>
-        {datos.ofertas.map(o => <TarjetaOferta key={o.oferta} oferta={o} ocupado={ocupado || c.cargando}
+        {ofertas.map(o => <TarjetaOferta key={o.oferta} oferta={o} ocupado={ocupado || c.cargando}
           confirmando={aceptar === o.oferta}
           onPedirConfirmacion={() => setAceptar(o.oferta)}
           onCancelar={() => setAceptar(null)}
@@ -99,7 +105,7 @@ export function PanelTecnico() {
           ? 'Activa tu disponibilidad para recibir pedidos de tu cobertura.'
           : 'Cuando un cliente pida un servicio dentro de tu cobertura, aparecerá aquí.'}</Texto>
       </Tarjeta> : null}
-      {datos.solicitudes.map(s => <Tarjeta key={s.id} style={{ gap: 12 }}>
+      {solicitudes.map(s => <Tarjeta key={s.id} style={{ gap: 12 }}>
         <Texto variante="cuerpoFuerte">Solicitud #{s.id} · {s.categoria}</Texto>
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
           {s.urgencia ? <Chip texto="Urgente" tono="advertencia" /> : <Chip texto="Sin urgencia" />}
