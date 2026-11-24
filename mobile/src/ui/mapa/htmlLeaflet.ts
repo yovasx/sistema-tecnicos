@@ -1,7 +1,7 @@
+import { atribucionMapa, urlMosaicosMapa } from './configuracionMapa';
+
 // Leaflet 1.9.4 fijado con integridad; el mapa solo solicita mosaicos al abrirse.
 export function htmlLeaflet() {
-  const tiles = process.env.EXPO_PUBLIC_MAPA_TILES_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const atribucion = process.env.EXPO_PUBLIC_MAPA_ATRIBUCION || '© OpenStreetMap contributors';
   const seguro = (v: string) => JSON.stringify(v).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -24,7 +24,7 @@ window.actualizar=function(d){
  if(!window.L||!valido(d.destino))return;
  if(!mapa){
   mapa=L.map('mapa').setView([d.destino.latitud,d.destino.longitud],15);
-  L.tileLayer(${seguro(tiles)},{maxZoom:19,attribution:${seguro(atribucion)}}).addTo(mapa)
+  L.tileLayer(${seguro(urlMosaicosMapa)},{maxZoom:19,attribution:${seguro(atribucionMapa)}}).addTo(mapa)
    .on('tileerror',function(){document.getElementById('aviso').textContent='No se pudo cargar el fondo del mapa.'});
   mapa.on('click',function(e){if(editable)avisar({tipo:'punto',latitud:e.latlng.lat,longitud:e.latlng.lng})});
  }

@@ -1,0 +1,39 @@
+.fixly-mapa-web {
+  width: 100%;
+  height: 100%;
+}
+
+.fixly-mapa-web .fixly-mapa-pin {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #2f6bff;
+  box-shadow: 0 3px 10px rgba(16, 24, 40, .45);
+  transform: rotate(-45deg);
+}
+
+.fixly-mapa-web .fixly-mapa-pin i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.fixly-mapa-aviso {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  z-index: 1000;
+  max-width: 90%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(16, 24, 40, .82);
+  color: #fff;
+  font: 12px sans-serif;
+  pointer-events: none;
+  text-align: center;
+  transform: translateX(-50%);
+}
