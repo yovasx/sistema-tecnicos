@@ -12,6 +12,7 @@ export function Mapa(props: PropsMapa) {
     props.cliente?.latitud, props.cliente?.longitud, props.onSeleccionar, props.areas, props.etiquetaPunto, props.marcadores]);
   return <View style={{ height: props.alto ?? 360 }}><WebView<{}> ref={frame} source={html} originWhitelist={['about:blank']}
     style={{ flex: 1 }} javaScriptEnabled domStorageEnabled={false}
+    userAgent="Fixly/1.0.0 (+https://github.com/yovasx/sistema-tecnicos)"
     onShouldStartLoadWithRequest={r => r.url === 'about:blank'}
     onLoadEnd={actualizar}
     onMessage={e => {

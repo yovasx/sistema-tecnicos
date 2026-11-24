@@ -1,19 +1,19 @@
-// Sin credenciales ni datos personales: únicamente coordenadas del mapa abierto
-// por el usuario. Leaflet 1.9.4 fijado con integridad; proveedor configurable.
+import { atribucionMapa, urlMosaicosMapa } from './configuracionMapa';
+
+// Leaflet 1.9.4 fijado con integridad; el mapa solo solicita mosaicos al abrirse.
 export function htmlLeaflet() {
-  const tiles = process.env.EXPO_PUBLIC_MAPA_TILES_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const atribucion = process.env.EXPO_PUBLIC_MAPA_ATRIBUCION || '© OpenStreetMap contributors';
   const seguro = (v: string) => JSON.stringify(v).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>html,body,#mapa{height:100%;margin:0}#aviso{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(16,24,40,.82);color:#fff;padding:6px 12px;border-radius:999px;font:12px sans-serif;max-width:90%;text-align:center}.pin{width:28px;height:28px;border-radius:50% 50% 50% 0;background:#2F6BFF;border:3px solid #fff;box-shadow:0 3px 10px rgba(16,24,40,.45);transform:rotate(-45deg)}.pin>i{display:block;width:8px;height:8px;margin:7px;border-radius:50%;background:#fff}</style>
 </head><body><div id="mapa" role="application" aria-label="Mapa del servicio"></div>
 <div id="aviso">Cargando mapa…</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
- integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""
+ onerror="document.getElementById('aviso').textContent='No se pudo cargar Leaflet. Revisa tu conexión.'"></script>
 <script>
 var mapa, destino, tecnico, cliente, areas, extras, editable=false, centrado=false, centradoCliente=false, areasCentradas=false, claveExtras='';
 function etiqueta(s){var nodo=document.createElement('span');nodo.textContent=s;return nodo}
@@ -24,7 +24,7 @@ window.actualizar=function(d){
  if(!window.L||!valido(d.destino))return;
  if(!mapa){
   mapa=L.map('mapa').setView([d.destino.latitud,d.destino.longitud],15);
-  L.tileLayer(${seguro(tiles)},{maxZoom:19,attribution:${seguro(atribucion)}}).addTo(mapa)
+  L.tileLayer(${seguro(urlMosaicosMapa)},{maxZoom:19,attribution:${seguro(atribucionMapa)}}).addTo(mapa)
    .on('tileerror',function(){document.getElementById('aviso').textContent='No se pudo cargar el fondo del mapa.'});
   mapa.on('click',function(e){if(editable)avisar({tipo:'punto',latitud:e.latlng.lat,longitud:e.latlng.lng})});
  }
