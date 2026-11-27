@@ -134,8 +134,8 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, on
               Servicios técnicos,{'\n'}con confianza y claridad.
             </Texto>
             <Texto variante="subtitulo" color={colores.secundario} style={estilos.bajada}>
-              Servicios a domicilio en La Paz, con precio estimado antes de confirmar.
-              Identidad y certificados técnicos revisados antes de habilitar al profesional.
+              Atención de nuestra empresa para hogares y negocios en La Paz.
+              Personal habilitado, diagnóstico documentado y cotización autorizada antes de reparar.
             </Texto>
 
             <View style={estilos.ctaHero}>
@@ -280,13 +280,13 @@ export function LandingPublicaScreen({ onEntrar, onCrearCuenta, onSoyTecnico, on
         <View style={estilos.garantia}>
           <Ionicons name="shield-checkmark" size={24} color={colores.exito} />
           <View style={estilos.garantiaTexto}>
-            <Texto variante="cuerpoFuerte">¿Eres un profesional técnico?</Texto>
+            <Texto variante="cuerpoFuerte">Personal técnico de la empresa</Texto>
             <Texto variante="caption" color={colores.secundario}>
-              Crea tu perfil, sube tus certificados y envía tu expediente a revisión.
+              Coordinación incorpora al personal por invitación y revisa su expediente antes de habilitarlo.
             </Texto>
           </View>
           <BotonPrimario
-            titulo="Crear perfil técnico"
+            titulo="Activar invitación técnica"
             tamano="escritorio"
             onPress={onSoyTecnico}
           />

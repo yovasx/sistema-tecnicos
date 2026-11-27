@@ -25,7 +25,6 @@ import { FacturacionEmpresa } from '../screens/empresa/FacturacionEmpresa';
 import { PerfilEmpresa } from '../screens/empresa/PerfilEmpresa';
 import { PanelTecnico } from '../screens/tecnico/PanelTecnico';
 import { ServiciosTecnico } from '../screens/tecnico/ServiciosTecnico';
-import { BilleteraTecnico } from '../screens/tecnico/BilleteraTecnico';
 import { PerfilTecnico } from '../screens/tecnico/PerfilTecnico';
 import { CoberturaTecnico } from '../screens/tecnico/CoberturaTecnico';
 import { AdminScreen } from '../screens/admin/AdminScreen';
@@ -33,6 +32,7 @@ import { Texto } from '../ui/Texto';
 import { colores } from '../theme/tokens';
 import { AccesoTecnico } from '../screens/tecnico/AccesoTecnico';
 import { SeguimientoGpsProvider } from '../session/SeguimientoGpsProvider';
+import { EquiposCliente } from '../screens/cliente/EquiposCliente';
 
 const Tab = createBottomTabNavigator();
 
@@ -44,7 +44,7 @@ const ICONOS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Ordenes: 'receipt',
   Facturacion: 'card',
   Panel: 'speedometer',
-  Billetera: 'wallet',
+  Equipos: 'hardware-chip',
   Cobertura: 'map',
   Admin: 'settings',
 };
@@ -139,6 +139,7 @@ function TabsClientePersona() {
     <Tab.Navigator screenOptions={opcionesTabs}>
       <Tab.Screen name="Inicio" component={InicioCliente} options={{ title: 'Inicio' }} />
       <Tab.Screen name="Servicios" component={MisServicios} options={{ title: 'Servicios' }} />
+      <Tab.Screen name="Equipos" component={EquiposCliente} options={{ title: 'Equipos' }} />
       <Tab.Screen
         name="Notificaciones"
         component={NotificacionesCliente}
@@ -154,10 +155,11 @@ function TabsEmpresa() {
     <Tab.Navigator screenOptions={opcionesTabs}>
       <Tab.Screen name="Inicio" component={InicioEmpresa} options={{ title: 'Inicio' }} />
       <Tab.Screen name="Ordenes" component={OrdenesEmpresa} options={{ title: 'Órdenes' }} />
+      <Tab.Screen name="Equipos" component={EquiposCliente} options={{ title: 'Equipos' }} />
       <Tab.Screen
         name="Facturacion"
         component={FacturacionEmpresa}
-        options={{ title: 'Facturación' }}
+        options={{ title: 'Costos' }}
       />
       <Tab.Screen name="Perfil" component={PerfilEmpresa} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
@@ -170,7 +172,6 @@ function TabsTecnico() {
       <Tab.Screen name="Panel" component={PanelTecnico} options={{ title: 'Panel' }} />
       <Tab.Screen name="Servicios" component={ServiciosTecnico} options={{ title: 'Servicios' }} />
       <Tab.Screen name="Cobertura" component={CoberturaTecnico} options={{ title: 'Cobertura' }} />
-      <Tab.Screen name="Billetera" component={BilleteraTecnico} options={{ title: 'Billetera' }} />
       <Tab.Screen name="Notificaciones" component={NotificacionesCliente} options={{ title: 'Notif.' }} />
       <Tab.Screen name="Perfil" component={PerfilTecnico} options={{ title: 'Perfil' }} />
     </Tab.Navigator>

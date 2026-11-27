@@ -1,104 +1,44 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import { useSesion } from '../../session/SesionProvider';
 import { useSolicitudServicio } from '../../session/SolicitudServicioProvider';
-import { BotonPrimario } from '../../ui/BotonPrimario';
-import { Chip } from '../../ui/Chip';
-import { ContenedorApp } from '../../ui/ContenedorApp';
+import { solicitudesRepository, gestionLocalRepository } from '../../infrastructure/di';
+import { useConsulta } from '../useConsulta';
+import { MarcoContenido } from '../../ui/MarcoContenido';
 import { Encabezado } from '../../ui/Encabezado';
+import { Tarjeta } from '../../ui/Tarjeta';
 import { Texto } from '../../ui/Texto';
-import { useResponsive } from '../../theme/responsive';
-import { colores, espacio } from '../../theme/tokens';
+import { BotonPrimario } from '../../ui/BotonPrimario';
+import { Aviso } from '../../ui/Aviso';
+import { bolivianos } from '../../ui/formato';
 
 export function InicioEmpresa() {
   const { usuario } = useSesion();
   const { abrir } = useSolicitudServicio();
-  const { esDesktop } = useResponsive();
-
-  return (
-    <ContenedorApp>
-      <SafeAreaView style={estilos.seguro} edges={['top', 'left', 'right']}>
-        <ScrollView
-          contentContainerStyle={[estilos.contenido, esDesktop && estilos.contenidoDesktop]}
-        >
-          <Encabezado
-            titulo={usuario?.nombre ?? 'Empresa'}
-            subtitulo={
-              usuario?.nit ? `Cuenta empresarial · NIT ${usuario.nit}` : 'Cuenta empresarial'
-            }
-          />
-          <View style={[estilos.datos, esDesktop && estilos.datosDesktop]}>
-            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
-              <Texto variante="etiqueta" color={colores.secundario}>
-                NIT
-              </Texto>
-              <Texto variante="cuerpo">{usuario?.nit ?? '—'}</Texto>
-            </View>
-            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
-              <Texto variante="etiqueta" color={colores.secundario}>
-                Razón social
-              </Texto>
-              <Texto variante="cuerpo">{usuario?.razonSocial ?? '—'}</Texto>
-            </View>
-            <View style={[estilos.dato, esDesktop && estilos.datoDesktop]}>
-              <Texto variante="etiqueta" color={colores.secundario}>
-                Email
-              </Texto>
-              <Texto variante="cuerpo">{usuario?.email ?? '—'}</Texto>
-            </View>
-          </View>
-          <View style={estilos.servicios}>
-            <Texto variante="subtitulo">Solicitar un servicio</Texto>
-            <Texto variante="caption" color={colores.secundario}>
-              Crea una solicitud para tu empresa y consulta su estado desde Órdenes.
-            </Texto>
-            <BotonPrimario titulo="Nueva solicitud" onPress={() => abrir()} />
-          </View>
-          <Chip tono="marca" texto="Facturación pendiente de V2" />
-        </ScrollView>
-      </SafeAreaView>
-    </ContenedorApp>
-  );
+  const c = useConsulta(async () => ({
+    ordenes: await solicitudesRepository.propias(0), costos: await solicitudesRepository.facturacion(),
+    equipos: await gestionLocalRepository.equipos(), sucursales: await gestionLocalRepository.sucursales(),
+  }));
+  return <MarcoContenido>
+    <Encabezado titulo={usuario?.razonSocial ?? usuario?.nombre ?? 'Mi empresa'}
+      subtitulo={`Mantenimiento para tus instalaciones · NIT ${usuario?.nit ?? 'No registrado'}`} />
+    <BotonPrimario titulo="Solicitar atención técnica" onPress={() => abrir()} />
+    <Aviso>Tu cuenta es la responsable de autorizar cotizaciones. Organiza tus equipos por sucursal y conserva
+      el historial de cada reparación. No se emiten facturas fiscales ni se confirman pagos desde este sistema.</Aviso>
+    {c.error ? <Aviso tono="peligro">{c.error}</Aviso> : null}
+    <BotonPrimario titulo="Actualizar resumen empresarial" variante="secundario" deshabilitado={c.cargando} onPress={c.actualizar} />
+    {c.datos ? <>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+        <Tarjeta><Texto variante="display">{c.datos.ordenes.total}</Texto><Texto>Solicitudes registradas</Texto></Tarjeta>
+        <Tarjeta><Texto variante="display">{c.datos.equipos.filter(e => e.activo).length}</Texto><Texto>Equipos activos</Texto></Tarjeta>
+        <Tarjeta><Texto variante="display">{c.datos.sucursales.filter(s => s.activa).length}</Texto><Texto>Sucursales activas</Texto></Tarjeta>
+      </View>
+      <Tarjeta style={{ gap: 8 }}><Texto variante="subtitulo">{bolivianos(c.datos.costos.totalAceptado)}</Texto>
+        <Texto>Cotizaciones autorizadas · todas las fechas · no equivale a pagos</Texto></Tarjeta>
+      <Texto variante="subtitulo">Solicitudes recientes</Texto>
+      {c.datos.ordenes.elementos.slice(0, 5).map(o => <Tarjeta key={o.id}>
+        <Texto variante="cuerpoFuerte">#{o.id} · {o.categoria}</Texto><Texto>{o.estado.replaceAll('_', ' ')}</Texto>
+      </Tarjeta>)}
+      {!c.datos.ordenes.total ? <Texto>Tu empresa todavía no tiene solicitudes.</Texto> : null}
+    </> : null}
+  </MarcoContenido>;
 }
-
-const estilos = StyleSheet.create({
-  seguro: { flex: 1 },
-  contenido: {
-    flexGrow: 1,
-    paddingHorizontal: espacio.lg,
-    paddingTop: espacio.lg,
-    gap: espacio.lg,
-  },
-  datos: {
-    gap: espacio.md,
-  },
-  dato: {
-    padding: espacio.lg,
-    backgroundColor: colores.fondo,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colores.linea,
-    gap: 4,
-  },
-  contenidoDesktop: {
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    maxWidth: 1080,
-  },
-  datosDesktop: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  datoDesktop: {
-    flex: 1,
-    minWidth: 220,
-  },
-  servicios: {
-    gap: espacio.md,
-    padding: espacio.lg,
-    backgroundColor: colores.superficie,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colores.linea,
-  },
-});

@@ -44,8 +44,8 @@ export class BackofficeApiRepository implements BackofficeRepository {
     return this.post(`/api/admin/disputas/${id}/revisar`, { estado, resolucion });
   }
 
-  propiasDisputas(pagina: number) {
-    return this.get<PaginaAdmin<Disputa>>(`/api/disputas?pagina=${pagina}`);
+  propiasDisputas(pagina: number, orden?: number) {
+    return this.get<PaginaAdmin<Disputa>>(`/api/disputas?pagina=${pagina}${orden ? `&orden=${orden}` : ''}`);
   }
 
   abrirDisputa(orden: number, motivo: string) {

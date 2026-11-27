@@ -37,7 +37,7 @@ const FORMULARIO_NUEVO: Formulario = {
   tarifaVisita: '',
   tarifaHora: '',
   recargo: '0',
-  comision: '',
+  comision: '0',
   activa: true,
 };
 
@@ -56,7 +56,7 @@ function aFormulario(c: CategoriaAdmin): Formulario {
     tarifaVisita: c.tarifaVisita === null ? '' : String(c.tarifaVisita),
     tarifaHora: c.tarifaHora === null ? '' : String(c.tarifaHora),
     recargo: c.recargoUrgenciaPct === null ? '' : String(c.recargoUrgenciaPct),
-    comision: c.comisionPct === null ? '' : String(c.comisionPct),
+    comision: c.comisionPct === null ? '0' : String(c.comisionPct),
     activa: c.activa,
   };
 }
@@ -201,7 +201,7 @@ export function CatalogoAdminScreen() {
         : prev.map((c) => c.id === guardada.id ? guardada : c));
       setMensaje(
         nueva
-          ? `Categoría "${guardada.nombre}" creada con su tarifa y comisión vigentes.`
+          ? `Categoría "${guardada.nombre}" creada con su tarifa vigente.`
           : `Cambios guardados en "${guardada.nombre}".`,
       );
       setSeleccion(guardada);
@@ -233,7 +233,7 @@ export function CatalogoAdminScreen() {
     <View style={s.raiz}>
       <Encabezado
         titulo="Catálogo de servicios"
-        subtitulo="Categorías, tarifas base y comisión de la plataforma. Cada cambio queda auditado y versionado por fecha."
+        subtitulo="Servicios y tarifas de referencia de la empresa. Cada cambio queda auditado y versionado por fecha."
         derecha={
           <BotonPrimario
             titulo="Nueva categoría"
@@ -311,7 +311,7 @@ export function CatalogoAdminScreen() {
                     {c.descripcion ?? 'Sin descripción'}
                   </Texto>
                   <Texto variante="caption">
-                    Visita {bolivianos(c.tarifaVisita)} · Comisión {c.comisionPct ?? '—'}% · Vigente desde{' '}
+                    Visita {bolivianos(c.tarifaVisita)} · Vigente desde{' '}
                     {c.tarifaVigenteDesde ?? '—'}
                   </Texto>
                 </View>
@@ -331,8 +331,7 @@ export function CatalogoAdminScreen() {
                 <View style={s.filtros}>
                   <Chip texto={seleccion!.activa ? 'Activa' : 'Inactiva'} tono={seleccion!.activa ? 'exito' : 'neutro'} />
                   <Texto variante="caption">
-                    Tarifa vigente desde {seleccion!.tarifaVigenteDesde ?? '—'} · Comisión vigente desde{' '}
-                    {seleccion!.comisionVigenteDesde ?? '—'}
+                    Tarifa vigente desde {seleccion!.tarifaVigenteDesde ?? '—'}
                   </Texto>
                 </View>
               ) : null}
@@ -384,17 +383,8 @@ export function CatalogoAdminScreen() {
                 keyboardType="decimal-pad"
                 placeholder="30"
               />
-              <CampoTexto
-                etiqueta="Comisión de la plataforma (%)"
-                value={form.comision}
-                onChangeText={(v) => cambiar('comision', v)}
-                error={errores.comision}
-                editable={!ocupado}
-                keyboardType="decimal-pad"
-                placeholder="15"
-              />
               <Texto variante="caption">
-                Moneda: BOB (bolivianos). La comisión es interna: no se publica en el catálogo del cliente.
+                Moneda: BOB (bolivianos). Son referencias: el importe del trabajo se autoriza mediante cotización.
               </Texto>
 
               <View style={s.interruptor}>
@@ -468,7 +458,7 @@ export function CatalogoAdminScreen() {
             <Tarjeta style={s.tarjeta}>
               <Texto variante="subtitulo">Selecciona una categoría</Texto>
               <Texto color={colores.secundario}>
-                Aquí se editan el nombre, la descripción, las tarifas y la comisión. También puedes crear una categoría
+                Aquí se editan el nombre, la descripción y las tarifas. También puedes crear una categoría
                 nueva.
               </Texto>
               <Texto variante="caption">

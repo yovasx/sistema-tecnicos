@@ -30,6 +30,8 @@ import java.util.*;
 /** Orquestación del expediente. Reglas y transiciones exclusivamente en Postgres. */
 @Service
 public class TecnicoService {
+    @org.springframework.beans.factory.annotation.Value("${app.empresa-local:true}")
+    private boolean empresaLocal;
     private final JdbcTemplate jdbc;
     private final UsuarioRepository usuarios;
     private final PasswordEncoder claves;
@@ -48,6 +50,8 @@ public class TecnicoService {
 
     @Transactional
     public LoginResponse registrarTecnico(TecnicoRegistroRequest r) {
+        if(empresaLocal) throw error(HttpStatus.FORBIDDEN,"ALTA_POR_INVITACION",
+            "La empresa incorpora a sus técnicos mediante invitación de coordinación.");
         auditoria.aplicarEnTransaccion();
         String email=r.email().trim().toLowerCase(Locale.ROOT);
         if (usuarios.existsByEmailIgnoreCase(email)) {

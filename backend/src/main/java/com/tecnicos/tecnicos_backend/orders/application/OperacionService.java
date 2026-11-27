@@ -29,13 +29,9 @@ public class OperacionService {
               WHERE u.id=? AND u.activo AND u.eliminado_en IS NULL AND p.estado_validacion='aprobado')
             """,Boolean.class,id))) throw new ApiException(HttpStatus.FORBIDDEN,"TECNICO_NO_HABILITADO","El técnico no está habilitado.");
     }
-    @Transactional(isolation=Isolation.REPEATABLE_READ)
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
     public TecnicoPanel panel(long id) {
         habilitado(id);
-        // Expira ofertas vencidas y reintenta el despacho de solicitudes sin
-        // ofertas pendientes. Se hace al abrir el panel para no depender de un
-        // proceso externo y para no escribir en cada consulta del cliente.
-        jdbc.queryForObject("SELECT orders.mantener_ofertas()",Integer.class);
         String disponibilidad=jdbc.queryForObject("SELECT disponibilidad::text FROM identity.perfiles_tecnico WHERE usuario_id=?",String.class,id);
         long finalizados=jdbc.queryForObject("SELECT count(*) FROM orders.ordenes_servicio WHERE tecnico_id=? AND estado='finalizado'",Long.class,id);
         long activos=jdbc.queryForObject("SELECT count(*) FROM orders.ordenes_servicio WHERE tecnico_id=? AND estado NOT IN ('finalizado','cancelado')",Long.class,id);
@@ -56,12 +52,15 @@ public class OperacionService {
             FROM orders.ordenes_servicio o JOIN orders.categorias_servicio c ON c.id=o.categoria_id AND c.activa
             JOIN identity.usuarios u ON u.id=o.cliente_id AND u.activo AND u.eliminado_en IS NULL
             WHERE o.estado='solicitado' AND o.tecnico_id IS NULL
+              AND NOT EXISTS(SELECT 1 FROM orders.busquedas_servicio b WHERE b.orden_id=o.id
+                AND (b.estado<>'buscando' OR b.hasta<=clock_timestamp()))
+              AND NOT EXISTS(SELECT 1 FROM orders.ofertas_orden f WHERE f.orden_id=o.id AND f.tecnico_id=?)
               AND EXISTS(SELECT 1 FROM identity.tecnico_especialidades e WHERE e.tecnico_id=? AND e.categoria_id=o.categoria_id)
               AND EXISTS(SELECT 1 FROM geo.zonas_cobertura z WHERE z.tecnico_id=? AND z.activo
                 AND ST_Covers(z.poligono::geometry,o.ubicacion_cliente::geometry))
               AND ?='disponible' AND ?=0 ORDER BY o.tarifa_urgencia DESC,o.creado_en,o.id LIMIT 30
             """,(r,n)->new Servicio(r.getLong("id"),r.getString("categoria"),r.getString("estado"),
-                r.getBoolean("tarifa_urgencia"),r.getObject("creado_en",OffsetDateTime.class)),id,id,disponibilidad,activos);
+                r.getBoolean("tarifa_urgencia"),r.getObject("creado_en",OffsetDateTime.class)),id,id,id,disponibilidad,activos);
         return new TecnicoPanel(disponibilidad,finalizados,activos,ofertas,candidatos);
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)

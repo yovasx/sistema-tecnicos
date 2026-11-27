@@ -35,6 +35,7 @@ export class SolicitudesApiRepository implements SolicitudesRepository {
     ] as const) {
       form.append(k, String(s[k]));
     }
+    if (s.equipo) form.append('equipo', String(s.equipo));
     if (s.evidencia) {
       const e = s.evidencia;
       if (Platform.OS === 'web' && e.contenidoWeb) {
@@ -77,9 +78,9 @@ export class SolicitudesApiRepository implements SolicitudesRepository {
     }
   }
 
-  async facturacion(): Promise<Facturacion> {
+  async facturacion(filtros?: { desde?: string; hasta?: string; sucursal?: number }): Promise<Facturacion> {
     try {
-      return (await apiClient.get<Facturacion>('/api/ordenes/facturacion')).data;
+      return (await apiClient.get<Facturacion>('/api/ordenes/facturacion', { params: filtros })).data;
     } catch (e) {
       throw traducirError(e);
     }

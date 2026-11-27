@@ -66,17 +66,17 @@ public class DisputasService {
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-    public Pagina propias(long usuario, int pagina) {
+    public Pagina propias(long usuario, int pagina,Long orden) {
         pagina(pagina);
         long total = jdbc.queryForObject("""
             SELECT count(*) FROM admin_svc.disputas
-            WHERE abierta_por_id = ? OR contra_usuario_id = ?
-            """, Long.class, usuario, usuario);
+            WHERE (abierta_por_id = ? OR contra_usuario_id = ?) AND (?::bigint IS NULL OR orden_id=?)
+            """, Long.class, usuario, usuario,orden,orden);
         var filas = jdbc.query(SELECT + """
-            WHERE d.abierta_por_id = ? OR d.contra_usuario_id = ?
+            WHERE (d.abierta_por_id = ? OR d.contra_usuario_id = ?) AND (?::bigint IS NULL OR d.orden_id=?)
             ORDER BY (d.estado <> 'resuelta') DESC, d.abierta_en DESC, d.id DESC
             LIMIT 20 OFFSET ?
-            """, DisputasService::fila, usuario, usuario, pagina * 20);
+            """, DisputasService::fila, usuario, usuario,orden,orden, pagina * 20);
         return new Pagina(filas, total, pagina, 20);
     }
 

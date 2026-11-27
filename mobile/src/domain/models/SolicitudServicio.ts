@@ -26,6 +26,7 @@ export interface CategoriaSolicitud {
 }
 
 export interface CrearSolicitud {
+  equipo?: number;
   clave: string;
   categoria: number;
   descripcion: string;
@@ -79,6 +80,8 @@ export interface DetalleServicio extends FilaServicio {
 
 /** Línea de facturación con la última cotización aceptada de una orden propia. */
 export interface LineaFacturacion {
+  equipo: string | null;
+  sucursal: string | null;
   orden: number;
   categoria: string;
   estadoOrden: EstadoServicio;

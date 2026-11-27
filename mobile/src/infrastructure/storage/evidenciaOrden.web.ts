@@ -8,8 +8,9 @@ import { guardarDescarga } from './descarga';
 export async function descargarEvidenciaOrden(
   id: number,
   extension: string | null,
+  ruta = `/api/ordenes/${id}/evidencia`,
 ): Promise<void> {
-  const r = await apiClient.get<Blob>(`/api/ordenes/${id}/evidencia`, {
+  const r = await apiClient.get<Blob>(ruta, {
     responseType: 'blob',
   });
   guardarDescarga(r.data, `evidencia-${id}.${extension ?? 'bin'}`);

@@ -44,6 +44,8 @@ class SeguimientoWebSocketIntegrationTest {
         if(repetido!=null) repetido.abort();
         if(orden!=0) {
             jdbc.update("DELETE FROM identity.tickets_seguimiento WHERE orden_id=?",orden);
+            jdbc.update("DELETE FROM orders.busquedas_servicio WHERE orden_id=?",orden);
+            jdbc.update("DELETE FROM orders.atenciones WHERE orden_id=?",orden);
             // Solo nuestra orden nueva. Su historial usa ON DELETE CASCADE.
             jdbc.update("DELETE FROM orders.ordenes_servicio WHERE id=?",orden);
         }

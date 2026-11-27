@@ -13,7 +13,7 @@ export interface BackofficeRepository {
   resumen(): Promise<ResumenOperativo>;
   disputas(estado: string, pagina: number): Promise<PaginaAdmin<Disputa>>;
   revisarDisputa(id: number, estado: 'en_revision' | 'resuelta', resolucion: string): Promise<void>;
-  propiasDisputas(pagina: number): Promise<PaginaAdmin<Disputa>>;
+  propiasDisputas(pagina: number, orden?: number): Promise<PaginaAdmin<Disputa>>;
   abrirDisputa(orden: number, motivo: string): Promise<void>;
   auditoria(origen: string, pagina: number): Promise<PaginaAdmin<Auditoria>>;
   moderacion(pendientes: boolean, pagina: number): Promise<PaginaAdmin<MensajeModerado>>;

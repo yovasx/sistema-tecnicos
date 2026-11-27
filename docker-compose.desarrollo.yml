@@ -1,0 +1,9 @@
+# Opcional para desarrollar fuera de Docker (bootRun, psql, emuladores).
+# La web y el backend de la demostración no lo necesitan:
+#   docker compose up -d
+# Con este archivo, Postgres también escucha en el host:
+#   docker compose -f docker-compose.yml -f docker-compose.desarrollo.yml up -d postgres
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"

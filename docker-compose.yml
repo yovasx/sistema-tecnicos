@@ -6,8 +6,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tecnicos_db}
       POSTGRES_USER: ${POSTGRES_USER:-tecnicos_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,6 +17,7 @@ services:
       - tecnicos-net
 
   rabbitmq:
+    profiles: ["mensajeria"]
     image: rabbitmq:3.13-management
     restart: unless-stopped
     environment:
@@ -48,12 +47,9 @@ services:
 
   backend:
     build: ./backend
-    pull_policy: build
     restart: unless-stopped
     depends_on:
       postgres:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
       mailpit:
         condition: service_started
@@ -80,6 +76,7 @@ services:
       SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
       SMTP_FROM: ${SMTP_FROM:-no-responder@fixly.bo}
       UPLOADS_DIR: /app/uploads
+      APP_EMPRESA_LOCAL: ${EMPRESA_LOCAL:-true}
     volumes:
       - documentos_data:/app/uploads
     ports:
@@ -94,7 +91,6 @@ services:
         EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:-}
         EXPO_PUBLIC_MAPA_TILES_URL: ${EXPO_PUBLIC_MAPA_TILES_URL:-}
         EXPO_PUBLIC_MAPA_ATRIBUCION: ${EXPO_PUBLIC_MAPA_ATRIBUCION:-}
-    pull_policy: build
     restart: unless-stopped
     depends_on:
       backend:

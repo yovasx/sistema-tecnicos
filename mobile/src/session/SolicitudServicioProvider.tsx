@@ -19,6 +19,7 @@ export interface BorradorSolicitud {
   longitud: string;
   referencia: string;
   urgencia: boolean;
+  equipo?: number;
   evidencia?: EvidenciaServicio;
 }
 
@@ -37,7 +38,7 @@ export function borradorVacio(categoria: number | null = null): BorradorSolicitu
 
 interface ContextoSolicitud {
   abierta: boolean;
-  abrir: (categoria?: number) => void;
+  abrir: (categoria?: number, equipo?: number) => void;
   cerrar: () => void;
   borrador: BorradorSolicitud;
   cambiar: Dispatch<SetStateAction<BorradorSolicitud>>;
@@ -100,6 +101,7 @@ export function SolicitudServicioProvider({ children }: { children: ReactNode })
         latitud: Number(borrador.latitud),
         longitud: Number(borrador.longitud),
         urgencia: borrador.urgencia,
+        equipo: borrador.equipo,
         evidencia: borrador.evidencia,
       });
       setResultado(r);
@@ -133,10 +135,10 @@ export function SolicitudServicioProvider({ children }: { children: ReactNode })
         recarga,
         enviar,
         cerrar,
-        abrir: (categoria) => {
+        abrir: (categoria, equipo) => {
           if (bloqueo.current) return;
           if (resultado) {
-            setBorrador(borradorVacio(categoria ?? null));
+            setBorrador({ ...borradorVacio(categoria ?? null), equipo });
             setResultado(null);
             setPaso(0);
             setIncierto(false);
@@ -144,6 +146,7 @@ export function SolicitudServicioProvider({ children }: { children: ReactNode })
           } else if (categoria) {
             setBorrador((b) => ({ ...b, categoria }));
           }
+          if (equipo && !incierto) setBorrador(b => ({ ...b, equipo }));
           setError('');
           setAbierta(true);
         },

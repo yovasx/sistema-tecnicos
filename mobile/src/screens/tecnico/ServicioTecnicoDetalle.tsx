@@ -16,6 +16,8 @@ import { EstadoServicio } from '../../domain/models/SolicitudServicio';
 import { estadoServicio } from '../cliente/estadosServicio';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import { SeguimientoClienteTecnico } from './SeguimientoClienteTecnico';
+import { AtencionLocal } from '../servicios/AtencionLocal';
+import { ReclamosServicio } from '../servicios/ReclamosServicio';
 
 export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver: () => void }) {
   const c = useConsulta(async () => {
@@ -28,9 +30,11 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
   const [ocupado, setOcupado] = useState(false);
   const [edicionOperacion, setEdicionOperacion] = useState(false);
   const [edicionCalificacion, setEdicionCalificacion] = useState(false);
+  const [edicionAtencion, setEdicionAtencion] = useState(false);
+  const [edicionReclamo, setEdicionReclamo] = useState(false);
   const [error, setError] = useState('');
   const bloqueo = useRef(false);
-  const bloqueado = ocupado || gps.ocupado || edicionOperacion || edicionCalificacion || !!accion || !!confirmarGps;
+  const bloqueado = ocupado || gps.ocupado || edicionOperacion || edicionCalificacion || edicionAtencion || edicionReclamo || !!accion || !!confirmarGps;
   useCambiosSinGuardar(edicionOperacion || edicionCalificacion || !!accion || !!confirmarGps, ocupado || gps.ocupado);
   async function avanzar() {
     if (!accion || bloqueo.current) return;
@@ -59,6 +63,10 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
         <Texto variante="caption">Información privada del servicio asignado.</Texto>
       </Tarjeta>
       <SeguimientoClienteTecnico orden={id} latitud={d.latitud} longitud={d.longitud} estadoOrden={d.estado} />
+      <AtencionLocal orden={id} modo="tecnico" onCambio={c.actualizar} onEdicion={setEdicionAtencion}
+        bloqueado={ocupado || gps.ocupado || edicionOperacion || edicionCalificacion || edicionReclamo || !!accion || !!confirmarGps} />
+      {['finalizado', 'cancelado'].includes(d.estado) ? <ReclamosServicio orden={id} onEdicion={setEdicionReclamo}
+        bloqueado={edicionAtencion || edicionOperacion || edicionCalificacion} /> : null}
       {d.estado === 'en_camino' ? <Tarjeta style={{ gap: 12 }}>
         <Texto variante="subtitulo">Compartir mi ubicación con el cliente</Texto>
         <Texto>{gps.mensaje || 'El GPS está desactivado. Se requiere tu autorización para este trayecto.'}</Texto>
@@ -87,9 +95,7 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
         <Texto variante="subtitulo">Atención del servicio</Texto>
         {!autorizada && d.estado !== 'en_camino' ? <Aviso>El cliente debe aceptar una cotización vigente antes de iniciar o finalizar la reparación.
           Actualiza el servicio después de su respuesta.</Aviso> : null}
-        {d.estado === 'en_camino' ? <BotonPrimario titulo={etiquetas.llegada} deshabilitado={bloqueado || c.cargando} onPress={() => setAccion('llegada')} /> : null}
         {d.estado === 'en_diagnostico' ? <BotonPrimario titulo={etiquetas.reparacion} deshabilitado={bloqueado || c.cargando || !autorizada} onPress={() => setAccion('reparacion')} /> : null}
-        {d.estado === 'en_reparacion' ? <BotonPrimario titulo={etiquetas.finalizar} deshabilitado={bloqueado || c.cargando || !autorizada} onPress={() => setAccion('finalizar')} /> : null}
         {accion ? <>
           <Aviso tono="advertencia">Confirma: {etiquetas[accion]}. Esta acción quedará registrada.
             Finalizar el servicio no registra ni confirma un pago.</Aviso>
@@ -101,7 +107,7 @@ export function ServicioTecnicoDetalle({ id, onVolver }: { id: number; onVolver:
       </Tarjeta> : null}
       <OperacionDelServicio orden={id} tecnico estado={d.estado} onCambio={c.actualizar}
         actualizacion={cotizaciones.map(q => `${q.id}:${q.estado}`).join('|')}
-        onEdicion={setEdicionOperacion} bloqueado={edicionCalificacion || !!accion || !!confirmarGps || ocupado || gps.ocupado} />
+        onEdicion={setEdicionOperacion} bloqueado={edicionCalificacion || edicionAtencion || edicionReclamo || !!accion || !!confirmarGps || ocupado || gps.ocupado} />
       {d.estado === 'finalizado' ? <CalificarServicio orden={id} actual={d.miCalificacion} tecnico
         onGuardada={c.actualizar} onEdicion={setEdicionCalificacion} bloqueado={edicionOperacion} /> : null}
     </> : null}

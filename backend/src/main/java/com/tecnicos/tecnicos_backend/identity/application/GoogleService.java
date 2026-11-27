@@ -17,6 +17,8 @@ import java.security.SecureRandom;
 
 @Service
 public class GoogleService {
+    @org.springframework.beans.factory.annotation.Value("${app.empresa-local:true}")
+    private boolean empresaLocal;
     private final JdbcTemplate jdbc;
     private final VerificadorGoogle verificador;
     private final UsuarioRepository usuarios;
@@ -30,6 +32,8 @@ public class GoogleService {
     }
     @Transactional
     public String desafio(GoogleController.Proposito proposito) {
+        if(empresaLocal && proposito==GoogleController.Proposito.tecnico)
+            throw new ApiException(HttpStatus.FORBIDDEN,"ALTA_POR_INVITACION","Los técnicos se incorporan mediante invitación de coordinación.");
         auditoria.aplicarEnTransaccion();
         if (!verificador.habilitado()) throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
             "GOOGLE_NO_CONFIGURADO","El acceso con Google todavía no está configurado.");
@@ -49,6 +53,8 @@ public class GoogleService {
         Long id=jdbc.query("SELECT usuario_id FROM identity.identidades_google WHERE sujeto=?",
             (rs,n)->rs.getLong(1),perfil.getSubject()).stream().findFirst().orElse(null);
         if (id==null) {
+            if(empresaLocal && proposito.equals("tecnico"))
+                throw new ApiException(HttpStatus.FORBIDDEN,"ALTA_POR_INVITACION","Los técnicos se incorporan mediante invitación de coordinación.");
             String email=perfil.getClaimAsString("email").toLowerCase(Locale.ROOT);
             var existente=usuarios.findByEmailIgnoreCase(email);
             if (existente.isPresent()) {

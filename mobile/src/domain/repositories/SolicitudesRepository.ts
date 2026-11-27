@@ -12,6 +12,6 @@ export interface SolicitudesRepository {
   crear(solicitud: CrearSolicitud): Promise<ResultadoSolicitud>;
   propias(pagina: number): Promise<PaginaServicios>;
   detalle(id: number): Promise<DetalleServicio>;
-  facturacion(): Promise<Facturacion>;
+  facturacion(filtros?: { desde?: string; hasta?: string; sucursal?: number }): Promise<Facturacion>;
   descargarEvidencia(id: number, extension: string | null): Promise<void>;
 }

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CalificarServicio } from './CalificarServicio';
 import { SeguimientoServicio } from './SeguimientoServicio';
 import { OperacionDelServicio } from '../servicios/OperacionDelServicio';
+import { AtencionLocal } from '../servicios/AtencionLocal';
+import { ReclamosServicio } from '../servicios/ReclamosServicio';
 import { CancelarSolicitud } from './CancelarSolicitud';
 import { useCambiosSinGuardar } from '../../ui/admin/CambiosAdmin';
 import axios from 'axios';
@@ -357,9 +359,11 @@ function DetalleServicioVista({
   const [editandoOperacion, setEditandoOperacion] = useState(false);
   const [editandoCalificacion, setEditandoCalificacion] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [editandoAtencion, setEditandoAtencion] = useState(false);
+  const [editandoReclamo, setEditandoReclamo] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
   const [errorMapa, setErrorMapa] = useState('');
-  const interaccion = editandoOperacion || editandoCalificacion || cancelando;
+  const interaccion = editandoOperacion || editandoCalificacion || cancelando || editandoAtencion || editandoReclamo;
   useCambiosSinGuardar(interaccion);
   useEffect(() => { onInteraccion(interaccion); return () => onInteraccion(false); }, [interaccion, onInteraccion]);
   function alternarMapa() {
@@ -379,13 +383,17 @@ function DetalleServicioVista({
       />
       <SeguimientoServicio key={`seguimiento-${detalle.id}`} orden={detalle.id}
         latitud={detalle.latitud} longitud={detalle.longitud} estadoOrden={detalle.estado} />
+      <AtencionLocal orden={detalle.id} modo="cliente" onCambio={onActualizar} onEdicion={setEditandoAtencion}
+        bloqueado={editandoOperacion || editandoCalificacion || cancelando || editandoReclamo} />
+      {['finalizado', 'cancelado'].includes(detalle.estado) && detalle.tecnico ? <ReclamosServicio orden={detalle.id}
+        onEdicion={setEditandoReclamo} bloqueado={editandoOperacion || editandoCalificacion || editandoAtencion} /> : null}
       {detalle.estado === 'finalizado' && detalle.tecnico ? <CalificarServicio key={`calificacion-${detalle.id}`}
         orden={detalle.id} actual={detalle.miCalificacion} onGuardada={onActualizar}
         onEdicion={setEditandoCalificacion} bloqueado={editandoOperacion} /> : null}
       {detalle.estado === 'solicitado' ? <CancelarSolicitud orden={detalle.id} onCambio={onActualizar} onEdicion={setCancelando} /> : null}
       {detalle.asignadoEn || detalle.tecnico || ['en_camino', 'en_diagnostico', 'en_reparacion', 'finalizado'].includes(detalle.estado)
         ? <OperacionDelServicio orden={detalle.id} tecnico={false} estado={detalle.estado} onCambio={onActualizar}
-          onEdicion={setEditandoOperacion} bloqueado={editandoCalificacion} /> : null}
+          onEdicion={setEditandoOperacion} bloqueado={editandoCalificacion || editandoAtencion || editandoReclamo} /> : null}
 
       {detalle.estado === 'solicitado' ? (
         <Aviso tono="info" titulo="Solicitud registrada">
@@ -411,10 +419,6 @@ function DetalleServicioVista({
         <View style={estilos.separador} />
         <Dato etiqueta="Urgencia" valor={detalle.urgencia ? 'Sí' : 'No'} />
         <Dato etiqueta="Dirección o referencia" valor={detalle.referencia} />
-        <Dato
-          etiqueta="Coordenadas"
-          valor={`${detalle.latitud.toFixed(6)}, ${detalle.longitud.toFixed(6)}`}
-        />
         <Pressable accessibilityRole="button" onPress={alternarMapa} style={estilos.enlace}>
           <Ionicons name="map-outline" size={16} color={colores.marca} />
           <Texto variante="etiqueta" color={colores.marca}>

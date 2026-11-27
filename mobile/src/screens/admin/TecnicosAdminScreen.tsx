@@ -249,7 +249,7 @@ function EstadoCuentaTecnico({ detalle: d, onGuardado, onInteraccion }: {
     finally { bloqueo.current = false; setOcupado(false); }
   }
   return <Tarjeta style={{ gap: 16 }}>
-    <Texto variante="subtitulo">Acceso a la plataforma</Texto>
+    <Texto variante="subtitulo">Acceso al sistema de la empresa</Texto>
     <Texto color={colores.secundario}>{d.cuenta.activo ? 'Desactivar la cuenta cierra sus sesiones sin borrar su aprobación ni su expediente.' :
       'Reactivar permite una nueva sesión. No aprueba documentos ni recupera sesiones anteriores.'}</Texto>
     {error ? <Aviso tono="peligro">{error}</Aviso> : null}

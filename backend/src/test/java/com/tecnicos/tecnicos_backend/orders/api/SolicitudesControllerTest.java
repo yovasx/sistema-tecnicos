@@ -89,6 +89,41 @@ class SolicitudesControllerTest {
         mvc.perform(get("/api/ordenes").param("tamano","1").param("pagina","1").header("Authorization","Bearer "+cliente))
             .andExpect(status().isOk()).andExpect(jsonPath("$.elementos[0].id").value(a));
     }
+    @Test void facturacion_suma_la_ultima_cotizacion_aceptada_en_bob_y_filtra_por_dia_boliviano_y_sucursal() throws Exception {
+        long sinEquipo=id(mvc.perform(solicitud(clave,cliente)).andExpect(status().isCreated()).andReturn());
+        long conEquipo=id(mvc.perform(solicitud(UUID.randomUUID().toString(),cliente)).andExpect(status().isCreated()).andReturn());
+        long sucursal=jdbc.queryForObject("INSERT INTO identity.sucursales_cliente(cliente_id,nombre,referencia) VALUES(?,?,?) RETURNING id",
+            Long.class,clienteId,"Sucursal Centro","Avenida Arce 123");
+        long equipo=jdbc.queryForObject("INSERT INTO orders.equipos_cliente(cliente_id,sucursal_id,nombre) VALUES(?,?,?) RETURNING id",
+            Long.class,clienteId,sucursal,"Compresor");
+        jdbc.update("INSERT INTO orders.equipos_orden(orden_id,equipo_id,nombre_snapshot,sucursal_snapshot,sucursal_id) VALUES(?,?,?,?,?)",
+            conEquipo,equipo,"Compresor","Sucursal Centro",sucursal);
+        cotizar(sinEquipo,"150.00","2026-01-15T23:30:00-04:00","BOB");
+        cotizar(conEquipo,"200.00","2026-01-16T10:00:00-04:00","BOB");
+        mvc.perform(get("/api/ordenes/facturacion").header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(header().string("Cache-Control","no-store"))
+            .andExpect(jsonPath("$.totalAceptado").value(350.00)).andExpect(jsonPath("$.moneda").value("BOB"))
+            .andExpect(jsonPath("$.lineas.length()").value(2))
+            .andExpect(jsonPath("$.lineas[0].orden").value(conEquipo))
+            .andExpect(jsonPath("$.lineas[0].sucursal").value("Sucursal Centro"));
+        mvc.perform(get("/api/ordenes/facturacion").param("desde","2026-01-15").param("hasta","2026-01-15")
+                .header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalAceptado").value(150.00))
+            .andExpect(jsonPath("$.lineas.length()").value(1)).andExpect(jsonPath("$.lineas[0].orden").value(sinEquipo));
+        mvc.perform(get("/api/ordenes/facturacion").param("sucursal",String.valueOf(sucursal))
+                .header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalAceptado").value(200.00))
+            .andExpect(jsonPath("$.lineas.length()").value(1)).andExpect(jsonPath("$.lineas[0].orden").value(conEquipo));
+        mvc.perform(get("/api/ordenes/facturacion").param("desde","2026-01-16").param("hasta","2026-01-16")
+                .param("sucursal",String.valueOf(sucursal)).header("Authorization","Bearer "+cliente))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalAceptado").value(200.00));
+        mvc.perform(get("/api/ordenes/facturacion").param("desde","2026-01-20").param("hasta","2026-01-19")
+                .header("Authorization","Bearer "+cliente))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.codigo").value("FILTROS_INVALIDOS"));
+        mvc.perform(get("/api/ordenes/facturacion").header("Authorization","Bearer "+login("contacto@ferreteria-lapaz.bo")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalAceptado").value(0))
+            .andExpect(jsonPath("$.lineas.length()").value(0));
+    }
     @Test void evidencia_privada_dueno_admin_y_sin_cache_otros_no() throws Exception {
         long id=id(mvc.perform(solicitud(clave,cliente).file(pdf())).andExpect(status().isCreated()).andReturn());
         String url=jdbc.queryForObject("SELECT foto_evidencia_url FROM orders.ordenes_servicio WHERE id=?",String.class,id);
@@ -177,6 +212,8 @@ class SolicitudesControllerTest {
             jdbc.update("DELETE FROM orders.solicitudes_cliente WHERE cliente_id=? AND clave=?::uuid",clienteId,clave);
             for(long id:ids) {
                 String url=jdbc.queryForObject("SELECT foto_evidencia_url FROM orders.ordenes_servicio WHERE id=?",String.class,id);
+                jdbc.update("DELETE FROM orders.busquedas_servicio WHERE orden_id=?",id);
+                jdbc.update("DELETE FROM orders.atenciones WHERE orden_id=?",id);
                 jdbc.update("DELETE FROM orders.ordenes_servicio WHERE id=?",id);
                 if(url!=null) Files.deleteIfExists(archivos.resolve(url.substring(1)));
             }
@@ -191,6 +228,15 @@ class SolicitudesControllerTest {
         return b;
     }
     private MockMultipartFile pdf() { return new MockMultipartFile("evidencia","original.pdf","application/pdf","%PDF-1.4\n%%EOF".getBytes(StandardCharsets.US_ASCII)); }
+    /** Deja una cotización aceptada real: borrador con ítem, envío y respuesta del cliente. */
+    private void cotizar(long orden,String total,String respondidaEn,String moneda) {
+        long id=jdbc.queryForObject("INSERT INTO billing.cotizaciones(orden_id,estado,moneda) VALUES(?,'borrador',?) RETURNING id",
+            Long.class,orden,moneda);
+        jdbc.update("INSERT INTO billing.cotizacion_items(cotizacion_id,tipo,descripcion,cantidad,precio_unitario) VALUES(?,'mano_obra','Trabajo autorizado',1,?)",
+            id,new java.math.BigDecimal(total));
+        jdbc.update("UPDATE billing.cotizaciones SET estado='enviada' WHERE id=?",id);
+        jdbc.update("UPDATE billing.cotizaciones SET estado='aceptada',respondida_en=?::timestamptz WHERE id=?",respondidaEn,id);
+    }
     private long id(MvcResult r) throws Exception { return ((Number)JsonPath.read(texto(r),"$.id")).longValue(); }
     private String login(String email) throws Exception {
         return JsonPath.read(texto(mvc.perform(post("/api/auth/login").contentType("application/json")

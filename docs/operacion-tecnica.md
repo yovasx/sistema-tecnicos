@@ -1,4 +1,4 @@
-# Operación del servicio: V20, V21, V22 y V25
+# Operación del servicio: V20, V21, V22, V25 y V26–V30
 
 ## Alcance
 
@@ -11,6 +11,10 @@
   comprobación puntual de pertenencia.
 - **V25**: ubicación opcional del cliente para el técnico asignado durante el
   trayecto, con sesión de consentimiento en primer plano y sin historial.
+- **V26–V30**: búsqueda y asignación explicable, atención con código de llegada,
+  pausas e incidencias, entrega con evidencia y conformidad del cliente,
+  resolución administrativa, equipos y sucursales. Ver
+  [gestión local de servicios](gestion-local.md).
 - Las migraciones aplicadas no se reescriben. Los cambios posteriores van en una
   migración nueva.
 
@@ -83,13 +87,24 @@ disponibilidad y no se comparte con clientes. La UI invalida el resultado a los
 solicitado → en_camino → en_diagnostico → en_reparacion → finalizado
 ```
 
-- `llegada`, `reparacion` y `finalizar` son acciones cerradas, no un selector
-  libre de estados. Repetir la misma acción es idempotente; saltar de estado
-  responde `409`.
-- Iniciar reparación y finalizar exigen una cotización aceptada del técnico y
-  ninguna cotización enviada pendiente.
-- Finalizar **no** crea pagos ni liquidaciones.
-- Cancelar sigue siendo exclusivo del cliente y solo antes de asignar técnico.
+- La asignación pasa por `orders.busquedas_servicio` y `DespachoProgramado`
+  (cada 15 s, 15 minutos, hasta 18 destinatarios y 3 intentos). La aceptación se
+  serializa en PostgreSQL: dos técnicos no pueden ganar la misma orden y uno no
+  puede quedarse con dos. Detalle en [gestión local](gestion-local.md).
+- `llegada` ahora exige el código de ocho cifras que genera el cliente; sin
+  código responde `409`. Coordinación puede usar `llegada_justificada` con motivo.
+- `reparacion` exige una cotización aceptada y ninguna enviada pendiente.
+- **Finalizar ya no es una acción del técnico.** El técnico registra la entrega
+  con trabajo y evidencia privada; la orden sigue `en_reparacion` hasta que el
+  cliente da conformidad. Coordinación solo puede cerrar una entrega observada o
+  pendiente por más de 48 h, con causal auditada.
+- Pausa, incidencia, entrega y conformidad son dimensiones de
+  `orders.atenciones`, no estados nuevos.
+- Cancelar antes de asignar es del cliente; coordinación puede cancelar con
+  motivo desde el panel. No hay reasignación silenciosa: se cancela y se crea
+  otra solicitud, conservando historial y mensajes.
+- Repetir la misma acción es idempotente; saltar de estado responde `409`.
+- Entregar, finalizar o cancelar **no** crea pagos, comisiones ni liquidaciones.
 
 ## Cotizaciones
 
@@ -115,7 +130,9 @@ solicitado → en_camino → en_diagnostico → en_reparacion → finalizado
 
 `GET /api/tecnicos/liquidaciones` es de solo lectura y muestra únicamente filas
 existentes de `billing.liquidaciones`. No se simulan pagos, retiros, comisiones
-fijas ni saldos.
+fijas ni saldos. La app no publica una sección de billetera: el endpoint se
+conserva por compatibilidad y los pagos electrónicos están fuera del alcance
+actual (ver [gestión local](gestion-local.md)).
 
 ## Privacidad
 

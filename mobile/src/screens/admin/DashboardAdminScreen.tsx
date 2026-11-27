@@ -128,7 +128,7 @@ export function DashboardAdminScreen() {
         </Tarjeta>
       </View>
       <Tarjeta style={s.entre}>
-        <View style={{ gap: 6 }}><Texto variante="subtitulo">Gestión de la plataforma</Texto>
+        <View style={{ gap: 6 }}><Texto variante="subtitulo">Gestión de la empresa</Texto>
           <Texto variante="caption">{m.usuariosActivos} cuentas activas · {m.categoriasActivas} categorías activas</Texto></View>
         <View style={s.fila}>
           <BotonPrimario titulo="Gestionar usuarios" variante="secundario" tamano="escritorio"

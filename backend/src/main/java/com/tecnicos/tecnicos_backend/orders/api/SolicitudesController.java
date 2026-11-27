@@ -21,11 +21,11 @@ public class SolicitudesController {
             @RequestParam int categoria, @RequestParam String descripcion,
             @RequestParam double latitud,@RequestParam double longitud,
             @RequestParam String referencia,@RequestParam boolean urgencia,
-            @RequestParam(required=false) MultipartFile[] evidencia) throws IOException {
+            @RequestParam(required=false) MultipartFile[] evidencia,@RequestParam(required=false) Long equipo) throws IOException {
         if(evidencia!=null && evidencia.length>1) throw new com.tecnicos.tecnicos_backend.shared.web.ApiException(
             HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","Adjuntá una sola evidencia.");
         var r=solicitudes.crear(clave,categoria,descripcion,latitud,longitud,referencia,urgencia,
-            evidencia==null || evidencia.length==0?null:evidencia[0]);
+            evidencia==null || evidencia.length==0?null:evidencia[0],equipo);
         return ResponseEntity.status(r.creada()?HttpStatus.CREATED:HttpStatus.OK)
             .cacheControl(CacheControl.noStore()).body(r);
     }
@@ -34,9 +34,12 @@ public class SolicitudesController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(solicitudes.categorias());
     }
     @GetMapping("/facturacion")
-    public ResponseEntity<Facturacion> facturacion() {
+    public ResponseEntity<Facturacion> facturacion(
+        @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate desde,
+        @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate hasta,
+        @RequestParam(required=false) Long sucursal) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-            .body(solicitudes.facturacion(usuario().id()));
+            .body(solicitudes.facturacion(usuario().id(),desde,hasta,sucursal));
     }
     @GetMapping
     public ResponseEntity<Pagina<Fila>> propias(@RequestParam(defaultValue="0") int pagina,

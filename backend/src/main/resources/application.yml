@@ -43,6 +43,12 @@ spring:
       mail.smtp.writetimeout: 5000
 
 app:
+  # Una empresa prestadora: el alta técnica pública queda cerrada y el personal
+  # se incorpora por invitación de coordinación. Ponlo en false solo para
+  # reproducir suites históricas o un marketplace abierto.
+  empresa-local: ${APP_EMPRESA_LOCAL:true}
+  despacho:
+    intervalo-ms: ${APP_DESPACHO_INTERVALO_MS:15000}
   google:
     client-ids: ${GOOGLE_CLIENT_IDS:}
   jwt:
