@@ -14,6 +14,7 @@ import { BotonPrimario } from '../../ui/BotonPrimario';
 import { ServicioTecnicoDetalle } from './ServicioTecnicoDetalle';
 import { fechaHoraBolivia } from '../../ui/formato';
 import { colores } from '../../theme/tokens';
+import { useActualizacionVisible } from '../useActualizacionVisible';
 
 export function distanciaLegible(metros: number | null) {
   if (metros === null || !Number.isFinite(metros)) return 'Distancia por confirmar';
@@ -27,6 +28,7 @@ export function PanelTecnico() {
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
   const bloqueo = useRef(false);
+  useActualizacionVisible(c.actualizar, ocupado || c.cargando || aceptar !== null || seleccionada !== null);
 
   async function operar(fn: () => Promise<void>, orden?: number) {
     if (bloqueo.current) return;
@@ -61,8 +63,8 @@ export function PanelTecnico() {
   const sinTrabajo = datos && !ofertas.length && !solicitudes.length && !c.cargando;
 
   return <MarcoContenido>
-    <Encabezado titulo="Solicitudes cerca de ti"
-      subtitulo="Te enviamos pedidos que coinciden con tu especialidad y tu cobertura. El primero en aceptar se queda con el servicio." />
+    <Encabezado titulo="Atenciones de la empresa"
+      subtitulo="Solicitudes compatibles con tu especialidad, zona y disponibilidad. Las ofertas se actualizan mientras esta pantalla está visible." />
     {c.error || error ? <Aviso tono="peligro">{c.error || error}</Aviso> : null}
     <BotonPrimario titulo="Actualizar solicitudes" variante="secundario"
       deshabilitado={ocupado || c.cargando} onPress={c.actualizar} />

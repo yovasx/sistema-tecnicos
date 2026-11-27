@@ -31,6 +31,7 @@ import { colores, espacio, radio } from '../../theme/tokens';
 import { iconoCategoria } from '../publico/categorias';
 import { estadoServicio } from './estadosServicio';
 import { ElegirDireccionGuardada } from './ElegirDireccionGuardada';
+import { ElegirEquipoServicio } from './ElegirEquipoServicio';
 
 const PASOS = ['Categoría', 'Detalle', 'Ubicación', 'Confirmar'];
 const MAX_EVIDENCIA = 8 * 1024 * 1024;
@@ -431,6 +432,8 @@ export function SolicitudServicioWizard() {
 
                   {paso === 1 ? (
                     <>
+                      <ElegirEquipoServicio equipo={borrador.equipo} bloqueado={ocupado || incierto}
+                        onElegir={equipo => cambiar(b => ({ ...b, equipo }))} />
                       <CampoTexto
                         etiqueta="Descripción del problema"
                         placeholder="Ej.: hay una fuga debajo de la cocina y el piso está mojado."
@@ -599,22 +602,16 @@ export function SolicitudServicioWizard() {
                         <Dato etiqueta="Descripción" valor={borrador.descripcion.trim()} />
                         <Dato etiqueta="Urgencia" valor={borrador.urgencia ? 'Sí' : 'No'} />
                         <Dato etiqueta="Dirección" valor={borrador.referencia.trim()} />
-                        <Dato
-                          etiqueta="Coordenadas"
-                          valor={
-                            lat !== null && lng !== null
-                              ? `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-                              : '—'
-                          }
-                        />
+                        <Dato etiqueta="Ubicación" valor="Punto confirmado en el mapa" />
                         <Dato
                           etiqueta="Evidencia"
                           valor={borrador.evidencia?.nombre ?? 'Sin archivo adjunto'}
                         />
                       </View>
                       <Aviso tono="info" titulo="Qué pasa al enviar">
-                        La orden queda en estado Solicitado. Todavía no hay técnico asignado ni
-                        precio final; cuando existan, los vas a ver en el seguimiento.
+                        Buscaremos un técnico de la empresa por hasta 15 minutos. Todavía no hay un precio final.
+                        La solicitud no genera cargos automáticos por visita: cualquier importe debe estar en una
+                        cotización que tú autorices. Si no se repara, coordinación puede cerrar el diagnóstico sin cobros automáticos.
                       </Aviso>
                       {error ? (
                         <Aviso tono={incierto ? 'advertencia' : 'peligro'}>

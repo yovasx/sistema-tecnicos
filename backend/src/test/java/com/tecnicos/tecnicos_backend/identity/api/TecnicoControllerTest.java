@@ -28,7 +28,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Sin transacción de test: confirma que los intentos OTP persisten tras HTTP 400. */
-@SpringBootTest
+// Compatibilidad del expediente anterior; el modo local cerrado se prueba en AtencionLocalTest.
+@SpringBootTest(properties="app.empresa-local=false")
 @AutoConfigureMockMvc
 class TecnicoControllerTest {
     @Autowired MockMvc mvc;
@@ -239,7 +240,8 @@ class TecnicoControllerTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
                 jdbc.queryForObject("SELECT orders.aceptar_oferta(-1,?)",Boolean.class,id))
                 .isInstanceOf(org.springframework.dao.DataAccessException.class)
-                .hasMessageContaining("no está habilitado");
+                .rootCause()
+                .hasMessageContaining("técnico");
     }
     @Test void cliente_no_accede_al_expediente_tecnico() throws Exception {
         String cliente=JsonPath.read(cuerpo(mvc.perform(json("/api/auth/login",

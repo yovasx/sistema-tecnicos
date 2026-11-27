@@ -99,7 +99,7 @@ export function ExpedienteTecnicoAdmin({ id, expediente: d, cuentaActiva, onCamb
     {Object.entries(d.observaciones).map(([k, v]) => <Aviso key={k} tono="advertencia" titulo={etiquetas[k] ?? (k === 'motivo' ? 'Motivo del rechazo' : k)}>{v}</Aviso>)}
     {d.estadoExpediente === 'en_revision' ? <>
       <Aviso titulo="Revisión humana">Compara la identidad y la fecha con el CI, y revisa que los certificados sean legibles y correspondan al técnico. Un archivo cargado no prueba su autenticidad.</Aviso>
-      {!cuentaActiva ? <Aviso tono="advertencia">La cuenta está inactiva. Aprobar documentos no la reactiva ni habilita su acceso a la plataforma.</Aviso> : null}
+      {!cuentaActiva ? <Aviso tono="advertencia">La cuenta está inactiva. Aprobar documentos no la reactiva ni habilita su acceso al sistema.</Aviso> : null}
       <Texto variante="etiqueta">Campos a observar</Texto>
       <View style={s.fila}>{camposExpediente.map(([campo, titulo]) => <Pressable key={campo} accessibilityRole="checkbox"
         accessibilityLabel={`Observar ${titulo}`} accessibilityState={{ checked: campo in observaciones }} disabled={ocupado}

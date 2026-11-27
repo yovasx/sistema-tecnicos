@@ -42,6 +42,12 @@ class OperacionControllerTest {
         mvc.perform(put("/api/tecnicos/disponibilidad").header("Authorization","Bearer "+token)
             .contentType("application/json").content("{\"disponible\":true}")).andExpect(status().isNoContent());
     }
+    void llegada(long orden,String tecnico,String cliente) throws Exception {
+        String codigo=leer(enviar("/api/servicios/"+orden+"/atencion/codigo",cliente,"{}")
+            .andExpect(status().isOk()).andReturn(),"$.codigo");
+        enviar("/api/servicios/"+orden+"/atencion/llegada",tecnico,"{\"codigo\":\""+codigo+"\"}")
+            .andExpect(status().isNoContent());
+    }
     @Test void flujo_real_aceptacion_gps_diagnostico_cotizacion_reparacion_finalizacion() throws Exception {
         long orden=solicitud(); String t=token("diego.vargas@ejemplo.bo"),c=token("maria.quispe@ejemplo.bo");
         disponible(t);
@@ -56,7 +62,7 @@ class OperacionControllerTest {
             {"sesion":"%s","latitud":-16.5,"longitud":-68.13,"precision":5,"capturadoEn":"%s"}
             """.formatted(sesion,Instant.now())).andExpect(status().isNoContent());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_actual WHERE orden_id=?",Long.class,orden)).isEqualTo(1);
-        enviar("/api/tecnicos/servicios/"+orden+"/llegada",t,"{}").andExpect(status().isNoContent());
+        llegada(orden,t,c);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM geo.ubicacion_actual WHERE orden_id=?",Long.class,orden)).isZero();
         String cot="""
             {"clave":"%s","motivo":"Diagnóstico comprobado","items":[
@@ -68,14 +74,23 @@ class OperacionControllerTest {
         enviar("/api/ordenes/"+orden+"/cotizaciones/"+cotizacion+"/responder",c,"{\"acepta\":true}")
             .andExpect(status().isOk()).andExpect(jsonPath("$.estado").value("aceptada"));
         enviar("/api/tecnicos/servicios/"+orden+"/reparacion",t,"{}").andExpect(status().isNoContent());
-        enviar("/api/tecnicos/servicios/"+orden+"/finalizar",t,"{}").andExpect(status().isNoContent());
+        long revision=jdbc.queryForObject("SELECT revision FROM orders.atenciones WHERE orden_id=?",Long.class,orden);
+        mvc.perform(multipart("/api/servicios/"+orden+"/atencion/entrega")
+            .file(new org.springframework.mock.web.MockMultipartFile("evidencia","trabajo.pdf","application/pdf",
+                "%PDF-1.4\nEvidencia de reparación".getBytes(StandardCharsets.UTF_8)))
+            .param("revision",String.valueOf(revision)).param("trabajo","Se reparó el equipo y se comprobó su funcionamiento.")
+            .header("Authorization","Bearer "+t)).andExpect(status().isNoContent());
+        assertThat(jdbc.queryForObject("SELECT estado::text FROM orders.ordenes_servicio WHERE id=?",String.class,orden)).isEqualTo("en_reparacion");
+        revision=jdbc.queryForObject("SELECT revision FROM orders.atenciones WHERE orden_id=?",Long.class,orden);
+        enviar("/api/servicios/"+orden+"/atencion/conformidad",c,
+            "{\"revision\":"+revision+",\"conforme\":true,\"comentario\":\"El equipo funciona correctamente.\"}").andExpect(status().isNoContent());
         assertThat(jdbc.queryForObject("SELECT estado::text FROM orders.ordenes_servicio WHERE id=?",String.class,orden)).isEqualTo("finalizado");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM billing.pagos WHERE orden_id=?",Long.class,orden)).isZero();
     }
     @Test void no_inicia_reparacion_sin_cotizacion_aceptada() throws Exception {
         long o=solicitud(); String t=token("diego.vargas@ejemplo.bo"); disponible(t);
         enviar("/api/tecnicos/servicios/"+o+"/aceptar",t,"{}").andExpect(status().isNoContent());
-        enviar("/api/tecnicos/servicios/"+o+"/llegada",t,"{}").andExpect(status().isNoContent());
+        llegada(o,t,token("maria.quispe@ejemplo.bo"));
         enviar("/api/tecnicos/servicios/"+o+"/reparacion",t,"{}").andExpect(status().isConflict());
     }
     @Test void reintento_ofrece_a_otro_tecnico_tras_rechazo() {

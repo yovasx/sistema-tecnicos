@@ -14,12 +14,16 @@ import { colores, espacio } from '../../theme/tokens';
 import { desdeCategoria, iconoCategoria } from '../publico/categorias';
 import { bolivianos } from '../../ui/formato';
 import { useCategoriasSolicitud } from './useCategoriasSolicitud';
+import { useConsulta } from '../useConsulta';
+import { solicitudesRepository } from '../../infrastructure/di';
 
 export function InicioCliente() {
   const { esDesktop } = useResponsive();
   const { usuario } = useSesion();
   const { abrir } = useSolicitudServicio();
   const { categorias, cargando, error, recargar } = useCategoriasSolicitud();
+  const recientes = useConsulta(() => solicitudesRepository.propias(0));
+  const activas = recientes.datos?.elementos.filter(o => !['finalizado', 'cancelado'].includes(o.estado)) ?? [];
 
   return (
     <ContenedorApp>
@@ -29,7 +33,17 @@ export function InicioCliente() {
             titulo={`Hola, ${usuario?.nombre.split(' ')[0] ?? 'bienvenido'}`}
             subtitulo="¿Qué necesitas arreglar hoy?"
           />
-          <BotonPrimario titulo="Solicitar un servicio" onPress={() => abrir()} />
+          <Tarjeta style={{ backgroundColor: colores.marcaSuave, gap: 12 }}>
+            <Texto variante="titulo">Atención técnica, sin perder el control</Texto>
+            <Texto>Indica la falla, marca el lugar y autoriza la cotización antes de reparar.</Texto>
+            <BotonPrimario titulo="Solicitar atención a la empresa" onPress={() => abrir()} />
+            <Texto variante="caption">Sin cobros automáticos por solicitar. Tu ubicación solo se comparte para la atención.</Texto>
+          </Tarjeta>
+          {activas.length ? <Tarjeta style={{ gap: 8 }}>
+            <Texto variante="subtitulo">Atenciones en curso entre tus solicitudes recientes</Texto>
+            {activas.slice(0, 3).map(o => <Texto key={o.id}>#{o.id} · {o.categoria} · {o.estado.replaceAll('_', ' ')}</Texto>)}
+            <Texto variante="caption">Abre Servicios para consultar el seguimiento, autorizar trabajos o pedir ayuda.</Texto>
+          </Tarjeta> : null}
 
           <Texto variante="subtitulo">Servicios para tu hogar</Texto>
           <Texto variante="caption" color={colores.secundario}>

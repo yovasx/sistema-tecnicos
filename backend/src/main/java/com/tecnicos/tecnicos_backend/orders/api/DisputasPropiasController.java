@@ -26,8 +26,8 @@ public class DisputasPropiasController {
 
     @GetMapping
     public ResponseEntity<?> propias(@AuthenticationPrincipal UsuarioAutenticado u,
-                                     @RequestParam(defaultValue = "0") int pagina) {
+                                     @RequestParam(defaultValue = "0") int pagina,@RequestParam(required=false) Long orden) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-            .body(servicio.propias(u.id(), pagina));
+            .body(servicio.propias(u.id(), pagina,orden));
     }
 }

@@ -41,14 +41,14 @@ export function PublicoFlujo() {
       <LandingPublicaScreen
         onEntrar={() => setVista('login')}
         onCrearCuenta={() => setVista('tipoCuenta')}
-        onSoyTecnico={() => setVista('tecnico')}
+        onSoyTecnico={() => setVista('invitacion')}
         onActivarCuenta={() => setVista('invitacion')}
       />
     ) : (
       <BienvenidaMovilScreen
         onCrearCuenta={() => setVista('tipoCuenta')}
         onEntrar={() => setVista('login')}
-        onSoyTecnico={() => setVista('tecnico')}
+        onSoyTecnico={() => setVista('invitacion')}
         onActivarCuenta={() => setVista('invitacion')}
       />
     );
@@ -63,7 +63,7 @@ export function PublicoFlujo() {
           setVista('registro');
         }}
         onEntrar={() => setVista('login')}
-        onTecnico={() => setVista('tecnico')}
+        onTecnico={() => setVista('invitacion')}
       />
     );
   }
@@ -89,7 +89,7 @@ export function PublicoFlujo() {
     <LoginScreen
       onRegistroGoogle={tipo => {
         setTipoCliente('persona');
-        setVista(tipo === 'tecnico' ? 'tecnico' : 'registro');
+        setVista(tipo === 'tecnico' ? 'invitacion' : 'registro');
       }}
       onVolver={() => setVista('bienvenida')}
       onCrearCuenta={() => setVista('tipoCuenta')}

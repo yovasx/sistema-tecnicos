@@ -61,9 +61,9 @@ export function BienvenidaMovilScreen({
           <Texto variante="caption" color={colores.secundario}>
             Servicios a domicilio en La Paz
           </Texto>
-          <Texto style={estilos.titular}>Un técnico verificado para tu hogar</Texto>
+          <Texto style={estilos.titular}>Atención técnica para tu hogar y empresa</Texto>
           <Texto variante="cuerpo" color={colores.secundario}>
-            Encuentra servicios técnicos y consulta las tarifas base de forma sencilla.
+            Solicita atención a nuestra empresa, autoriza el trabajo y conserva su historial.
           </Texto>
         </View>
 
@@ -110,7 +110,7 @@ export function BienvenidaMovilScreen({
         <View style={estilos.confianza}>
           <Ionicons name="shield-checkmark" size={16} color={colores.exito} />
           <Texto variante="caption" color={colores.secundario}>
-            Identidad y certificados revisados por Fixly
+            Personal habilitado por la empresa · autorización antes de reparar
           </Texto>
         </View>
 
@@ -129,7 +129,7 @@ export function BienvenidaMovilScreen({
             accessibilityRole="button"
             style={estilos.soyTecnico}
           >
-            Soy técnico
+            Activar invitación de personal técnico
           </Texto>
           <Texto variante="caption" color={colores.secundario} centrado
             accessibilityRole="button" onPress={onActivarCuenta} style={estilos.soyTecnico}>

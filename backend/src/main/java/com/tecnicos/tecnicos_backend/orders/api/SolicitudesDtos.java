@@ -25,7 +25,7 @@ public final class SolicitudesDtos {
 
     /** Línea de facturación: la última cotización aceptada de una orden propia. */
     public record LineaFacturacion(long orden, String categoria, String estadoOrden, String tecnico,
-                                   BigDecimal total, String moneda, OffsetDateTime aceptadaEn) {}
+                                   BigDecimal total, String moneda, OffsetDateTime aceptadaEn,String equipo,String sucursal) {}
 
     /** Solo importes reales de cotizaciones aceptadas; no hay cobros ni comprobantes emitidos. */
     public record Facturacion(BigDecimal totalAceptado, String moneda, List<LineaFacturacion> lineas) {}

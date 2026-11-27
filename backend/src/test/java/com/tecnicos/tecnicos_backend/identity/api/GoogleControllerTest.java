@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** La firma se prueba en VerificadorGoogleTest; aquí se prueban persistencia y políticas. */
-@SpringBootTest
+@SpringBootTest(properties="app.empresa-local=false")
 @AutoConfigureMockMvc
 @Transactional
 class GoogleControllerTest {

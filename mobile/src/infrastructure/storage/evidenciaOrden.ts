@@ -9,6 +9,7 @@ import { apiClient } from '../http/apiClient';
 export async function descargarEvidenciaOrden(
   id: number,
   extension: string | null,
+  ruta = `/api/ordenes/${id}/evidencia`,
 ): Promise<void> {
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Este dispositivo no permite abrir el archivo de evidencia.');
@@ -17,7 +18,7 @@ export async function descargarEvidenciaOrden(
   const base = apiClient.defaults.baseURL ?? '';
   const destino = new File(Paths.cache, `fixly-evidencia-${id}.${extension ?? 'bin'}`);
   const archivo = await File.downloadFileAsync(
-    `${base}/api/ordenes/${id}/evidencia`,
+    `${base.replace(/\/$/, '')}${ruta}`,
     destino,
     {
       idempotent: true,

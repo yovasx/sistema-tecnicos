@@ -31,7 +31,7 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: Ti
       destacados={
         esDesktop
           ? [
-              'Precio estimado antes de confirmar',
+              'Cotización autorizada antes de reparar',
               'Revisión de identidad y certificados',
               'Seguimiento del servicio en la app',
             ]
@@ -76,14 +76,14 @@ export function TipoCuentaScreen({ onVolver, onElegir, onEntrar, onTecnico }: Ti
               <OpcionCuenta
                 icono="business"
                 titulo="Para mi empresa"
-                detalle="Gestiona servicios y facturación con NIT."
+                detalle="Gestiona equipos, sucursales y costos autorizados con tu cuenta empresarial."
                 onPress={() => onElegir('empresa')}
               />
               <OpcionCuenta
                 icono="construct"
-                titulo="Soy técnico"
-                detalle="Las cuentas de técnico se habilitan con validación."
-                insignia="Con validación"
+                titulo="Personal técnico invitado"
+                detalle="La empresa incorpora a sus técnicos mediante invitación de coordinación."
+                insignia="Solo invitación"
                 onPress={onTecnico}
               />
             </View>

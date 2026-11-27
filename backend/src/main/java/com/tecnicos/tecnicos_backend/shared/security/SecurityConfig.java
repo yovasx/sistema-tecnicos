@@ -61,7 +61,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ws/seguimiento").permitAll()
                         .requestMatchers("/api/perfil/direcciones/**", "/api/perfil/preferencias").hasRole("CLIENTE")
                         .requestMatchers("/api/perfil/foto").hasAnyRole("CLIENTE","TECNICO")
+                        .requestMatchers(HttpMethod.GET,"/api/servicios/*/atencion","/api/servicios/*/atencion/evidencia")
+                            .hasAnyRole("CLIENTE","TECNICO","ADMINISTRADOR")
                         .requestMatchers("/api/servicios/**").hasAnyRole("CLIENTE","TECNICO")
+                        .requestMatchers("/api/equipos/**","/api/sucursales/**").hasRole("CLIENTE")
                         .requestMatchers("/api/ordenes/*/seguimiento", "/api/ordenes/*/seguimiento/**",
                                 "/api/ordenes/seguimiento/**").hasAnyRole("CLIENTE","TECNICO")
                         // Disputas: las abre cualquiera de los dos participantes.

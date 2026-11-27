@@ -32,11 +32,11 @@ public class SolicitudesService {
     public SolicitudesService(JdbcTemplate jdbc,AuditoriaContexto auditoria,AlmacenArchivos almacen,ObjectMapper json) {
         this.jdbc=jdbc; this.auditoria=auditoria; this.almacen=almacen; this.json=json;
     }
-    private record Datos(int categoria,String descripcion,double latitud,double longitud,String referencia,boolean urgencia,String archivo) {}
+    private record Datos(int categoria,String descripcion,double latitud,double longitud,String referencia,boolean urgencia,String archivo,Long equipo) {}
 
     @Transactional(rollbackFor=IOException.class)
     public CrearResultado crear(String clave,int categoria,String descripcion,double latitud,double longitud,
-                                 String referencia,boolean urgencia,MultipartFile evidencia) throws IOException {
+                                 String referencia,boolean urgencia,MultipartFile evidencia,Long equipo) throws IOException {
         auditoria.aplicarEnTransaccion();
         UUID uuid;
         try {
@@ -55,7 +55,7 @@ public class SolicitudesService {
             hashArchivo+=extension(evidencia.getOriginalFilename());
         }
         String huella=hash(new ByteArrayInputStream(json.writeValueAsString(new Datos(categoria,descripcion.trim(),
-            latitud,longitud,referencia.trim(),urgencia,hashArchivo)).getBytes(StandardCharsets.UTF_8)));
+            latitud,longitud,referencia.trim(),urgencia,hashArchivo,equipo)).getBytes(StandardCharsets.UTF_8)));
         String url=evidencia==null?null:almacen.guardar(evidencia.getOriginalFilename(),evidencia.getInputStream());
         // Registrar antes de SQL: un rollback también elimina el archivo recién creado.
         final boolean[] conservar={false};
@@ -68,6 +68,7 @@ public class SolicitudesService {
             (rs,n)->new CrearResultado(rs.getLong("orden_id"),"solicitado",rs.getBoolean("creada")),
             uuid.toString(),huella,categoria,descripcion.trim(),latitud,longitud,referencia.trim(),urgencia,url);
         conservar[0]=Objects.requireNonNull(r).creada();
+        if(equipo!=null) jdbc.queryForObject("SELECT orders.vincular_equipo(?,?)",(rs,n)->null,r.id(),equipo);
         // Un reintento puede corresponder a una orden que ya avanzó: devolver su estado real.
         String estado=jdbc.queryForObject("SELECT estado::text FROM orders.ordenes_servicio WHERE id=?",String.class,r.id());
         // Despacho real del match dentro de la misma transacción. Es idempotente:
@@ -133,32 +134,40 @@ public class SolicitudesService {
      * órdenes. No crea comprobantes ni cobros porque no hay pasarela integrada.
      */
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
-    public Facturacion facturacion(long cliente) {
+    public Facturacion facturacion(long cliente,java.time.LocalDate desde,java.time.LocalDate hasta,Long sucursal) {
+        if(desde!=null && hasta!=null && (desde.isAfter(hasta) || hasta.isAfter(desde.plusDays(366))))
+            throw error(HttpStatus.BAD_REQUEST,"FILTROS_INVALIDOS","Selecciona un período de hasta 366 días.");
+        var args=new ArrayList<Object>();args.add(cliente);
+        String filtro=" WHERE o.cliente_id=?";
+        var zona=java.time.ZoneId.of("America/La_Paz");
+        if(desde!=null) { filtro+=" AND q.respondida_en>=?";args.add(desde.atStartOfDay(zona).toOffsetDateTime()); }
+        if(hasta!=null) { filtro+=" AND q.respondida_en<?";args.add(hasta.plusDays(1).atStartOfDay(zona).toOffsetDateTime()); }
+        if(sucursal!=null) { filtro+=" AND e.sucursal_id=?";args.add(sucursal); }
         var lineas=jdbc.query("""
             SELECT o.id, c.nombre categoria, o.estado::text estado_orden,
                    CASE WHEN t.eliminado_en IS NULL THEN NULLIF(concat_ws(' ',t.nombre,t.apellido),'') END tecnico,
-                   q.total, q.moneda, q.respondida_en
+                   q.total, q.moneda, q.respondida_en,e.nombre_snapshot,e.sucursal_snapshot
             FROM orders.ordenes_servicio o
             JOIN orders.categorias_servicio c ON c.id=o.categoria_id
             LEFT JOIN identity.usuarios t ON t.id=o.tecnico_id
+            LEFT JOIN orders.equipos_orden e ON e.orden_id=o.id
             JOIN LATERAL (
                 SELECT total, moneda, respondida_en FROM billing.cotizaciones
                 WHERE orden_id=o.id AND estado='aceptada' ORDER BY version DESC LIMIT 1
             ) q ON TRUE
-            WHERE o.cliente_id=?
-            ORDER BY q.respondida_en DESC NULLS LAST, o.id DESC LIMIT 100
-            """,(r,n)->new LineaFacturacion(r.getLong("id"),r.getString("categoria"),r.getString("estado_orden"),
+            """+filtro+" ORDER BY q.respondida_en DESC NULLS LAST, o.id DESC LIMIT 100",
+            (r,n)->new LineaFacturacion(r.getLong("id"),r.getString("categoria"),r.getString("estado_orden"),
                 r.getString("tecnico"),r.getBigDecimal("total"),r.getString("moneda"),
-                fecha(r,"respondida_en")),cliente);
+                fecha(r,"respondida_en"),r.getString("nombre_snapshot"),r.getString("sucursal_snapshot")),args.toArray());
         var total=jdbc.queryForObject("""
             SELECT coalesce(sum(q.total),0) FROM orders.ordenes_servicio o
             JOIN LATERAL (
-                SELECT total FROM billing.cotizaciones
+                SELECT total,respondida_en FROM billing.cotizaciones
                 WHERE orden_id=o.id AND estado='aceptada' AND moneda='BOB'
                 ORDER BY version DESC LIMIT 1
             ) q ON TRUE
-            WHERE o.cliente_id=?
-            """,java.math.BigDecimal.class,cliente);
+            LEFT JOIN orders.equipos_orden e ON e.orden_id=o.id
+            """+filtro,java.math.BigDecimal.class,args.toArray());
         return new Facturacion(total, "BOB", lineas);
     }
     public record Archivo(InputStream contenido,String extension) {}    @Transactional(readOnly=true)
@@ -183,7 +192,7 @@ public class SolicitudesService {
     private static String extension(String nombre) {
         return nombre==null || !nombre.contains(".")?"":nombre.substring(nombre.lastIndexOf('.')).toLowerCase(Locale.ROOT);
     }
-    private static void validarArchivo(MultipartFile f) throws IOException {
+    public static void validarArchivo(MultipartFile f) throws IOException {
         if(f.isEmpty() || f.getSize()>8*1024*1024) throw error(HttpStatus.BAD_REQUEST,"ARCHIVO_NO_PERMITIDO","La evidencia debe pesar entre 1 byte y 8 MB.");
         byte[] cabecera;
         try(var entrada=f.getInputStream()) { cabecera=entrada.readNBytes(8); }

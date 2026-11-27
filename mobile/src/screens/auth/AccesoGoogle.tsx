@@ -67,9 +67,7 @@ export function AccesoGoogle({ proposito = 'acceso', onRegistro, onInteraccion, 
     {registroRequerido && onRegistro ? <View style={{ gap: 12 }}>
       <BotonPrimario titulo="Crear cuenta de cliente personal" variante="secundario"
         onPress={() => onRegistro('cliente')} />
-      <BotonPrimario titulo="Crear cuenta de técnico" variante="secundario"
-        onPress={() => onRegistro('tecnico')} />
-      <Texto variante="caption">Selecciona el tipo de cuenta y confirma Google desde el registro correspondiente.</Texto>
+      <Texto variante="caption">El personal técnico se incorpora mediante invitación de coordinación, no por registro público.</Texto>
     </View> : null}
     <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
       <View style={{ height: 1, flex: 1, backgroundColor: colores.linea }} />

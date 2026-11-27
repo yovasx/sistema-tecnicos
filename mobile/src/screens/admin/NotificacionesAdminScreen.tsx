@@ -31,7 +31,7 @@ export function NotificacionesAdminScreen() {
   if (!esDesktop) return <Aviso>El panel administrativo se usa desde el backoffice web.</Aviso>;
 
   return <View style={s.raiz}>
-    <Encabezado titulo="Notificaciones" subtitulo="Avisos generados dentro de la plataforma para cada cuenta."
+    <Encabezado titulo="Notificaciones" subtitulo="Avisos generados dentro del sistema para cada cuenta."
       derecha={<BotonPrimario titulo="Actualizar notificaciones" tamano="escritorio" variante="secundario"
         deshabilitado={consulta.cargando} onPress={consulta.actualizar} />} />
     <FiltroAdmin etiqueta="Tipo de aviso" valor={tipo || 'todos'}
